@@ -1,0 +1,3 @@
+[submodule "deps/autd3-software"]
+	path = deps/autd3-software
+	url = http://gitlab.hapis.k.u-tokyo.ac.jp/inoue/autd3-software.git

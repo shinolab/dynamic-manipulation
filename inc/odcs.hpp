@@ -6,19 +6,24 @@
 //#include "engine.h"
 #include <queue>
 #include <vector>
+#include <memory>
+#include <thread>
+#include <mutex>
 #include <Eigen\Dense>
 #include <Windows.h>
 
 #pragma comment (lib, "winmm")
 
+
+
 class FloatingObject{
 public:
-	Eigen::Vector3f position;
-	Eigen::Vector3f velocity;
-	Eigen::Vector3f integral;
-	Eigen::Vector3f positionTarget;
-	Eigen::Vector3f velocityTarget;
-	Eigen::Vector3f force_offset;
+	Eigen::Vector3f getPosition();
+	Eigen::Vector3f getVelocity();
+	Eigen::Vector3f getIntegral();
+	Eigen::Vector3f getPositionTarget();
+	Eigen::Vector3f getVelocityTarget();
+	
 	DWORD lastDeterminationTime;
 	bool isTracked;
 	bool _isStable;
@@ -35,6 +40,17 @@ public:
 	Eigen::MatrixXf controlPath;
 	Eigen::RowVectorXf timePath;
 
+private:
+	Eigen::Vector3f position;
+	Eigen::Vector3f velocity;
+	Eigen::Vector3f integral;
+	Eigen::Vector3f positionTarget;
+	Eigen::Vector3f velocityTarget;
+	Eigen::Vector3f force_offset;
+	std::mutex mtxState;
+	std::mutex mtxStateTarget;
+
+public:
 	FloatingObject(Eigen::Vector3f _positionTarget);
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew);
@@ -46,13 +62,15 @@ public:
 	Eigen::Vector3f averageVelocity();
 };
 
+typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
+
 class ods
 {
-public:
+private:
 	KinectApp kinectApp;
-	Eigen::Vector3f positionKinect = Eigen::Vector3f::Zero();
-	Eigen::Matrix3f dcmGlobal2Kinect = Eigen::Matrix3f::Identity(3, 3);
-	Eigen::Matrix3f dcmKinect2Global = Eigen::Matrix3f::Identity(3, 3); // x_kinect = attitudeKinect * x_global
+	Eigen::Vector3f positionKinect;
+	Eigen::Matrix3f dcmGlobal2Kinect;
+	Eigen::Matrix3f dcmKinect2Global; // x_kinect = attitudeKinect * x_global
 	Eigen::Affine3f affineKinect2Global;
 	Eigen::Matrix<float, 3, 2> workspace;
 
@@ -61,13 +79,13 @@ public:
 
 	bool isInsideWorkSpace(Eigen::Vector3f pos);
 
-	void DeterminePositionByHSV(FloatingObject* obj, cv::Scalar lb, cv::Scalar ub);
+	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
-	void DeterminePositionByBGR(FloatingObject* obj, cv::Scalar lb, cv::Scalar ub);
+	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
-	void DeterminePositionByDepth(FloatingObject* obj);
+	void DeterminePositionByDepth(FloatingObjectPtr objPtr);
 
-	void DeterminePositionByDepth(std::vector<FloatingObject> &objs);
+	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
 
 	void GetMarkerPosition();
 
@@ -97,13 +115,11 @@ public:
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position);
 
-	Eigen::VectorXf FindDutyQP(FloatingObject* obj);
+	Eigen::VectorXf FindDutyQP(FloatingObjectPtr objPtr);
 
 	//Find Duty Module (with offset)
 
 	void FindDutyBruteForce(Eigen::VectorXf *const duties, Eigen::MatrixXf *const directions, Eigen::Vector3f pos, Eigen::Vector3f force);
-
-	int findDutyNLP(Eigen::VectorXf *duties, Eigen::MatrixXf *farpoints, Eigen::Vector3f pos, Eigen::Vector3f force);
 
 	//Objective Functions
 
@@ -119,22 +135,32 @@ public:
 
 	//Local Control Module
 
-	void PIDControl(FloatingObject* obj);
-
-	void DirectSemiPlaneWave(FloatingObject* obj, Eigen::VectorXi amplitudes);
+	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
 
 	//Global Control Module
 
-	void PositionControlBySingleAUTD(FloatingObject* obj);
+	void PositionControlBySingleAUTD(FloatingObjectPtr objPtr);
 
-	int SetPath(Eigen::Vector3f initialPosition, Eigen::Vector3f finalPosition, FloatingObject* obj);
-
-	void followPath(FloatingObject* obj);
+	void followPath(FloatingObjectPtr objPtr);
 
 	//Legacy Module
-	Eigen::VectorXf findDutySI(FloatingObject* obj);
+	Eigen::VectorXf findDutySI(FloatingObjectPtr objPtr);
 
-	Eigen::VectorXf findDutyQPEq(FloatingObject* obj);
+	Eigen::VectorXf findDutyQPEq(FloatingObjectPtr objPtr);
+};
+
+class odcs
+{
+public:
+	void Initialize();
+	void StartControl(std::vector<FloatingObjectPtr> &objPtrs);
+	void Close();
+private:
+	ods ods;
+	ocs ocs;
+	std::thread thread_control;
+private:
+	void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
 };
 
 #endif

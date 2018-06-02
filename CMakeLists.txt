@@ -17,7 +17,6 @@ find_package( Eigen3 REQUIRED )
 include_directories(inc/ deps/autd3-software/client/include ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
 
 #OpenCV
-#option(OpenCV_DIR "C:/dev/opencv-3.3.0/build/install")
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -34,6 +33,7 @@ include_directories(deps/dlib-19.0)
 
 add_executable(DynamicLevitation
  src/main.cpp
+ src/odcs.cpp
  inc/additionalGain.hpp
  src/additionalGain.cpp
  inc/KinectApp.hpp

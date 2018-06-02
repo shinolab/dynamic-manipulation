@@ -33,8 +33,36 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	gravityForce << 0, 0, -0 * 9.8; //0.1 g
 }
 
+Eigen::Vector3f FloatingObject::getPosition()
+{
+	std::lock_guard<std::mutex> lock(mtxState);
+	return position;
+}
+
+Eigen::Vector3f FloatingObject::getVelocity()
+{
+	std::lock_guard<std::mutex> lock(mtxState);
+	return velocity;
+}
+Eigen::Vector3f FloatingObject::getIntegral()
+{
+	std::lock_guard<std::mutex> lock(mtxState);
+	return integral;
+}
+
+Eigen::Vector3f FloatingObject::getPositionTarget()
+{
+	return positionTarget;
+}
+
+Eigen::Vector3f FloatingObject::getVelocityTarget()
+{
+	return velocityTarget;
+}
+
 void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f positionNew)
 {
+	std::lock_guard<std::mutex> lock(mtxState);
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0; // [sec]
 	this->velocity = (positionNew - position) / dt;
 	this->dTBuffer.push_back(dt);
@@ -51,6 +79,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f posit
 
 void FloatingObject::updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::Vector3f _velocityTarget)
 {
+	std::lock_guard<std::mutex> lock(mtxStateTarget);
 	positionTarget = _positionTarget;
 	velocityTarget = _velocityTarget;
 }
@@ -58,6 +87,7 @@ void FloatingObject::updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::
 Eigen::Vector3f FloatingObject::averageVelocity()
 {
 	Eigen::Vector3f averageVelocity(0, 0, 0);
+	std::lock_guard<std::mutex> lock(mtxState);
 	auto itrVel = velocityBuffer.begin();
 	auto itrDT = dTBuffer.begin();
 	float period = 0;

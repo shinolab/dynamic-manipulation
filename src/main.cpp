@@ -18,20 +18,22 @@ int main()
 	ocs ocs; ocs.Initialize();
 	cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
 	std::cout << "Initializing..." << std::endl;
-	std::vector<FloatingObject> objs;
-	objs.push_back(FloatingObject(Eigen::Vector3f(0, 0, 1350)));
+	
+	FloatingObjectPtr objectPtr1(new FloatingObject(Eigen::Vector3f(0, 0, 1350)));
+	std::vector<FloatingObjectPtr> objPtrs;
+	objPtrs.push_back(objectPtr1);
 	//objs.push_back(FloatingObject(Eigen::Vector3f(-250, 100, 1485)));
 
 	while (1)
 	{
-		for (auto itr = objs.begin(); itr != objs.end(); itr++)
+		for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 		{
-			ods.DeterminePositionByDepth(objs);
+			ods.DeterminePositionByDepth(objPtrs);
 						
-			Eigen::VectorXf duties = ocs.FindDutyQP(&(*itr)) / objs.size();
+			Eigen::VectorXf duties = ocs.FindDutyQP(*itr) / objPtrs.size();
 			//Eigen::VectorXi amplitudes = (255 * duties).cwiseMax(0).cwiseMin(255).cast<int>();
 			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-			ocs.DirectSemiPlaneWave(&(*itr), amplitudes);
+			ocs.DirectSemiPlaneWave(*itr, amplitudes);
 		}
 		auto key = cv::waitKey(1);
 		if (key == 'q')

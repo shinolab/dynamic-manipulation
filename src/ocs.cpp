@@ -128,8 +128,6 @@ void ocs::FindDutyBruteForce(Eigen::VectorXf *const duties, Eigen::MatrixXf *con
 	}
 }
 
-
-
 //variable ; [u0 u1 ... uN xL0 xL1 ... xLN yL0 yL1 ... yLN] (offset should be represented in AUTD local coordinate)
 double ocs::SqDiffOfForce(const std::vector<double> &x, std::vector<double> &grad, void* data)
 {
@@ -156,18 +154,22 @@ double ocs::SqDiffOfForce(const std::vector<double> &x, std::vector<double> &gra
 	return (F - forceTarget).norm();
 }
 
-
 //==================== Global Control Module ====================
 
-void ocs::PositionControlBySingleAUTD(FloatingObject* obj)
+void ocs::PositionControlBySingleAUTD(FloatingObjectPtr objPtr)
 {
+	Eigen::Vector3f position = objPtr->getPosition();
+	Eigen::Vector3f velocity = objPtr->averageVelocity();
+	Eigen::Vector3f integral = objPtr->getIntegral();
+	Eigen::Vector3f positionTarget = objPtr->getPositionTarget();
+	Eigen::Vector3f velocityTaget = objPtr->getVelocityTarget();
 	//corner of AUTD
-	Eigen::Vector3f dr; dr << -obj->positionTarget[0] + obj->position[0], -obj->positionTarget[1] + obj->position[1], 0;
-	Eigen::Vector3f drdt; drdt << obj->velocity[0], obj->velocity[1], 0;
-	Eigen::Vector3f waveDirection; waveDirection = obj->position + obj->radius * (dr + 0.5 * drdt).normalized() - centerAUTD;
+	Eigen::Vector3f dr; dr << -positionTarget[0] + position[0], -positionTarget[1] + position[1], 0;
+	Eigen::Vector3f drdt; drdt << velocity[0], velocity[1], 0;
+	Eigen::Vector3f waveDirection; waveDirection = position + objPtr->radius * (dr + 0.5 * drdt).normalized() - centerAUTD;
 
-	int amplitude = round(std::max(std::min(105 - 0.1 * (obj->position[2] - obj->positionTarget[2]) - 0.1 * obj->velocity[2] - 0.001 * obj->integral[2], 255.0), 0.0));
-	if (obj->isTracked == true)
+	int amplitude = round(std::max(std::min(105 - 0.1 * (position[2] - positionTarget[2]) - 0.1 * velocity[2] - 0.001 * integral[2], 255.0), 0.0));
+	if (objPtr->isTracked == true)
 	{
 		autd.AppendGainSync(autd::FocalPointGain::Create(100 * waveDirection));
 		autd.AppendModulationSync(autd::Modulation::Create((uint8_t)amplitude));
@@ -179,26 +181,26 @@ void ocs::PositionControlBySingleAUTD(FloatingObject* obj)
 	}
 }
 
-void ocs::DirectSemiPlaneWave(FloatingObject* obj, Eigen::VectorXi amplitudes)
+void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
 {
 	float outpor = 100;
-	Eigen::MatrixXf farPoints = centerAUTD + outpor * (obj->position.replicate(1, centerAUTD.cols()) - centerAUTD);
+	Eigen::MatrixXf farPoints = centerAUTD + outpor * (objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD);
 	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(farPoints, amplitudes));
 	autd.AppendModulation(autd::Modulation::Create(255));
 	Sleep(25);
 }
 
 //update the target position of the object so that the object follow the path
-void ocs::followPath(FloatingObject* obj)
+void ocs::followPath(FloatingObjectPtr objPtr)
 {
 	int latestNodeIndex = 0;
 	int nextNodeIndex = 1;
-	float tf = obj->timePath[obj->timePath.cols() - 1];
+	float tf = objPtr->timePath[objPtr->timePath.cols() - 1];
 	float initialTime = (float)timeGetTime() / 1000.0;
 	while (1)
 	{
 		float currentTime = (float)timeGetTime() / 1000.0 - initialTime;
-		if (currentTime > obj->timePath[nextNodeIndex])
+		if (currentTime > objPtr->timePath[nextNodeIndex])
 		{
 			latestNodeIndex++;
 			nextNodeIndex++;
@@ -211,14 +213,14 @@ void ocs::followPath(FloatingObject* obj)
 		else
 		{
 			//polynominal approximation of the path
-			Eigen::VectorXf latestNodeState(NUM_STATES); latestNodeState = obj->statePath.col(latestNodeIndex);
-			Eigen::VectorXf nextNodeState(NUM_STATES); nextNodeState = obj->statePath.col(nextNodeIndex);
-			Eigen::VectorXf latestNodeDerivative(NUM_STATES); latestNodeDerivative = obj->derivativePath.col(latestNodeIndex);
-			Eigen::VectorXf nextNodeDerivative(NUM_STATES); nextNodeDerivative = obj->derivativePath.col(nextNodeIndex);
-			Eigen::VectorXf latestNodeControl(NUM_AUTDS); latestNodeControl = obj->controlPath.col(latestNodeIndex);
-			Eigen::VectorXf nextNodeControl(NUM_AUTDS); nextNodeControl = obj->controlPath.col(nextNodeIndex);
-			float dT = currentTime - obj->timePath[latestNodeIndex];
-			float period = obj->timePath[nextNodeIndex] - obj->timePath[latestNodeIndex];
+			Eigen::VectorXf latestNodeState(NUM_STATES); latestNodeState = objPtr->statePath.col(latestNodeIndex);
+			Eigen::VectorXf nextNodeState(NUM_STATES); nextNodeState = objPtr->statePath.col(nextNodeIndex);
+			Eigen::VectorXf latestNodeDerivative(NUM_STATES); latestNodeDerivative = objPtr->derivativePath.col(latestNodeIndex);
+			Eigen::VectorXf nextNodeDerivative(NUM_STATES); nextNodeDerivative = objPtr->derivativePath.col(nextNodeIndex);
+			Eigen::VectorXf latestNodeControl(NUM_AUTDS); latestNodeControl = objPtr->controlPath.col(latestNodeIndex);
+			Eigen::VectorXf nextNodeControl(NUM_AUTDS); nextNodeControl = objPtr->controlPath.col(nextNodeIndex);
+			float dT = currentTime - objPtr->timePath[latestNodeIndex];
+			float period = objPtr->timePath[nextNodeIndex] - objPtr->timePath[latestNodeIndex];
 			float dS = dT / period;
 			Eigen::Matrix<float, NUM_STATES, 4> adjNodeMat; adjNodeMat << nextNodeState, nextNodeDerivative*period, latestNodeState, latestNodeDerivative * period;
 			Eigen::Matrix4f polyMat;
@@ -231,37 +233,36 @@ void ocs::followPath(FloatingObject* obj)
 			Eigen::Vector4f dSVec; dSVec << dS*dS*dS, dS*dS, dS, 1;
 			Eigen::VectorXf stateTarget = polyCoefficients * dSVec;
 			Eigen::VectorXf controlTarget = dS * nextNodeControl + (1 - dS) * latestNodeControl;
-			obj->positionTarget << stateTarget[0], stateTarget[1], stateTarget[2];
-			obj->velocityTarget << stateTarget[3], stateTarget[4], stateTarget[5];
+			objPtr->updateStatesTarget(stateTarget.block(0,0,0,2), stateTarget.block(0, 3, 0, 5));
 		}
 	}
 }
 
 //Legacy Module
 
-Eigen::VectorXf ocs::findDutySI(FloatingObject* obj)
+Eigen::VectorXf ocs::findDutySI(FloatingObjectPtr objPtr)
 {
-	Eigen::Vector3f dr = obj->position - obj->positionTarget;
+	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::VectorXf dutiesOffset(centerAUTD.cols()); dutiesOffset.setZero();
 	Eigen::VectorXf gainPSi(centerAUTD.cols()); gainPSi.setConstant(-0.75); gainPSi[0] = -1.0;
 	Eigen::VectorXf gainDSi(centerAUTD.cols()); gainDSi.setConstant(-1.3); gainDSi[0] = -1.8;
 	Eigen::VectorXf gainISi(centerAUTD.cols()); gainISi.setConstant(-0.01);
 	Eigen::VectorXf drRel = directionsAUTD.transpose() * dr;
-	Eigen::VectorXf dvRel = directionsAUTD.transpose() * obj->velocity;
-	Eigen::VectorXf diRel = directionsAUTD.transpose() * obj->integral;
+	Eigen::VectorXf dvRel = directionsAUTD.transpose() * objPtr->getVelocity();
+	Eigen::VectorXf diRel = directionsAUTD.transpose() * objPtr->getIntegral();
 	Eigen::VectorXf duties = dutiesOffset + gainPSi.asDiagonal() * drRel + gainDSi.asDiagonal() * dvRel;// +gainI.asDiagonal() * diRel;
 	return duties;
 }
 
-Eigen::VectorXf ocs::findDutyQPEq(FloatingObject* obj)
+Eigen::VectorXf ocs::findDutyQPEq(FloatingObjectPtr objPtr)
 {
-	Eigen::Vector3f dr = obj->position - obj->positionTarget;
+	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dutiesOffset(0, 0, 0);
 	Eigen::Vector3f gainPEq(-0.6, -0.6, -1.0);
 	Eigen::Vector3f gainDEq(-1.0, -1.0, -1.8);
 	Eigen::Vector3f gainIEq(0.0, 0.0, 0.0);
-	Eigen::MatrixXf directions2obj = (obj->position.replicate(1, centerAUTD.cols()) - centerAUTD).colwise().normalized();
-	Eigen::VectorXf f = dutiesOffset + gainPEq.asDiagonal() * dr + gainDEq.asDiagonal() * obj->averageVelocity() + gainIEq.asDiagonal() * obj->integral;
+	Eigen::MatrixXf directions2obj = (objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD).colwise().normalized();
+	Eigen::VectorXf f = dutiesOffset + gainPEq.asDiagonal() * dr + gainDEq.asDiagonal() * objPtr->averageVelocity() + gainIEq.asDiagonal() * objPtr->getIntegral();
 	Eigen::MatrixXf E = directions2obj.transpose() * directions2obj;
 	Eigen::VectorXf b = -directions2obj.transpose() * f;
 	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Ed = dlib::mat(E);
@@ -298,16 +299,16 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position)
 	return duty;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(FloatingObject* obj)
+Eigen::VectorXf ocs::FindDutyQP(FloatingObjectPtr objPtr)
 {
-	Eigen::Vector3f dr = obj->position - obj->positionTarget;
-	Eigen::Vector3f dv = obj->averageVelocity() - obj->velocityTarget;
+	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
+	Eigen::Vector3f dv = objPtr->averageVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f dutiesOffset(0, 0, 0);
 	Eigen::Vector3f gainPQp(-6e-3, -6e-3, -6e-3);
 	Eigen::Vector3f gainDQp(-22e-3, -22e-3, -22e-3);
 	Eigen::Vector3f gainIQp(-2e-4, -2e-4, -2e-4);
-	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * obj->integral - obj->gravityForce;
-	Eigen::MatrixXf posRel = obj->position.replicate(1, centerAUTD.cols()) - centerAUTD;
+	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * objPtr->getIntegral() - objPtr->gravityForce;
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD;
 	Eigen::MatrixXf F = arfModel::arf(posRel);
 	Eigen::MatrixXf Q = F.transpose() * F;
 	Eigen::VectorXf b = -F.transpose() * force;

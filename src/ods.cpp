@@ -42,7 +42,7 @@ bool ods::isInsideWorkSpace(Eigen::Vector3f pos)
 	return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
 }
 
-void ods::DeterminePositionByHSV(FloatingObject* obj, cv::Scalar lb, cv::Scalar ub)
+void ods::DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub)
 {
 	kinectApp.getColorBuffer(); kinectApp.getDepthBuffer();
 	//pre-processing
@@ -68,16 +68,16 @@ void ods::DeterminePositionByHSV(FloatingObject* obj, cv::Scalar lb, cv::Scalar 
 			float detectY = 1000 * detectPosition.Y;
 			float detectZ = 1000 * detectPosition.Z;
 			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + obj->radius) / detectR;
+			float outpor = (detectR + objPtr->radius) / detectR;
 			Eigen::Vector3f currentPosition(outpor * detectX, outpor * detectY, outpor * detectZ);
 			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
 			DWORD currentTime = timeGetTime();
-			obj->updateStates(currentTime, currentPosition);
+			objPtr->updateStates(currentTime, currentPosition);
 		}
 	}
 }
 
-void ods::DeterminePositionByBGR(FloatingObject* obj, cv::Scalar lb, cv::Scalar ub)
+void ods::DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub)
 {
 	kinectApp.getColorBuffer(); kinectApp.getDepthBuffer();
 	cv::Mat colorImage = cv::Mat(kinectApp.getColorHeight(), kinectApp.getColorWidth(), CV_8UC4, &kinectApp.colorBuffer[0]);
@@ -100,24 +100,24 @@ void ods::DeterminePositionByBGR(FloatingObject* obj, cv::Scalar lb, cv::Scalar 
 			float detectY = 1000 * detectPosition.Y;
 			float detectZ = 1000 * detectPosition.Z;
 			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + obj->radius) / detectR;
+			float outpor = (detectR + objPtr->radius) / detectR;
 			Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
 			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
 			DWORD currentTime = timeGetTime();
-			obj->updateStates(currentTime, currentPosition);
+			objPtr->updateStates(currentTime, currentPosition);
 		}
 		else
 		{
-			obj->isTracked = false;
+			objPtr->isTracked = false;
 		}
 	}
 	else
 	{
-		obj->isTracked = false;
+		objPtr->isTracked = false;
 	}
 }
 
-void ods::DeterminePositionByDepth(FloatingObject* obj)
+void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr)
 {
 	kinectApp.getDepthBuffer();
 	//=====Preprocessing=====
@@ -143,32 +143,32 @@ void ods::DeterminePositionByDepth(FloatingObject* obj)
 			float detectY = detectPosition.Y * 1000;
 			float detectZ = detectPosition.Z * 1000;
 			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + obj->radius) / detectR;
+			float outpor = (detectR + objPtr->radius) / detectR;
 			Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
 			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
 			if (isInsideWorkSpace(currentPosition))
 			{
-				obj->updateStates(currentTime, currentPosition);
-				obj->isTracked = true;
+				objPtr->updateStates(currentTime, currentPosition);
+				objPtr->isTracked = true;
 			}
 			else
 			{
-				obj->isTracked = false;
+				objPtr->isTracked = false;
 			}
 		}
 		else
 		{
-			obj->isTracked = false;
+			objPtr->isTracked = false;
 		}
 	}
 	else
 	{
-		obj->isTracked = false;
+		objPtr->isTracked = false;
 	}
 	cv::imshow("POSITION", maskedImage);
 }
 
-void ods::DeterminePositionByDepth(std::vector<FloatingObject> &objs)
+void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 {
 	kinectApp.getDepthBuffer();
 	//Masking
@@ -215,7 +215,7 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObject> &objs)
 		}
 		std::cout << std::endl;
 		*/
-		for (auto itrObj = objs.begin(); itrObj != objs.end(); itrObj++)
+		for (auto itrObj = objPtrs.begin(); itrObj != objPtrs.end(); itrObj++)
 		{
 			if (cameraPoints.empty())
 			{
@@ -227,7 +227,7 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObject> &objs)
 			for (auto itrP = cameraPoints.begin(); itrP != cameraPoints.end(); itrP++, itrDist++)
 			{
 				Eigen::Vector3f posTemp(1000 * (*itrP).X, 1000 * (*itrP).Y, 1000 * (*itrP).Z);
-				float distTemp = ((*itrObj).position - dcmKinect2Global * posTemp - positionKinect).squaredNorm();
+				float distTemp = ((*itrObj)->getPosition() - dcmKinect2Global * posTemp - positionKinect).squaredNorm();
 				*itrDist = distTemp;
 			}
 			auto i = std::distance(dists.begin(), std::min_element(dists.begin(), dists.end()));
@@ -239,17 +239,17 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObject> &objs)
 				float detectY = detectPosition.Y * 1000;
 				float detectZ = detectPosition.Z * 1000;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-				float outpor = (detectR + (*itrObj).radius) / detectR;
+				float outpor = (detectR + (*itrObj)->radius) / detectR;
 				Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
 				currentPosition = dcmKinect2Global * currentPosition + positionKinect;
 				if (isInsideWorkSpace(currentPosition))
 				{
-					(*itrObj).updateStates(currentTime, currentPosition);
-					(*itrObj).isTracked = true;
+					(*itrObj)->updateStates(currentTime, currentPosition);
+					(*itrObj)->isTracked = true;
 				}
 				else
 				{
-					(*itrObj).isTracked = false;
+					(*itrObj)->isTracked = false;
 				}
 			}
 		}

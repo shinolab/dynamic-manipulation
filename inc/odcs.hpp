@@ -117,6 +117,8 @@ public:
 
 	Eigen::VectorXf FindDutyQP(FloatingObjectPtr objPtr);
 
+	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
+
 	//Find Duty Module (with offset)
 
 	void FindDutyBruteForce(Eigen::VectorXf *const duties, Eigen::MatrixXf *const directions, Eigen::Vector3f pos, Eigen::Vector3f force);

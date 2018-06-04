@@ -64,14 +64,14 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f posit
 {
 	std::lock_guard<std::mutex> lock(mtxState);
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0; // [sec]
-	this->velocity = (positionNew - position) / dt;
-	this->dTBuffer.push_back(dt);
-	this->dTBuffer.pop_front();
-	this->velocityBuffer.push_back(velocity);
-	this->velocityBuffer.pop_front();
-	if (this->isStable() && isTracked)
+	velocity = (positionNew - position) / dt;
+	dTBuffer.push_back(dt);
+	dTBuffer.pop_front();
+	velocityBuffer.push_back(velocity);
+	velocityBuffer.pop_front();
+	if (isTracked)
 	{
-		this->integral += (0.5 * (positionNew + position) - positionTarget) * dt;
+		integral += (0.5 * (positionNew + position) - positionTarget) * dt;
 	}
 	position = positionNew;
 	lastDeterminationTime = determinationTime;

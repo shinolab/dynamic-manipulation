@@ -9,11 +9,11 @@
 
 void odcs::Initialize()
 {
-	ocs.Initialize();
+	ods.Initialize();
 	ocs.Initialize();
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> objPtrs)
 {
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
@@ -28,9 +28,10 @@ void odcs::StartControl(std::vector<FloatingObjectPtr> &objPtrs)
 {
 	thread_control = std::thread([this, &objPtrs](){
 		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
+		Sleep(5);
 		while (1)
 		{
-			ControlLoop(objPtrs);
+			this->ControlLoop(objPtrs);
 			auto key = cv::waitKey(1);
 			if (key == 'q')
 			{

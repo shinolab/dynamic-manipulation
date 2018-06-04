@@ -156,13 +156,12 @@ class odcs
 public:
 	void Initialize();
 	void StartControl(std::vector<FloatingObjectPtr> &objPtrs);
+	void ControlLoop(std::vector<FloatingObjectPtr> objPtrs);
 	void Close();
-private:
 	ods ods;
 	ocs ocs;
 	std::thread thread_control;
 private:
-	void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
 };
 
 #endif

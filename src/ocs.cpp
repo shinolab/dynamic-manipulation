@@ -330,30 +330,21 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dv = objPtr->averageVelocity() - objPtr->getVelocityTarget();
-	Eigen::Vector3f dutiesOffset(0, 0, 0);
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD;
+	Eigen::MatrixXf F = arfModel::arf(posRel);
 	Eigen::Vector3f gainPQp(-6e-3, -6e-3, -6e-3);
 	Eigen::Vector3f gainDQp(-22e-3, -22e-3, -22e-3);
 	Eigen::Vector3f gainIQp(-2e-4, -2e-4, -2e-4);
-	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * objPtr->getIntegral() - objPtr->gravityForce;
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD;
-	Eigen::MatrixXf F = arfModel::arf(posRel);
-	Eigen::MatrixXf Q = F.transpose() * F;
-	Eigen::VectorXf b = -F.transpose() * force;
-	Eigen::VectorXf duty(NUM_AUTDS);
-	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
-	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
-	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::ones_matrix<float>(centerAUTD.cols(), 1);
-	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(centerAUTD.cols(), 1);
-	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
-	for (int index = 0; index < NUM_AUTDS; index++)
-	{
-		duty[index] = u(index, 0);
-	}
-	return duty;
-
-
+	Eigen::Vector3f force = gainPQp.asDiagonal() * dr
+		+ gainDQp.asDiagonal() * dv
+		+ gainIQp.asDiagonal() * objPtr->getIntegral()
+		- objPtr->gravityForce;
+		-0.5 * F * Eigen::VectorXf::Ones(F.cols());
+		std::cout << "F : " << std::endl << F << std::endl;
+	Eigen::VectorXf duties =  F.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(force) - 0.5 * Eigen::VectorXf::Ones(F.cols());
+	return duties;
 }
+
 
 /*
 int ocs::SetPath(Eigen::Vector3f initialPosition, Eigen::Vector3f finalPosition, FloatingObject* obj)

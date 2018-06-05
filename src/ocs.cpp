@@ -338,10 +338,9 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 	Eigen::Vector3f force = gainPQp.asDiagonal() * dr
 		+ gainDQp.asDiagonal() * dv
 		+ gainIQp.asDiagonal() * objPtr->getIntegral()
-		- objPtr->gravityForce;
-		-0.5 * F * Eigen::VectorXf::Ones(F.cols());
-		std::cout << "F : " << std::endl << F << std::endl;
-	Eigen::VectorXf duties =  F.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(force) - 0.5 * Eigen::VectorXf::Ones(F.cols());
+		- objPtr->gravityForce
+		- 0.5 * F.rowwise().sum();
+	Eigen::VectorXf duties =  F.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(force) + 0.5 * Eigen::VectorXf::Ones(F.cols());
 	return duties;
 }
 

@@ -14,14 +14,13 @@
 
 int main()
 {
-
 	std::cout << "Initializing..." << std::endl;
 	odcs odcs;
 	odcs.Initialize();
 	std::vector<FloatingObjectPtr> objPtrs;
-	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0,0,1350))));
+	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350))));
 	//objs.push_back(FloatingObject(Eigen::Vector3f(-250, 100, 1485)));
-	
+
 	odcs.StartControl(objPtrs);
 	
 	//write your application process here.

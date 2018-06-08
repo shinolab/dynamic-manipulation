@@ -1,11 +1,12 @@
-#include "Projector.hpp"
+// *Caution* you may need to change the settings of characterset to run the program.
+// Use Unicode character set.
+
 #include "odcs.hpp"
-#include "arfModel.hpp"
 #include <Eigen\Geometry>
 #include <iostream>
 #include <sstream>
-#include <fstream>
-#include <algorithm>
+#include <string>
+#include <vector>
 #include <Windows.h>
 
 #define _USE_MATH_DEFINES
@@ -15,7 +16,7 @@
 
 int main()
 {
-	HANDLE pipeHandle = CreateFile(L"\\\\.\\pipe\\mynamedpipe", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE pipeHandle = CreateFileW(L"\\\\.\\pipe\\mynamedpipe", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (pipeHandle == INVALID_HANDLE_VALUE)
 	{
 		std::cout << "Failed to create pipe." << std::endl;
@@ -32,7 +33,7 @@ int main()
 	//objs.push_back(FloatingObject(Eigen::Vector3f(-250, 100, 1485)));
 
 	odcs.StartControl(objPtrs);
-	
+
 	//write your application process here.
 
 	do
@@ -57,9 +58,9 @@ int main()
 		Eigen::Vector3f vec = Eigen::Map<Eigen::Vector3f>(&v[0]);
 		objPtrs[0]->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
 		std::cout << "target position is updated to : " << vec.transpose() << std::endl;
-		
+
 	} while (strcmp(buffer, "") != 0);
-	
+
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	odcs.Close();

@@ -31,8 +31,7 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 #Dlib
 include_directories(deps/dlib-19.0)
 
-add_executable(DynamicLevitation
- src/main.cpp
+add_library(DynamicLevitation STATIC
  src/odcs.cpp
  inc/additionalGain.hpp
  src/additionalGain.cpp
@@ -51,3 +50,5 @@ add_executable(DynamicLevitation
  )
 
 target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} )
+
+add_subdirectory(sample)

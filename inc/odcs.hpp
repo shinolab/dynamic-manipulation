@@ -14,8 +14,6 @@
 
 #pragma comment (lib, "winmm")
 
-
-
 class FloatingObject{
 public:
 	Eigen::Vector3f getPosition();
@@ -84,6 +82,8 @@ public:
 	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
 	void DeterminePositionByDepth(FloatingObjectPtr objPtr);
+
+	void DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr);
 
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
 

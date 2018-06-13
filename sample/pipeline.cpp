@@ -1,6 +1,3 @@
-// *Caution* you may need to change the settings of characterset to run the program.
-// Use Unicode character set.
-
 #include "odcs.hpp"
 #include <Eigen\Geometry>
 #include <iostream>

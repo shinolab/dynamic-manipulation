@@ -24,6 +24,8 @@ public:
 	//fields to store body index
 	std::vector<BYTE> bodyIndexBuffer;
 
+	std::vector<IBody*> pBodies;
+
 private:
 
 	CComPtr<IKinectSensor> kinect;
@@ -37,6 +39,8 @@ private:
 	CComPtr<IInfraredFrameReader> infraredFrameReader;
 
 	CComPtr<IBodyIndexFrameReader> bodyIndexFrameReader = nullptr;
+
+	CComPtr<IBodyFrameReader> bodyFrameReader = nullptr;
 
 	int colorWidth;
 	int colorHeight;
@@ -81,6 +85,8 @@ public:
 
 	CameraSpacePoint getPositionAtDepthPixel(int x, int y);
 
+	DepthSpacePoint convertPositionToDepthPixel(CameraSpacePoint csp);
+
 	bool isReliableDepth(int depth);
 
 	bool isReliablePosition(CameraSpacePoint pos);
@@ -88,6 +94,8 @@ public:
 	bool isInsideColorView(int x, int y);
 
 	bool isInsideDepthView(int x, int y);
+
+	HRESULT getBodies();
 };
 
 #endif

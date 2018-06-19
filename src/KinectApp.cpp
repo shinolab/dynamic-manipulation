@@ -90,12 +90,11 @@ void KinectApp::initialize()
 
 	bodyIndexBuffer.resize(bodyIndexHeight * bodyIndexWidth);
 
-	colors[0] = cv::Scalar(255, 0, 0);
-	colors[1] = cv::Scalar(0, 255, 0);
-	colors[2] = cv::Scalar(0, 0, 255);
-	colors[3] = cv::Scalar(255, 255, 0);
-	colors[4] = cv::Scalar(255, 0, 255);
-	colors[5] = cv::Scalar(0, 255, 255);
+	//-----initialization for body info-----
+	CComPtr<IBodyFrameSource> pBodyFrameSource;
+	kinect->get_BodyFrameSource(&pBodyFrameSource);
+	pBodyFrameSource->OpenReader(&bodyFrameReader);
+	pBodies.resize(BODY_COUNT);
 }
 
 HRESULT KinectApp::getColorBuffer()
@@ -203,6 +202,13 @@ CameraSpacePoint KinectApp::getPositionAtDepthPixel(int x, int y)
 	return position;
 }
 
+DepthSpacePoint KinectApp::convertPositionToDepthPixel(CameraSpacePoint csp)
+{
+	DepthSpacePoint dsp;
+	coordinateMapper->MapCameraPointToDepthSpace(csp, &dsp);
+	return dsp;
+}
+
 bool KinectApp::isReliableDepth(int depth)
 {
 	return (depth < depthMaxReliableDistance) && (depth > depthMinReliableDistance);
@@ -221,6 +227,17 @@ bool KinectApp::isInsideColorView(int x, int y)
 bool KinectApp::isInsideDepthView(int x, int y)
 {
 	return (0 < x) && (x < depthWidth) && (0 < y) && (y < depthHeight);
+}
+
+HRESULT KinectApp::getBodies()
+{
+	CComPtr<IBodyFrame> pBodyFrame = nullptr;
+	HRESULT hr = bodyFrameReader->AcquireLatestFrame(&pBodyFrame);
+	if (SUCCEEDED(hr))
+	{
+		hr = pBodyFrame->GetAndRefreshBodyData(BODY_COUNT, &pBodies[0]);
+	}
+	return hr;
 }
 
 #endif

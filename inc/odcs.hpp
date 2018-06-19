@@ -89,6 +89,8 @@ public:
 
 	void GetMarkerPosition();
 
+	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
+
 };
 
 class ocs

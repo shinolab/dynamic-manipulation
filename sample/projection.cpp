@@ -55,7 +55,7 @@ void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv:
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
 		scale, 0, (imagePoints2d[0].x - 0.5 * scale * image.cols),
 		0, scale, (imagePoints2d[0].y - 0.5 * scale * image.rows) + 10);
-	cv::warpAffine(image, dst, affine, dst.size());
+	cv::warpAffine(image, dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 	/*
 	std::vector<cv::Point> originalImageCorners = {cv::Point(0,0), cv::Point(img0.cols, 0), cv::Point(0, img0.rows), cv::Point(img0.cols, img0.rows)};
 	cv::Mat perspectiveMat = cv::getPerspectiveTransform(originalImageCorners, imagePoints2d);

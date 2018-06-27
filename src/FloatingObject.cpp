@@ -52,11 +52,13 @@ Eigen::Vector3f FloatingObject::getIntegral()
 
 Eigen::Vector3f FloatingObject::getPositionTarget()
 {
+	std::lock_guard<std::mutex> lock(mtxStateTarget);
 	return positionTarget;
 }
 
 Eigen::Vector3f FloatingObject::getVelocityTarget()
 {
+	std::lock_guard<std::mutex> lock(mtxStateTarget);
 	return velocityTarget;
 }
 

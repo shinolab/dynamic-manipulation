@@ -131,6 +131,6 @@ int main()
 
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
-	//odcs.Close();
+	odcs.Close();
 	return 0;
 }

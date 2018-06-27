@@ -20,7 +20,7 @@ int main()
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs.Initialize();
 	std::vector<FloatingObjectPtr> objPtrs;
-	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 200, 1500))));
+	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350))));
 	//objs.push_back(FloatingObject(Eigen::Vector3f(-250, 100, 1485)));
 	odcs.StartControl(objPtrs);
 	/*

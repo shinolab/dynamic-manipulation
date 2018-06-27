@@ -18,3 +18,7 @@ target_link_libraries(pipeline DynamicLevitation)
 add_executable(interaction interaction.cpp)
 include_directories(../inc)
 target_link_libraries(interaction DynamicLevitation)
+
+add_executable(projection projection.cpp)
+include_directories(../inc)
+target_link_libraries(projection DynamicLevitation)

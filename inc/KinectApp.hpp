@@ -4,8 +4,7 @@
 #include <iostream>
 #include <Kinect.h>
 #include <atlbase.h>
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
+#include <vector>
 
 class KinectApp
 {
@@ -53,8 +52,7 @@ private:
 	int infraredHeight;
 	int bodyIndexWidth;
 	int bodyIndexHeight;
-	cv::Scalar colors[6];
-
+	
 public:
 	
 	void initialize();

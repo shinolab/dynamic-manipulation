@@ -1,10 +1,9 @@
 #ifndef kinectApp_
 #define kinectApp_
+#include <iostream>
+#include <sstream>
 #include <atlbase.h>
 #include <Kinect.h>
-#include <opencv2\opencv.hpp>
-#include <opencv2\highgui\highgui.hpp>
-
 #include "KinectApp.hpp"
 
 #define _USE_MATH_DEFINES
@@ -31,7 +30,7 @@ void KinectApp::initialize()
 	BOOLEAN isOpen = false;
 	ERROR_CHECK(kinect->get_IsOpen(&isOpen));
 	if (!isOpen){
-		throw std::runtime_error("Kinect‚ªŠJ‚¯‚Ü‚¹‚ñ");
+		throw std::runtime_error("cannot open Kinect");
 	}
 
 	//-----prepare color reader and storage-----

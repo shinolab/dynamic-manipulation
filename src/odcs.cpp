@@ -1,6 +1,9 @@
 #include <thread>
 #include <vector>
 #include <Eigen\Dense>
+#include <opencv2\core.hpp>
+#include <opencv2\highgui.hpp>
+#define NOMINMAX
 #include "odcs.hpp"
 
 #define _USE_MATH_DEFINES

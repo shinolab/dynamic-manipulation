@@ -3,13 +3,15 @@
 
 #include "autd3.hpp"
 #include "KinectApp.hpp"
+#include <opencv2/core.hpp>
 //#include "engine.h"
 #include <queue>
 #include <vector>
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <Eigen\Dense>
+#include <Eigen/Dense>
+#define NOMINMAX
 #include <Windows.h>
 
 #pragma comment (lib, "winmm")

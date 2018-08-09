@@ -1,5 +1,5 @@
-#define SUBDISPLAY_WIDTH 1920
-#define SUBDISPLAY_HEIGHT 1080
+#define SUBDISPLAY_WIDTH 1024
+#define SUBDISPLAY_HEIGHT 768
 #define MAINDISPLAY_WIDTH 1366
 #define MAINDISPLAY_HEIGHT 768
 
@@ -39,27 +39,28 @@ void imshowPopUp(const char* windowName, cv::Mat image, int posX, int posY)
 
 void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv::Mat image)
 {
-	cv::Point3f objectPosition(posKinect.x(), posKinect.y(), posKinect.z() - 75);
+	cv::Point3f objectPosition(posKinect.x(), posKinect.y(), posKinect.z());
 	std::vector<cv::Point3f> imagePoints3d = { objectPosition };
 	//here comes conversion from object position to object points
 	std::vector<cv::Point2f> imagePoints2d;
 	cv::Mat internalParam = (cv::Mat_<float>(3, 3) <<
-		1244, 0, SUBDISPLAY_WIDTH / 2,
-		0, 1069, SUBDISPLAY_HEIGHT + 148,
+		734, 0, 510,
+		0, 741, 900,
 		0, 0, 1);
-	cv::Mat rvec = (cv::Mat_<float>(3, 1) << 0.02374, -0.002134, -3.1495);
-	cv::Mat tvec = (cv::Mat_<float>(3, 1) << 57.4, -617.5, 189.95);
+	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << (int)0.03965, (int)-0.0151, (int)0.01114, (int)-0.0003963, 0);
+	cv::Mat rvec = (cv::Mat_<float>(3, 1) << (int)-0.0005831, (int)-0.04041, (int)3.1242);
+	cv::Mat tvec = (cv::Mat_<float>(3, 1) << (int)25.1, (int)-764.8, (int)154.7);
 
 	cv::Point2f centerImage;
-	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, cv::Mat(), imagePoints2d);
+	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, distCoeff, imagePoints2d);
 	
 	cv::Mat dst(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
-	float scale = 0.22 * 1000 / objectPosition.z;
-	float zscale = 1000 / objectPosition.z;
-	cv::Rect roi(cv::Point(0 * image.cols, 0),cv::Point(0.75 * image.cols, 0.8 * image.rows));
+	float scale = 1.0;  1.0 * 1000.0 / objectPosition.z;
+	float zscale = 1000.0 / objectPosition.z;
+	cv::Rect roi(cv::Point(0 * image.cols, 0),cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
-		scale, 0, (imagePoints2d[0].x - 0.5 * scale * image.cols + 210 * zscale),
-		0, scale, (imagePoints2d[0].y - 0.5 * scale * image.rows + 120 * zscale));
+		(int)scale, 0, ((int)(imagePoints2d[0].x - 0.5 * scale * image.cols + 0 * zscale)),
+		0, (int)scale, ((int)(imagePoints2d[0].y - 0.5 * scale * image.rows - 0 * zscale)));
 	cv::warpAffine(image(roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 	/*
 	std::vector<cv::Point> originalImageCorners = {cv::Point(0,0), cv::Point(img0.cols, 0), cv::Point(0, img0.rows), cv::Point(img0.cols, img0.rows)};
@@ -181,71 +182,107 @@ void runInteractionLoop(Eigen::Affine3f affineKinect2Global, std::vector<Floatin
 
 int main()
 {
-
+	std::ofstream ofs_basic("20180806_averagingTime7_log.csv");
+	ofs_basic << "frame#, x, y, z" << std::endl;
 	//initialization
 	odcs odcs;
 	odcs.Initialize();
 	Eigen::Affine3f affineKinect2Global = odcs.ods.getAffineKinect2Global();
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
 	std::vector<FloatingObjectPtr> objPtrs;
-	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1500))));
-	cv::Mat image;// = cv::imread("img/shinolab.jpg");
+	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1600))));
+	cv::Mat image = cv::imread("img/shinolab2.jpg");
 	cv::VideoCapture cap("video/bird2.mp4");
 	//start control thread.
 	odcs.StartControl(objPtrs);
 
 	//start projection thread.
-	std::thread threadProjection([&image, &cap, &objPtrs, &affineGlobal2Kinect]{
+	std::thread threadProjection([&image, &cap, &objPtrs, &affineGlobal2Kinect, &ofs_basic]{
 		cv::Mat blank(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
 		imshowPopUp("FULL", blank, MAINDISPLAY_WIDTH, 0);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
 		int count_frame = 0;
 		while (1)
 		{
-			Eigen::Vector3f objPosKinect = affineGlobal2Kinect * objPtrs[0]->getPositionTarget();
-			cap >> image;
+			int num_average = 7
+;
+			Eigen::Vector3f objPosKinect(0, 0, 0);
+			for (int iAve = 0; iAve < num_average; iAve++)
+			{
+				objPosKinect += affineGlobal2Kinect * objPtrs[0]->getPosition();
+				cv::waitKey(25);
+			}
+			objPosKinect /= num_average;
+			ofs_basic << count_frame << "," << objPosKinect.x() << ", " << objPosKinect.y() << ", " << objPosKinect.z() << std::endl;
+			//cap >> image;
 			projectImageOnObject("FULL", objPosKinect, image);
-			auto key = cv::waitKey(25);
+			auto key = cv::waitKey(1);
+			count_frame++;
+			/*
 			count_frame++;
 			if (count_frame >= num_frame / 2)
 			{
-				cap.set(cv::CAP_PROP_POS_FRAMES, 0);
-				count_frame = 0;
+			cap.set(cv::CAP_PROP_POS_FRAMES, 0);
+			count_frame = 0;
 			}
+
+			*/
 			if (key == 'q')
 			{
 				break;
 			}
 		}
 	});
-
-	
-	float lengthX = 350;
+	getchar();
+	float lengthX = 400;
 	float offsetX = 0;
-	float offsetY = 100;
-	int period = 18000;
+	float offsetY = 0;
+	float offsetZ = 1600;
+	int period = 10000;
 	Sleep(40000);
-	std::ofstream ofs("projection_log.csv");
+	std::ofstream ofs("20180723_projection_log_step5.csv");
 	ofs << "time, x, y, z, v_x, v_y, v_z, I_x, I_y, I_z, x_tgt, y_tgt, z_tgt, v_x, v_y, v_z, u0, u1, u2, u3, u4" << std::endl;
 	DWORD initialTime = timeGetTime();
 	DWORD loopPeriod = 30;
-	while ((timeGetTime()-initialTime) < 1 * period)
+	while ((timeGetTime()-initialTime) < 2 * period)
 	{
 		DWORD beginningOfLoop = timeGetTime();
-		float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
-		float x = lengthX * sinf(phase) + offsetX;
-		float v = 2 * M_PI / period * 1000 * lengthX * cosf(phase);
-		objPtrs[0]->updateStatesTarget(Eigen::Vector3f(x, offsetY, 1500), Eigen::Vector3f(v, 0, 0));
+		//float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
+		DWORD t = beginningOfLoop - initialTime;
+		float x, y, z, vx, vy, vz;
+		switch(t / period)
+		{
+		case 0:
+			vx = 0; vy = 0; vz = 0;
+			x = lengthX;  y = 0; z = offsetZ; 
+			break;
+		case 1:
+			vx = 0; vy = 0; vz = 0;
+			x = 0;  y = lengthX; z = offsetZ;
+			break;
+		case 2:
+			vx = 0; vy = 0; vz = 0;
+			x = 0;  y = 0; z = offsetZ + lengthX;
+			break;
+		case 3:
+			vx = 0; vy = 0; vz = 0;
+			x = 0;  y = 0; z = offsetZ;
+			break;
+		default:
+			vx = 0; vy = 0; vz = 0;
+			x = offsetX; y = offsetY; z = offsetZ;
+		}
+		objPtrs[0]->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
 		Eigen::Vector3f currentPosition = objPtrs[0]->getPosition();
 		ofs << timeGetTime() - initialTime << ", " << currentPosition.x() << ", " << currentPosition.y() << ", " << currentPosition.z() << ", "
-			<< x << ", 0, 0," << v << ", 0, 0" << std::endl;
+			<< x << ", " << y << "," << z << ", " << vx << ", " << vy << ", " << vz << std::endl;
 		DWORD loopTime = timeGetTime() - beginningOfLoop;
 		if (loopTime < loopPeriod)
 		{
 			Sleep(loopPeriod - loopTime);
 		}
 	}
-	objPtrs[0]->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, 1500), Eigen::Vector3f(0, 0, 0));
+	objPtrs[0]->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
 	//start interaction thread.
 	//interaction sequence
@@ -254,7 +291,7 @@ int main()
 	bool isGrabbed = false;
 	DWORD timeGrabbed;
 	const float distThreshold = 500;
-	const int timeThreshold = 1000;
+	const int timeThreshold = 1500;
 	std::cout << "initialization completed." << std::endl;
 	while (timeGetTime() - initialTime < 90000)
 	{

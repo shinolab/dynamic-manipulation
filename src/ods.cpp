@@ -178,7 +178,7 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
 		cv::Mat maskedImage;
-		//cv::imshow("Raw", depthImageUc8); cv::waitKey(1);
+		cv::imshow("Raw", depthImageUc8); cv::waitKey(1);
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
 		if (objPtr->isTracked)
 		{
@@ -195,18 +195,36 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 		//cv::imshow("ROI-masked", maskedImage);
 		//cv::waitKey(1);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-
-		cv::Mat imgOpened;
-		cv::Mat strElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+		cv::imshow("ROI-masked", maskedImage);
 
 		//detect position of the object
-
 		cv::Moments mu = cv::moments(maskedImage, true);
 		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
 
 		if (kinectApp.isInsideDepthView(center.x, center.y))
 		{
-			CameraSpacePoint detectPosition = kinectApp.getPositionAtDepthPixel(center.x, center.y);
+			std::cout << center.x << ", " << center.y << std::endl;
+			CameraSpacePoint detectPosition;
+			int capcount = 0;
+			for (int ix = -3; ix <= 3; ix++)
+			{
+				for (int iy = -3; iy <= 3; iy++)
+				{
+					CameraSpacePoint postemp = kinectApp.getPositionAtDepthPixel(center.x, center.y);
+					if (kinectApp.isReliablePosition(postemp))
+					{
+						detectPosition.X += postemp.X;
+						detectPosition.Y += postemp.Y;
+						detectPosition.Z += postemp.Z;
+						capcount++;
+					}
+				}
+			}
+			std::cout << "capcount :" << capcount << " ";
+			detectPosition.X /= capcount;
+			detectPosition.Y /= capcount;
+			detectPosition.Z /= capcount;
+			//CameraSpacePoint detectPosition = kinectApp.getPositionAtDepthPixel(center.x, center.y);
 			DWORD currentTime = timeGetTime();
 			if (kinectApp.isReliablePosition(detectPosition))
 			{
@@ -215,8 +233,8 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 				float detectZ = detectPosition.Z * 1000;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
-				currentPosition = dcmKinect2Global * currentPosition + positionKinect;
+				Eigen::Vector3f currentPosition(outpor * detectX, outpor * detectY, outpor * detectZ);
+				currentPosition = affineKinect2Global * currentPosition;
 				if (isInsideWorkSpace(currentPosition))
 				{
 					objPtr->updateStates(currentTime, currentPosition);
@@ -236,12 +254,8 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 		{
 			objPtr->isTracked = false;
 		}
-
-
 	}
-	
 }
-
 
 void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 {

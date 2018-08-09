@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -32,7 +33,7 @@ int main()
 	bool isGrabbed = false;
 	DWORD timeGrabbed;
 	const float distThreshold = 500;
-	const int timeThreshold = 3000;
+	const int timeThreshold = 1500;
 	std::cout << "initialization completed." << std::endl;
 	while (1)
 	{

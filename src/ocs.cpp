@@ -304,9 +304,9 @@ Eigen::VectorXf ocs::FindDutyQP(FloatingObjectPtr objPtr)
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dv = objPtr->averageVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f dutiesOffset(0, 0, 0);
-	Eigen::Vector3f gainPQp(-3e-2, -3e-2, -3e-2);
-	Eigen::Vector3f gainDQp(-11e-2, -11e-2, -11e-2);
-	Eigen::Vector3f gainIQp(-5e-4, -5e-4, -5e-4);
+	Eigen::Vector3f gainPQp(-6e-3, -6e-3, -6e-3);
+	Eigen::Vector3f gainDQp(-22e-3, -22e-3, -22e-3);
+	Eigen::Vector3f gainIQp(0e-4, 0e-4, -2e-4);
 	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * objPtr->getIntegral() - objPtr->gravityForce;
 	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD;
 	Eigen::MatrixXf F = arfModel::arf(posRel);

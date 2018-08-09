@@ -191,6 +191,11 @@ CameraSpacePoint KinectApp::getPositionAtColorPixel(int x, int y)
 	return cameraSpace[index];
 }
 
+UINT16 KinectApp::getDepthAtDepthPixel(int x, int y)
+{
+	return depthBuffer[y * depthWidth + x];
+}
+
 CameraSpacePoint KinectApp::getPositionAtDepthPixel(int x, int y)
 {
 	DepthSpacePoint depthPoint; depthPoint.X = x; depthPoint.Y = y;

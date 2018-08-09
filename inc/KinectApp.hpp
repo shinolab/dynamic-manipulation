@@ -79,6 +79,8 @@ public:
 
 	UINT16 getDepthAtColorPixel(int x, int y);
 
+	UINT16 getDepthAtDepthPixel(int x, int y);
+
 	CameraSpacePoint getPositionAtColorPixel(int x, int y);
 
 	CameraSpacePoint getPositionAtDepthPixel(int x, int y);

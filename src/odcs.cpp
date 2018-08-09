@@ -21,7 +21,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> objPtrs)
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
 		ods.DeterminePositionByDepthWithROI(*itr);
-		Eigen::VectorXf duties = ocs.FindDutyQP((*itr)) / objPtrs.size();
+		Eigen::VectorXf duties = ocs.FindDutyQP((*itr)) * objPtrs.size();
 		Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), amplitudes);
 	}

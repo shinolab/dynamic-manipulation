@@ -44,23 +44,23 @@ void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv:
 	//here comes conversion from object position to object points
 	std::vector<cv::Point2f> imagePoints2d;
 	cv::Mat internalParam = (cv::Mat_<float>(3, 3) <<
-		734, 0, 510,
-		0, 741, 900,
+		771, 0, 498,
+		0, 771, 886,
 		0, 0, 1);
-	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << (int)0.03965, (int)-0.0151, (int)0.01114, (int)-0.0003963, 0);
-	cv::Mat rvec = (cv::Mat_<float>(3, 1) << (int)-0.0005831, (int)-0.04041, (int)3.1242);
-	cv::Mat tvec = (cv::Mat_<float>(3, 1) << (int)25.1, (int)-764.8, (int)154.7);
+	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << 0, 0, 0, 0, 0);
+	cv::Mat rvec = (cv::Mat_<float>(3, 1) << 0.02436, 0.01095, 3.131);
+	cv::Mat tvec = (cv::Mat_<float>(3, 1) << 39.9, -768.8, 209.8);
 
 	cv::Point2f centerImage;
 	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, distCoeff, imagePoints2d);
 	
 	cv::Mat dst(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
-	float scale = 1.0;  1.0 * 1000.0 / objectPosition.z;
+	float scale = 1.0 * 1000.0 / objectPosition.z;
 	float zscale = 1000.0 / objectPosition.z;
 	cv::Rect roi(cv::Point(0 * image.cols, 0),cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
-		(int)scale, 0, ((int)(imagePoints2d[0].x - 0.5 * scale * image.cols + 0 * zscale)),
-		0, (int)scale, ((int)(imagePoints2d[0].y - 0.5 * scale * image.rows - 0 * zscale)));
+		scale, 0, ((int)(imagePoints2d[0].x - 0.5 * scale * image.cols + 1.0 * zscale)),
+		0, scale, ((int)(imagePoints2d[0].y - 0.5 * scale * image.rows - 1.0 * zscale)));
 	cv::warpAffine(image(roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 	/*
 	std::vector<cv::Point> originalImageCorners = {cv::Point(0,0), cv::Point(img0.cols, 0), cv::Point(0, img0.rows), cv::Point(img0.cols, img0.rows)};
@@ -182,8 +182,6 @@ void runInteractionLoop(Eigen::Affine3f affineKinect2Global, std::vector<Floatin
 
 int main()
 {
-	std::ofstream ofs_basic("20180806_averagingTime7_log.csv");
-	ofs_basic << "frame#, x, y, z" << std::endl;
 	//initialization
 	odcs odcs;
 	odcs.Initialize();
@@ -197,25 +195,22 @@ int main()
 	odcs.StartControl(objPtrs);
 
 	//start projection thread.
-	std::thread threadProjection([&image, &cap, &objPtrs, &affineGlobal2Kinect, &ofs_basic]{
+	std::thread threadProjection([&image, &cap, &objPtrs, &affineGlobal2Kinect](){
 		cv::Mat blank(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
 		imshowPopUp("FULL", blank, MAINDISPLAY_WIDTH, 0);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
 		int count_frame = 0;
+		int num_average = 7;
+		Eigen::MatrixXf posBuffer(3, num_average);
+		unsigned int colcount = 0;
 		while (1)
 		{
-			int num_average = 7
-;
-			Eigen::Vector3f objPosKinect(0, 0, 0);
-			for (int iAve = 0; iAve < num_average; iAve++)
-			{
-				objPosKinect += affineGlobal2Kinect * objPtrs[0]->getPosition();
-				cv::waitKey(25);
-			}
-			objPosKinect /= num_average;
-			ofs_basic << count_frame << "," << objPosKinect.x() << ", " << objPosKinect.y() << ", " << objPosKinect.z() << std::endl;
+			DWORD initTimeLoop = timeGetTime();
+			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * objPtrs[0]->getPosition();
+			colcount++;
 			//cap >> image;
-			projectImageOnObject("FULL", objPosKinect, image);
+			projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
+			std::cout << posBuffer.rowwise().sum().transpose() << std::endl; ;
 			auto key = cv::waitKey(1);
 			count_frame++;
 			/*
@@ -225,29 +220,28 @@ int main()
 			cap.set(cv::CAP_PROP_POS_FRAMES, 0);
 			count_frame = 0;
 			}
-
 			*/
-			if (key == 'q')
-			{
-				break;
-			}
+			if (key == 'q') { break; }
+			int loopTime = (timeGetTime() - initTimeLoop);
+			if (loopTime < 30) { Sleep(30-loopTime); }
+			
 		}
 	});
-	getchar();
-	float lengthX = 400;
+
+	std::ofstream ofs("20180811_projection_log_with_moving_average3.csv");
+	float lengthX = 300;
 	float offsetX = 0;
 	float offsetY = 0;
 	float offsetZ = 1600;
 	int period = 10000;
 	Sleep(40000);
-	std::ofstream ofs("20180723_projection_log_step5.csv");
 	ofs << "time, x, y, z, v_x, v_y, v_z, I_x, I_y, I_z, x_tgt, y_tgt, z_tgt, v_x, v_y, v_z, u0, u1, u2, u3, u4" << std::endl;
 	DWORD initialTime = timeGetTime();
 	DWORD loopPeriod = 30;
-	while ((timeGetTime()-initialTime) < 2 * period)
+	while (1)//(timeGetTime()-initialTime) < 2 * period)
 	{
 		DWORD beginningOfLoop = timeGetTime();
-		//float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
+		float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
 		DWORD t = beginningOfLoop - initialTime;
 		float x, y, z, vx, vy, vz;
 		switch(t / period)
@@ -258,11 +252,11 @@ int main()
 			break;
 		case 1:
 			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = lengthX; z = offsetZ;
+			x = lengthX / 2;  y = lengthX / 2; z = offsetZ;
 			break;
 		case 2:
 			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = 0; z = offsetZ + lengthX;
+			x = 0;  y = lengthX; z = offsetZ;
 			break;
 		case 3:
 			vx = 0; vy = 0; vz = 0;
@@ -270,13 +264,14 @@ int main()
 			break;
 		default:
 			vx = 0; vy = 0; vz = 0;
-			x = offsetX; y = offsetY; z = offsetZ;
+			x = 0; y = 0; z = offsetZ;
+			break;
 		}
 		objPtrs[0]->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
 		Eigen::Vector3f currentPosition = objPtrs[0]->getPosition();
 		ofs << timeGetTime() - initialTime << ", " << currentPosition.x() << ", " << currentPosition.y() << ", " << currentPosition.z() << ", "
 			<< x << ", " << y << "," << z << ", " << vx << ", " << vy << ", " << vz << std::endl;
-		DWORD loopTime = timeGetTime() - beginningOfLoop;
+		int loopTime = timeGetTime() - beginningOfLoop;
 		if (loopTime < loopPeriod)
 		{
 			Sleep(loopPeriod - loopTime);
@@ -284,6 +279,7 @@ int main()
 	}
 	objPtrs[0]->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
+	return 0;
 	//start interaction thread.
 	//interaction sequence
 	KinectApp app;
@@ -388,15 +384,9 @@ int main()
 			<< ", " << targetPosition.x() << ", " << targetPosition.y() << ", " << targetPosition.z() << std::endl;
 
 		auto key = cv::waitKey(1);
-		if (key == 'q')
-		{
-			break;
-		}
+		if (key == 'q') { break; }
 		DWORD loopTime = timeGetTime() - beginningOfLoop;
-		if (loopTime < loopPeriod)
-		{
-			Sleep(loopPeriod - loopTime);
-		}
+		if (loopTime < loopPeriod) { Sleep(loopPeriod - loopTime); }
 	}
 	std::cout << "Closing..." << std::endl;
 	odcs.Close();

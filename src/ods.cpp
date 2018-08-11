@@ -203,7 +203,6 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 
 		if (kinectApp.isInsideDepthView(center.x, center.y))
 		{
-			std::cout << center.x << ", " << center.y << std::endl;
 			CameraSpacePoint detectPosition;
 			int capcount = 0;
 			for (int ix = -3; ix <= 3; ix++)
@@ -220,7 +219,6 @@ void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 					}
 				}
 			}
-			std::cout << "capcount :" << capcount << " ";
 			detectPosition.X /= capcount;
 			detectPosition.Y /= capcount;
 			detectPosition.Z /= capcount;

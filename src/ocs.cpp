@@ -28,12 +28,6 @@ int ocs::Initialize()
 	autd.Open(autd::LinkType::ETHERCAT);
 	if (!autd.isOpen()) return ENXIO;
 
-	/*
-	Eigen::Vector3f positionAUTD0(415, 435, 0); Eigen::Vector3f eulerAngleAUTD0(0, 0, 0);
-	Eigen::Vector3f positionAUTD1(-585, 435, 0); Eigen::Vector3f eulerAngleAUTD1(0, 0, 0);
-	Eigen::Vector3f positionAUTD2(-585, -565, 0); Eigen::Vector3f eulerAngleAUTD2(0, 0, 0);
-	Eigen::Vector3f positionAUTD3(415, -565, 0); Eigen::Vector3f eulerAngleAUTD3(0, 0, 0);
-	*/
 	Eigen::Vector3f positionAUTD0(-85, -65, 0); Eigen::Vector3f eulerAngleAUTD0(0, 0, 0);
 	Eigen::Vector3f positionAUTD1(-1000, 65, 1000); Eigen::Vector3f eulerAngleAUTD1(M_PI, -M_PI_2, 0);
 	Eigen::Vector3f positionAUTD2(1000, -65, 1000); Eigen::Vector3f eulerAngleAUTD2(0, -M_PI_2, 0);
@@ -304,9 +298,9 @@ Eigen::VectorXf ocs::FindDutyQP(FloatingObjectPtr objPtr)
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dv = objPtr->averageVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f dutiesOffset(0, 0, 0);
-	Eigen::Vector3f gainPQp(-6e-3, -6e-3, -6e-3);
+	Eigen::Vector3f gainPQp(-9e-3, -9e-3, -9e-3);
 	Eigen::Vector3f gainDQp(-22e-3, -22e-3, -22e-3);
-	Eigen::Vector3f gainIQp(0e-4, 0e-4, -2e-4);
+	Eigen::Vector3f gainIQp(-2e-4, -2e-4, -2e-4);
 	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * objPtr->getIntegral() - objPtr->gravityForce;
 	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD;
 	Eigen::MatrixXf F = arfModel::arf(posRel);

@@ -47,9 +47,12 @@ void odcs::StartControl(std::vector<FloatingObjectPtr> &objPtrs)
 
 void odcs::Close()
 {
+	/*
 	if (!thread_control.joinable())
 	{
-		thread_control.join();
+	thread_control.join();
 	}
+	*/
+	
 	ocs.Close();
 }

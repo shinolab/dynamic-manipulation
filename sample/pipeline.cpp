@@ -49,7 +49,7 @@ int main()
 		std::string temp;
 		while (std::getline(ss, temp, ','))
 		{
-			v.push_back(atoi(temp.c_str()));
+			v.push_back(atof(temp.c_str()));
 		}
 
 		Eigen::Vector3f vec = Eigen::Map<Eigen::Vector3f>(&v[0]);

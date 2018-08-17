@@ -1,3 +1,6 @@
+#ifndef _ARF_MODEL_
+#define _ARF_MODEL_
+
 #include "arfModel.hpp"
 #include "read-csv-to-eigen.hpp"
 #include <iostream>
@@ -183,3 +186,5 @@ Eigen::Vector3f arfModel::arfTotalOffsetsLocal(const Eigen::MatrixXf posRel, con
 {
 	return arfTotalOffsetsLocal(posRel, eulerAnglesAUTDS, duties, offsetsLocal).rowwise().sum();
 }
+
+#endif

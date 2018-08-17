@@ -79,6 +79,23 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f posit
 	lastDeterminationTime = determinationTime;
 }
 
+void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f positionNew, Eigen::Vector3f velocityNew)
+{
+	std::lock_guard<std::mutex> lock(mtxState);
+	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
+	if (isTracked)
+	{
+		integral += (0.5 * (positionNew + position) - positionTarget) * dt;
+	}
+	velocity = velocityNew;
+	position = positionNew;
+	lastDeterminationTime = determinationTime;
+	dTBuffer.push_back(dt);
+	dTBuffer.pop_front();
+	velocityBuffer.push_back(velocity);
+	velocityBuffer.pop_front();
+}
+
 void FloatingObject::updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::Vector3f _velocityTarget)
 {
 	std::lock_guard<std::mutex> lock(mtxStateTarget);

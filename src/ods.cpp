@@ -33,6 +33,23 @@ int ods::Initialize()
 	return 0;
 }
 
+//==================== Utilities =====================
+
+Eigen::Vector3f ods::getPositionAtCGI(cv::Mat const depthImage, float radius = 0, bool isBinary = false)
+{
+	cv::Moments mu = cv::moments(depthImage, isBinary);
+	cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
+	Eigen::Vector3f pos(-1, -1, -1);
+	if (kinectApp.isInsideDepthView(center.x, center.y))
+	{
+		CameraSpacePoint csp = kinectApp.getPositionAtDepthPixel(center.x, center.y);
+		Eigen::Vector3f detectPosition(1000 * csp.X, 1000 * csp.Y, 1000 * csp.Z);
+		float distance = detectPosition.norm();
+		pos << affineKinect2Global * ( (distance + radius) / distance * detectPosition );
+	}
+	return pos;
+}
+
 //==================== ODS Module ====================
 
 bool ods::isInsideWorkSpace(Eigen::Vector3f pos)
@@ -332,6 +349,58 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 	}
 
 }
+
+Eigen::Vector3f ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr)
+{
+	Eigen::Vector3f currentPosition(-1, -1, -1);
+	HRESULT hr = kinectApp.getDepthBuffer();
+	if (SUCCEEDED(hr))
+	{
+		cv::Mat depthImageRaw = cv::Mat(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_16UC1, &kinectApp.depthBuffer[0]).clone();
+		cv::Mat depthImageUc8;
+		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
+		cv::Mat maskedImage;
+		cv::imshow("Raw", depthImageUc8); cv::waitKey(1);
+		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
+		//=====truncate region around the object=====
+		if (objPtr->isTracked)
+		{
+			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
+			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
+				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
+			cv::circle(mask, p, 150 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
+		}
+		else
+		{
+			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+		}
+		depthImageUc8.copyTo(maskedImage, mask);
+		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
+		cv::imshow("ROI-masked", maskedImage);
+
+		//detect position of the object
+		cv::Moments mu = cv::moments(maskedImage, true);
+		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
+
+		if (kinectApp.isInsideDepthView(center.x, center.y))
+		{
+			CameraSpacePoint detectPosition = kinectApp.getPositionAtDepthPixel(center.x, center.y);
+			DWORD currentTime = timeGetTime();
+			if (kinectApp.isReliablePosition(detectPosition))
+			{
+				float detectX = detectPosition.X * 1000;
+				float detectY = detectPosition.Y * 1000;
+				float detectZ = detectPosition.Z * 1000;
+				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
+				float outpor = (detectR + objPtr->radius) / detectR;
+				currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
+				currentPosition = affineKinect2Global * currentPosition;
+			}
+		}
+	}
+	return currentPosition;
+}
+
 
 void ods::GetMarkerPosition()
 {

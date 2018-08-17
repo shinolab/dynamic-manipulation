@@ -39,6 +39,8 @@ public:
 	Eigen::MatrixXf derivativePath;
 	Eigen::MatrixXf controlPath;
 	Eigen::RowVectorXf timePath;
+	float additionalMass = 0.1e-3;
+	float totalMass = 5.5e-3;
 
 private:
 	Eigen::Vector3f position;
@@ -54,6 +56,8 @@ public:
 	FloatingObject(Eigen::Vector3f _positionTarget);
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew);
+
+	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew, Eigen::Vector3f velocitynew);
 
 	void updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::Vector3f _velocityTarget);
 
@@ -79,6 +83,8 @@ public:
 
 	bool isInsideWorkSpace(Eigen::Vector3f pos);
 
+	Eigen::Vector3f getPositionAtCGI(cv::Mat depthImage, float radius, bool isBinary);
+
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
 	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
@@ -88,6 +94,9 @@ public:
 	void DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr);
 
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
+
+	//This function only observes a position of the object and do NOT update its position.
+	Eigen::Vector3f GetPositionByDepthWithROI(FloatingObjectPtr objPtr);
 
 	void GetMarkerPosition();
 
@@ -162,6 +171,7 @@ public:
 	void StartControl(std::vector<FloatingObjectPtr> &objPtrs);
 	void ControlLoop(std::vector<FloatingObjectPtr> objPtrs);
 	void Close();
+	void DetermineStateKF(FloatingObjectPtr objPtr, Eigen::VectorXf amplitudes);
 	ods ods;
 	ocs ocs;
 	std::thread thread_control;

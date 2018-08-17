@@ -31,8 +31,8 @@ public:
 	std::deque<Eigen::Vector3f> velocityBuffer;
 	std::deque<float> dTBuffer;
 	const int velocityBufferSize = 3;
-	const float radius = 70.0; // [mm]
-	const float mass = 5.4e-3; //[Kg]
+	float radius = 100.0; // [mm]
+	//const float mass = 5.4e-3; //[Kg]
 	const float speedLimit = 400; // [mm/s]
 	Eigen::Vector3f gravityForce;
 	Eigen::MatrixXf statePath;
@@ -40,7 +40,6 @@ public:
 	Eigen::MatrixXf controlPath;
 	Eigen::RowVectorXf timePath;
 	float additionalMass = 0.1e-3;
-	float totalMass = 5.5e-3;
 
 private:
 	Eigen::Vector3f position;
@@ -54,6 +53,10 @@ private:
 
 public:
 	FloatingObject(Eigen::Vector3f _positionTarget);
+
+	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
+
+	float totalMass(); 
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew);
 

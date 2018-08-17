@@ -33,6 +33,16 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	gravityForce << 0, 0, -0 * 9.8; //0.1 g
 }
 
+float FloatingObject::sphereMass()
+{
+	return 1.293 * 4.0 * M_PI * pow(radius/1000, 3) / 3.0;
+}
+
+float FloatingObject::totalMass()
+{
+	return sphereMass() + additionalMass;
+}
+
 Eigen::Vector3f FloatingObject::getPosition()
 {
 	std::lock_guard<std::mutex> lock(mtxState);
@@ -44,6 +54,7 @@ Eigen::Vector3f FloatingObject::getVelocity()
 	std::lock_guard<std::mutex> lock(mtxState);
 	return velocity;
 }
+
 Eigen::Vector3f FloatingObject::getIntegral()
 {
 	std::lock_guard<std::mutex> lock(mtxState);

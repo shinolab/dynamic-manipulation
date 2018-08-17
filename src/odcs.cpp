@@ -68,7 +68,7 @@ void odcs::DetermineStateKF(FloatingObjectPtr objPtr, Eigen::VectorXf amplitudes
 		Eigen::MatrixXf::Zero(3, 3), Eigen::MatrixXf::Identity(3, 3);
 	Eigen::MatrixXf B(6, ocs.positionAUTD.cols());
 	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.positionAUTD;
-	Eigen::MatrixXf F = arfModel::arf(posRel) / (objPtr->mass + objPtr->additionalMass);
+	Eigen::MatrixXf F = arfModel::arf(posRel) / objPtr->totalMass();
 	B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()), F;
 	Eigen::VectorXf g(6); g << 0, 0, 0, 0, 0, objPtr->additionalMass * 9.806 / objPtr->totalMass;
 	Eigen::VectorXf state;

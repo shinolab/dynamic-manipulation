@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 
+
 void estimateStateKF(Eigen::VectorXf &state,
 	Eigen::MatrixXf &P,
 	Eigen::VectorXf const &input,
@@ -16,6 +17,6 @@ void estimateStateKF(Eigen::VectorXf &state,
 	Eigen::MatrixXf K = M * C.transpose()*(C*M*C + V);
 	Eigen::VectorXf state_prop = A * state + B * input + c;
 	Eigen::VectorXf e = observation - C * state_prop;
-	Eigen::VectorXf P = (Eigen::MatrixXf::Identity(P.rows(), P.cols()) - K * C)*M;
-	Eigen::VectorXf state = state_prop - K * e;
+	P = (Eigen::MatrixXf::Identity(P.rows(), P.cols()) - K * C)*M;
+	state = state_prop - K * e;
 }

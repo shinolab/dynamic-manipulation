@@ -4,6 +4,7 @@
 #include "autd3.hpp"
 #include "KinectApp.hpp"
 #include <opencv2/core.hpp>
+#include "arfModel.hpp"
 //#include "engine.h"
 #include <queue>
 #include <vector>
@@ -23,6 +24,7 @@ public:
 	Eigen::Vector3f getIntegral();
 	Eigen::Vector3f getPositionTarget();
 	Eigen::Vector3f getVelocityTarget();
+	Eigen::Matrix3f covError;
 	
 	DWORD lastDeterminationTime;
 	bool isTracked;
@@ -41,6 +43,7 @@ public:
 	Eigen::RowVectorXf timePath;
 	float additionalMass = 0.1e-3;
 
+
 private:
 	Eigen::Vector3f position;
 	Eigen::Vector3f velocity;
@@ -50,6 +53,7 @@ private:
 	Eigen::Vector3f force_offset;
 	std::mutex mtxState;
 	std::mutex mtxStateTarget;
+
 
 public:
 	FloatingObject(Eigen::Vector3f _positionTarget);
@@ -115,11 +119,12 @@ public:
 	Eigen::MatrixXf directionsAUTD;
 	Eigen::MatrixXf eulerAnglesAUTD;
 	Eigen::MatrixXf centerAUTD;
-
+	std::unique_ptr<arfModelTheoreticalTable> arfModelPtr;
 private:
 	Eigen::Vector3f gainP = -0.1 * Eigen::Vector3f::Ones();
 	Eigen::Vector3f gainD = -0.2 * Eigen::Vector3f::Ones();
 	Eigen::Vector3f gainI = Eigen::Vector3f::Zero();
+	
 	//Engine *ep;
 
 public:
@@ -162,7 +167,7 @@ public:
 	void followPath(FloatingObjectPtr objPtr);
 
 	//Legacy Module
-	Eigen::VectorXf findDutySI(FloatingObjectPtr objPtr);
+	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
 
 	Eigen::VectorXf findDutyQPEq(FloatingObjectPtr objPtr);
 };

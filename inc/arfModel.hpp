@@ -3,6 +3,57 @@
 
 #include <Eigen\Dense>
 
+class arfModelLinearBase
+{
+public:
+	virtual Eigen::MatrixXf arf(Eigen::MatrixXf posRel) = 0;
+	virtual Eigen::MatrixXf arf(Eigen::MatrixXf posRel, Eigen::MatrixXf directionsAUTD) = 0;
+};
+
+class arfModelConstant : public arfModelLinearBase
+{
+public:
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);
+};
+
+class arfModelExperimentalPoly : public arfModelLinearBase
+{
+public:
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);
+};
+
+class arfModelTheoreticalPoly : public arfModelLinearBase
+{
+public:
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);
+};
+
+class arfModelExperimentalTable : public arfModelLinearBase
+{
+public:
+	arfModelExperimentalTable();
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);
+private:
+	Eigen::MatrixXf tableArfX;
+	Eigen::MatrixXf tableArfZ;
+	float arfX(float distance, float offset);
+	float arfZ(float distance, float offset);
+};
+
+class arfModelTheoreticalTable 
+{
+public:
+	arfModelTheoreticalTable();
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);
+	Eigen::MatrixXf arf(Eigen::MatrixXf posRel, Eigen::MatrixXf directionsAUTD);
+private:
+	Eigen::VectorXf tableDistance;
+	Eigen::RowVectorXf tableAngle;
+	Eigen::MatrixXf tableARF;
+	
+};
+
+
 namespace arfModel
 {
 	float arfX(float distance, float offset);

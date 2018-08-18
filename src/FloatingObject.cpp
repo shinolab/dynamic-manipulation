@@ -30,7 +30,10 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	{
 		*itr = 1;
 	}
-	gravityForce << 0, 0, -0 * 9.8; //0.1 g
+	gravityForce << 0, 0, -0 * 9.8;
+	covError << 10.0, 0, 0,
+		0, 10.0, 0,
+		0, 0, 10.0;
 }
 
 float FloatingObject::sphereMass()

@@ -63,6 +63,7 @@ int ocs::Initialize()
 	}
 	*/
 	//engEvalString(ep, "cd 'C:\\Users\\takuro\\Documents\\MATLAB\\AcouticAviator'");
+	arfModelPtr = std::unique_ptr<arfModelTheoreticalTable>(new arfModelTheoreticalTable());
 	return 0;
 }
 
@@ -234,7 +235,7 @@ void ocs::followPath(FloatingObjectPtr objPtr)
 
 //Legacy Module
 
-Eigen::VectorXf ocs::findDutySI(FloatingObjectPtr objPtr)
+Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::VectorXf dutiesOffset(centerAUTD.cols()); dutiesOffset.setZero();

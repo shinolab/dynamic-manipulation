@@ -37,14 +37,12 @@ add_library(DynamicLevitation STATIC
  src/additionalGain.cpp
  inc/KinectApp.hpp
  src/KinectApp.cpp
- inc/Projector.hpp
- src/Projector.cpp
- inc/read-csv-to-eigen.hpp
- src/read-csv-to-eigen.cpp
  inc/odcs.hpp
  src/ocs.cpp
  src/ods.cpp
  src/FloatingObject.cpp
+ inc/read-csv-to-eigen.hpp
+ src/read-csv-to-eigen.cpp
  inc/arfModel.hpp
  src/arfModel.cpp
  inc/kalmanFilter.hpp

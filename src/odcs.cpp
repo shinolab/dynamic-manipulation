@@ -49,34 +49,35 @@ void odcs::StartControl(std::vector<FloatingObjectPtr> &objPtrs)
 
 void odcs::Close()
 {
-	/*
+	
 	if (!thread_control.joinable())
 	{
 	thread_control.join();
 	}
-	*/
 	
 	ocs.Close();
 }
 
+
 void odcs::DetermineStateKF(FloatingObjectPtr objPtr, Eigen::VectorXf amplitudes)
 {
-	Eigen::Vector3f observe = ods.GetPositionByDepthWithROI(objPtr); //observe states of the object
-	float dt = (timeGetTime() - objPtr->lastDeterminationTime) / 1000.0;
-	Eigen::MatrixXf A(6, 6);
-	A << Eigen::MatrixXf::Identity(3, 3), dt * Eigen::MatrixXf::Identity(),
-		Eigen::MatrixXf::Zero(3, 3), Eigen::MatrixXf::Identity(3, 3);
-	Eigen::MatrixXf B(6, ocs.positionAUTD.cols());
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.positionAUTD;
-	Eigen::MatrixXf F = arfModel::arf(posRel) / objPtr->totalMass();
-	B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()), F;
-	Eigen::VectorXf g(6); g << 0, 0, 0, 0, 0, objPtr->additionalMass * 9.806 / objPtr->totalMass;
-	Eigen::VectorXf state;
-	Eigen::MatrixXf P;
-	Eigen::MatrixXf C(3, 6);
-	Eigen::MatrixXf D(6, 6);
-	Eigen::MatrixXf W(6, 6); // parameters of environment
-	Eigen::MatrixXf V(3, 3); // parameters of kinect
-	estimateStateKF(state, P, amplitudes, observe, A, B, g, C, D, W, V);
-	//update states of object
+Eigen::Vector3f observe = ods.GetPositionByDepthWithROI(objPtr); //observe states of the object
+float dt = (timeGetTime() - objPtr->lastDeterminationTime) / 1000.0;
+Eigen::MatrixXf A(6, 6);
+A << Eigen::Matrix3f::Identity(), dt * Eigen::Matrix3f::Identity(),
+Eigen::Matrix3f::Zero(), Eigen::Matrix3f::Identity();
+Eigen::MatrixXf B(6, ocs.positionAUTD.cols());
+Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.positionAUTD;
+Eigen::MatrixXf F = this->ocs.arfModelPtr->arf(posRel, ocs.directionsAUTD) / objPtr->totalMass();
+B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()), F;
+Eigen::VectorXf g(6); g << 0, 0, 0, 0, 0, objPtr->additionalMass * 9.806 / objPtr->totalMass();
+Eigen::VectorXf state;
+Eigen::MatrixXf P;
+Eigen::MatrixXf C(3, 6);
+Eigen::MatrixXf D(6, 6);
+Eigen::MatrixXf W(6, 6); // parameters of environment
+Eigen::MatrixXf V(3, 3); // parameters of kinect
+estimateStateKF(state, P, amplitudes, observe, A, B, g, C, D, W, V);
+//update states of object
 }
+

@@ -52,7 +52,7 @@ Eigen::Vector3f ods::getPositionAtCGI(cv::Mat const depthImage, float radius = 0
 
 //==================== ODS Module ====================
 
-bool ods::isInsideWorkSpace(Eigen::Vector3f pos)
+bool ods::isInsideWorkSpace(const Eigen::Vector3f &pos)
 {
 	Eigen::Vector3f v0 = pos - workspace.col(0);
 	Eigen::Vector3f v1 = pos - workspace.col(1);
@@ -61,76 +61,32 @@ bool ods::isInsideWorkSpace(Eigen::Vector3f pos)
 
 void ods::DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub)
 {
-	kinectApp.getColorBuffer(); kinectApp.getDepthBuffer();
-	//pre-processing
-	cv::Mat colorImage = cv::Mat(kinectApp.getColorHeight(), kinectApp.getColorWidth(), CV_8UC4, &kinectApp.colorBuffer[0]);
-	cv::Mat hsvImage;
-	cv::cvtColor(colorImage, colorImage, CV_BGRA2BGR);
-	cv::cvtColor(colorImage, hsvImage, CV_BGR2HSV);
-	cv::Mat binaryImage;
-	cv::inRange(hsvImage, lb, ub, binaryImage);
-	cv::Moments mu = cv::moments(binaryImage, true);
-	cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-	cv::circle(colorImage, center, 10, cv::Scalar(50, 255, 255), 2, 8);
-	cv::Mat display;
-	cv::resize(colorImage, display, cv::Size(), 0.5, 0.5);
-	cv::imshow("DISPLAY", display);
-
-	if (kinectApp.isInsideColorView(center.x, center.y))
+	Eigen::Vector3f currentPosition;
+	bool isValid = GetPositionByHSV(objPtr, currentPosition, lb, ub);
+	if (isValid)
 	{
-		CameraSpacePoint detectPosition = kinectApp.getPositionAtColorPixel(center.x, center.y);
-		if (kinectApp.isReliablePosition(detectPosition))
-		{
-			float detectX = 1000 * detectPosition.X;
-			float detectY = 1000 * detectPosition.Y;
-			float detectZ = 1000 * detectPosition.Z;
-			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + objPtr->radius) / detectR;
-			Eigen::Vector3f currentPosition(outpor * detectX, outpor * detectY, outpor * detectZ);
-			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
-			DWORD currentTime = timeGetTime();
-			objPtr->updateStates(currentTime, currentPosition);
-		}
+		DWORD currentTime = timeGetTime();
+		objPtr->updateStates(currentTime, currentPosition);
+		objPtr->isTracked = true;
 	}
 }
 
 void ods::DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub)
 {
-	kinectApp.getColorBuffer(); kinectApp.getDepthBuffer();
-	cv::Mat colorImage = cv::Mat(kinectApp.getColorHeight(), kinectApp.getColorWidth(), CV_8UC4, &kinectApp.colorBuffer[0]);
-	cv::Mat rgbImage;
-	cv::cvtColor(colorImage, rgbImage, CV_BGRA2BGR);
-	cv::Mat binaryImage;
-	cv::inRange(rgbImage, lb, ub, binaryImage);
-	cv::Moments mu = cv::moments(binaryImage, true);
-	cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-	cv::Mat display;
-	cv::resize(binaryImage, display, cv::Size(), 0.5, 0.5);
-	cv::imshow("DISPLAY", display);
-	if (kinectApp.isInsideColorView(center.x, center.y))
+	Eigen::Vector3f currentPosition;
+	bool isValid = GetPositionByBGR(objPtr, currentPosition, lb, ub);
+	if (isValid)
 	{
-		CameraSpacePoint detectPosition = kinectApp.getPositionAtColorPixel(center.x, center.y);
-
-		if (kinectApp.isReliablePosition(detectPosition))
+		if (isInsideWorkSpace(currentPosition))
 		{
-			float detectX = 1000 * detectPosition.X;
-			float detectY = 1000 * detectPosition.Y;
-			float detectZ = 1000 * detectPosition.Z;
-			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + objPtr->radius) / detectR;
-			Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
-			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
 			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
+			objPtr->isTracked = true;
 		}
 		else
 		{
 			objPtr->isTracked = false;
 		}
-	}
-	else
-	{
-		objPtr->isTracked = false;
 	}
 }
 
@@ -188,12 +144,12 @@ void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr)
 void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f currentPosition;
-	DWORD currentTime = timeGetTime();
 	bool isValid = GetPositionByDepthWithROI(objPtr, currentPosition);
 	if (isValid)
 	{
 		if (isInsideWorkSpace(currentPosition))
 		{
+			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
 			objPtr->isTracked = true;
 		}
@@ -276,6 +232,73 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 	}
 }
 
+bool ods::GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub)
+{
+	bool isValid = false;
+	HRESULT hrColor = kinectApp.getColorBuffer(); 
+	HRESULT hrDepth = kinectApp.getDepthBuffer();
+	if (SUCCEEDED(hrColor) && SUCCEEDED(hrDepth))
+	{
+		cv::Mat colorImage = cv::Mat(kinectApp.getColorHeight(), kinectApp.getColorWidth(), CV_8UC4, &kinectApp.colorBuffer[0]).clone();
+		cv::Mat bgrImage;
+		cv::cvtColor(colorImage, bgrImage, CV_BGRA2BGR);
+		cv::Mat binaryImage;
+		cv::inRange(bgrImage, lb, ub, binaryImage);
+		cv::Moments mu = cv::moments(binaryImage, true);
+		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
+		if (kinectApp.isInsideColorView(center.x, center.y))
+		{
+			CameraSpacePoint detectPosition = kinectApp.getPositionAtColorPixel(center.x, center.y);
+			if (kinectApp.isReliablePosition(detectPosition))
+			{
+				float detectX = 1000 * detectPosition.X;
+				float detectY = 1000 * detectPosition.Y;
+				float detectZ = 1000 * detectPosition.Z;
+				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
+				float outpor = (detectR + objPtr->radius) / detectR;
+				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				isValid = true;
+			}
+		}
+	}
+	return isValid;
+}
+
+bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub)
+{
+	bool isValid = false;
+	HRESULT hrColor = kinectApp.getColorBuffer();
+	HRESULT hrDepth = kinectApp.getDepthBuffer();
+	if (SUCCEEDED(hrColor) && SUCCEEDED(hrDepth))
+	{
+		//pre-processing
+		cv::Mat colorImage = cv::Mat(kinectApp.getColorHeight(), kinectApp.getColorWidth(), CV_8UC4, &kinectApp.colorBuffer[0]).clone();
+		cv::Mat bgrImage;
+		cv::cvtColor(colorImage, bgrImage, CV_BGRA2BGR);
+		cv::Mat hsvImage;
+		cv::cvtColor(bgrImage, hsvImage, CV_BGR2HSV);
+		cv::Mat binaryImage;
+		cv::inRange(hsvImage, lb, ub, binaryImage);
+		cv::Moments mu = cv::moments(binaryImage, true);
+		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
+		if (kinectApp.isInsideColorView(center.x, center.y))
+		{
+			CameraSpacePoint detectPosition = kinectApp.getPositionAtColorPixel(center.x, center.y);
+			if (kinectApp.isReliablePosition(detectPosition))
+			{
+				float detectX = 1000 * detectPosition.X;
+				float detectY = 1000 * detectPosition.Y;
+				float detectZ = 1000 * detectPosition.Z;
+				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
+				float outpor = (detectR + objPtr->radius) / detectR;
+				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				isValid = true;
+			}
+		}
+	}
+	return isValid;
+}
+
 bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos)
 {
 	bool isValid = false;
@@ -327,7 +350,6 @@ bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &p
 	}
 	return isValid;
 }
-
 
 void ods::GetMarkerPosition()
 {

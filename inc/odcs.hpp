@@ -56,17 +56,17 @@ private:
 
 
 public:
-	FloatingObject(Eigen::Vector3f _positionTarget);
+	FloatingObject(Eigen::Vector3f &_positionTarget);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 
 	float totalMass(); 
 
-	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew);
+	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew);
 
-	void updateStates(DWORD determinationTime, Eigen::Vector3f positionNew, Eigen::Vector3f velocitynew);
+	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocitynew);
 
-	void updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::Vector3f _velocityTarget);
+	void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget);
 
 	bool isStable();
 
@@ -88,7 +88,7 @@ private:
 public:
 	int Initialize();
 
-	bool isInsideWorkSpace(Eigen::Vector3f pos);
+	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	Eigen::Vector3f getPositionAtCGI(cv::Mat depthImage, float radius, bool isBinary);
 
@@ -101,6 +101,10 @@ public:
 	void DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr);
 
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
+
+	bool GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
+
+	bool GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
 
 	//This function only observes a position of the object and do NOT update its position.
 	bool GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos);

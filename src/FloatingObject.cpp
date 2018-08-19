@@ -9,7 +9,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
+FloatingObject::FloatingObject(Eigen::Vector3f &_positionTarget)
 {
 	position << 0, 0, 0;
 	velocity << 0, 0, 0;
@@ -76,7 +76,7 @@ Eigen::Vector3f FloatingObject::getVelocityTarget()
 	return velocityTarget;
 }
 
-void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f positionNew)
+void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew)
 {
 	std::lock_guard<std::mutex> lock(mtxState);
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0; // [sec]
@@ -93,7 +93,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f posit
 	lastDeterminationTime = determinationTime;
 }
 
-void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f positionNew, Eigen::Vector3f velocityNew)
+void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocityNew)
 {
 	std::lock_guard<std::mutex> lock(mtxState);
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
@@ -110,7 +110,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f posit
 	velocityBuffer.pop_front();
 }
 
-void FloatingObject::updateStatesTarget(Eigen::Vector3f _positionTarget, Eigen::Vector3f _velocityTarget)
+void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget)
 {
 	std::lock_guard<std::mutex> lock(mtxStateTarget);
 	positionTarget = _positionTarget;

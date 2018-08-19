@@ -1,5 +1,12 @@
 #include <Eigen/Dense>
 
+Eigen::VectorXf propagateLinearSystem(const Eigen::VectorXf &state,
+	Eigen::VectorXf const &input,
+	Eigen::MatrixXf const &A,
+	Eigen::MatrixXf const &B)
+{
+	return A * state + B * input;
+}
 
 void estimateStateKF(Eigen::VectorXf &state,
 	Eigen::MatrixXf &P,

@@ -103,7 +103,7 @@ public:
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
 
 	//This function only observes a position of the object and do NOT update its position.
-	Eigen::Vector3f GetPositionByDepthWithROI(FloatingObjectPtr objPtr);
+	bool GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos);
 
 	void GetMarkerPosition();
 

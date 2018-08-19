@@ -187,87 +187,15 @@ void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr)
 
 void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
 {
-	HRESULT hr = kinectApp.getDepthBuffer();
-	if (SUCCEEDED(hr))
+	Eigen::Vector3f currentPosition;
+	DWORD currentTime = timeGetTime();
+	bool isValid = GetPositionByDepthWithROI(objPtr, currentPosition);
+	if (isValid)
 	{
-		//=====Preprocessing=====
-		cv::Mat depthImageRaw = cv::Mat(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_16UC1, &kinectApp.depthBuffer[0]);
-		cv::Mat depthImageUc8;
-		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		cv::Mat maskedImage;
-		cv::imshow("Raw", depthImageUc8); cv::waitKey(1);
-		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
-		if (objPtr->isTracked)
+		if (isInsideWorkSpace(currentPosition))
 		{
-			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
-			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
-				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
-			cv::circle(mask, p, 150 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
-		}
-		else
-		{
-			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
-		}
-		depthImageUc8.copyTo(maskedImage, mask);
-		//cv::imshow("ROI-masked", maskedImage);
-		//cv::waitKey(1);
-		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-		cv::imshow("ROI-masked", maskedImage);
-
-		//detect position of the object
-		cv::Moments mu = cv::moments(maskedImage, true);
-		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-
-		if (kinectApp.isInsideDepthView(center.x, center.y))
-		{
-			CameraSpacePoint detectPosition;
-			int capcount = 0;
-			for (int ix = -3; ix <= 3; ix++)
-			{
-				for (int iy = -3; iy <= 3; iy++)
-				{
-					CameraSpacePoint postemp = kinectApp.getPositionAtDepthPixel(center.x, center.y);
-					if (kinectApp.isReliablePosition(postemp))
-					{
-						detectPosition.X += postemp.X;
-						detectPosition.Y += postemp.Y;
-						detectPosition.Z += postemp.Z;
-						capcount++;
-					}
-				}
-			}
-			detectPosition.X /= capcount;
-			detectPosition.Y /= capcount;
-			detectPosition.Z /= capcount;
-			//CameraSpacePoint detectPosition = kinectApp.getPositionAtDepthPixel(center.x, center.y);
-			DWORD currentTime = timeGetTime();
-			if (kinectApp.isReliablePosition(detectPosition))
-			{
-				float detectX = detectPosition.X * 1000;
-				float detectY = detectPosition.Y * 1000;
-				float detectZ = detectPosition.Z * 1000;
-				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-				float outpor = (detectR + objPtr->radius) / detectR;
-				Eigen::Vector3f currentPosition(outpor * detectX, outpor * detectY, outpor * detectZ);
-				currentPosition = affineKinect2Global * currentPosition;
-				if (isInsideWorkSpace(currentPosition))
-				{
-					objPtr->updateStates(currentTime, currentPosition);
-					objPtr->isTracked = true;
-				}
-				else
-				{
-					//objPtr->isTracked = false;
-				}
-			}
-			else
-			{
-				//objPtr->isTracked = false;
-			}
-		}
-		else
-		{
-			objPtr->isTracked = false;
+			objPtr->updateStates(currentTime, currentPosition);
+			objPtr->isTracked = true;
 		}
 	}
 }
@@ -345,14 +273,12 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 				}
 			}			
 		}
-
 	}
-
 }
 
-Eigen::Vector3f ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr)
+bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos)
 {
-	Eigen::Vector3f currentPosition(-1, -1, -1);
+	bool isValid = false;
 	HRESULT hr = kinectApp.getDepthBuffer();
 	if (SUCCEEDED(hr))
 	{
@@ -376,7 +302,7 @@ Eigen::Vector3f ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr)
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-		cv::imshow("ROI-masked", maskedImage);
+		//cv::imshow("ROI-masked", maskedImage);
 
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);
@@ -393,12 +319,13 @@ Eigen::Vector3f ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr)
 				float detectZ = detectPosition.Z * 1000;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
-				currentPosition = affineKinect2Global * currentPosition;
+				pos << outpor * detectX, outpor * detectY, outpor * detectZ;
+				pos = affineKinect2Global * pos;
+				isValid = true;
 			}
 		}
 	}
-	return currentPosition;
+	return isValid;
 }
 
 

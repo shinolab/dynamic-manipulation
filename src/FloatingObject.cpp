@@ -9,14 +9,13 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-FloatingObject::FloatingObject(Eigen::Vector3f &_positionTarget)
+FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 {
 	position << 0, 0, 0;
 	velocity << 0, 0, 0;
 	integral << 0, 0, 0;
 	positionTarget = _positionTarget;
 	velocityTarget << 0, 0, 0;
-	force_offset << 0, 0, 0;
 	lastDeterminationTime = 0;
 	isTracked = false;
 	isControlled = true;
@@ -30,10 +29,9 @@ FloatingObject::FloatingObject(Eigen::Vector3f &_positionTarget)
 	{
 		*itr = 1;
 	}
-	gravityForce << 0, 0, -0 * 9.8;
-	covError << 10.0, 0, 0,
-		0, 10.0, 0,
-		0, 0, 10.0;
+	covError << 100.0, 0, 0,
+		0, 100.0, 0,
+		0, 0, 100.0;
 }
 
 float FloatingObject::sphereMass()

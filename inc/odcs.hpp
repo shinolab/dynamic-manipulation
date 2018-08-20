@@ -17,15 +17,15 @@
 
 #pragma comment (lib, "winmm")
 
-class FloatingObject{
+class FloatingObject {
 public:
 	Eigen::Vector3f getPosition();
 	Eigen::Vector3f getVelocity();
 	Eigen::Vector3f getIntegral();
 	Eigen::Vector3f getPositionTarget();
 	Eigen::Vector3f getVelocityTarget();
+
 	Eigen::Matrix3f covError;
-	
 	DWORD lastDeterminationTime;
 	bool isTracked;
 	bool _isStable;
@@ -35,14 +35,8 @@ public:
 	const int velocityBufferSize = 3;
 	float radius = 100.0; // [mm]
 	//const float mass = 5.4e-3; //[Kg]
-	const float speedLimit = 400; // [mm/s]
-	Eigen::Vector3f gravityForce;
-	Eigen::MatrixXf statePath;
-	Eigen::MatrixXf derivativePath;
-	Eigen::MatrixXf controlPath;
-	Eigen::RowVectorXf timePath;
+	float speedLimit = 400; // [mm/s]
 	float additionalMass = 0.1e-3;
-
 
 private:
 	Eigen::Vector3f position;
@@ -50,13 +44,11 @@ private:
 	Eigen::Vector3f integral;
 	Eigen::Vector3f positionTarget;
 	Eigen::Vector3f velocityTarget;
-	Eigen::Vector3f force_offset;
 	std::mutex mtxState;
 	std::mutex mtxStateTarget;
 
-
 public:
-	FloatingObject(Eigen::Vector3f &_positionTarget);
+	FloatingObject(Eigen::Vector3f _positionTarget);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 
@@ -88,17 +80,15 @@ private:
 public:
 	int Initialize();
 
-	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
+	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
 
-	Eigen::Vector3f getPositionAtCGI(cv::Mat depthImage, float radius, bool isBinary);
+	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
 	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
 
-	void DeterminePositionByDepth(FloatingObjectPtr objPtr);
-
-	void DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr);
+	void DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI);
 
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
 
@@ -107,11 +97,7 @@ public:
 	bool GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
 
 	//This function only observes a position of the object and do NOT update its position.
-	bool GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos);
-
-	void GetMarkerPosition();
-
-	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
+	bool GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI);
 
 };
 
@@ -123,12 +109,12 @@ public:
 	Eigen::MatrixXf directionsAUTD;
 	Eigen::MatrixXf eulerAnglesAUTD;
 	Eigen::MatrixXf centerAUTD;
-	std::unique_ptr<arfModelTheoreticalTable> arfModelPtr;
+	std::unique_ptr<arfModelLinearBase> arfModelPtr;
+
 private:
-	Eigen::Vector3f gainP = -0.1 * Eigen::Vector3f::Ones();
-	Eigen::Vector3f gainD = -0.2 * Eigen::Vector3f::Ones();
-	Eigen::Vector3f gainI = Eigen::Vector3f::Zero();
-	
+	Eigen::Vector3f gainP = -1.6 * Eigen::Vector3f::Ones();
+	Eigen::Vector3f gainD = -4.0 * Eigen::Vector3f::Ones();
+	Eigen::Vector3f gainI = -0.04 * Eigen::Vector3f::Ones();
 	//Engine *ep;
 
 public:
@@ -136,44 +122,24 @@ public:
 
 	void Close();
 
-	//Find Duty Module (without offset)
+	void SetArfModel(std::unique_ptr<arfModelLinearBase> arfModelPtr);
+
+	void SetGain(Eigen::Vector3f gainP, Eigen::Vector3f gainD, Eigen::Vector3f gainI);
+
+	Eigen::Vector3f ComputePIDForce(FloatingObjectPtr objPtr);
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position);
 
 	Eigen::VectorXf FindDutyQP(FloatingObjectPtr objPtr);
 
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
-
-	//Find Duty Module (with offset)
-
-	void FindDutyBruteForce(Eigen::VectorXf *const duties, Eigen::MatrixXf *const directions, Eigen::Vector3f pos, Eigen::Vector3f force);
-
-	//Objective Functions
-
-	static double SqDiffOfForce(const std::vector<double> &x, std::vector<double> &grad, void* data);
-
-	struct dataObj{
-	public:
-		Eigen::MatrixXf posRel;
-		Eigen::Vector3f forceTarget;
-		Eigen::MatrixXf posAUTDS;
-		Eigen::MatrixXf eulerAngleAUTDS;
-	};
-
-	//Local Control Module
-
+	
 	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
-
-	//Global Control Module
-
-	void PositionControlBySingleAUTD(FloatingObjectPtr objPtr);
-
-	void followPath(FloatingObjectPtr objPtr);
-
+	
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
 
-	Eigen::VectorXf findDutyQPEq(FloatingObjectPtr objPtr);
+	Eigen::VectorXf FindDutyQPEq(FloatingObjectPtr objPtr);
 };
 
 class odcs
@@ -181,9 +147,9 @@ class odcs
 public:
 	void Initialize();
 	void StartControl(std::vector<FloatingObjectPtr> &objPtrs);
-	void ControlLoop(std::vector<FloatingObjectPtr> objPtrs);
+	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
 	void Close();
-	void DetermineStateKF(FloatingObjectPtr objPtr, Eigen::VectorXf amplitudes);
+	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::VectorXf &amplitudes);
 	ods ods;
 	ocs ocs;
 	std::thread thread_control;

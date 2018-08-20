@@ -48,8 +48,9 @@ int main()
 		}
 		objPtr->updateStatesTarget(positionTarget, Eigen::Vector3f(0, 0, 0));
 		//control sequence
-		odcs.ods.DeterminePositionByDepthWithROI(objPtr);
-		Eigen::VectorXf duties = odcs.ocs.findDutyQPEq((objPtr))/255;
+		odcs.ods.DeterminePositionByDepth(objPtr, true);
+		Eigen::VectorXf force = odcs.ocs.ComputePIDForce(objPtr);
+		Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
 		Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
 

@@ -33,23 +33,6 @@ int ods::Initialize()
 	return 0;
 }
 
-//==================== Utilities =====================
-
-Eigen::Vector3f ods::getPositionAtCGI(cv::Mat const depthImage, float radius = 0, bool isBinary = false)
-{
-	cv::Moments mu = cv::moments(depthImage, isBinary);
-	cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-	Eigen::Vector3f pos(-1, -1, -1);
-	if (kinectApp.isInsideDepthView(center.x, center.y))
-	{
-		CameraSpacePoint csp = kinectApp.getPositionAtDepthPixel(center.x, center.y);
-		Eigen::Vector3f detectPosition(1000 * csp.X, 1000 * csp.Y, 1000 * csp.Z);
-		float distance = detectPosition.norm();
-		pos << affineKinect2Global * ( (distance + radius) / distance * detectPosition );
-	}
-	return pos;
-}
-
 //==================== ODS Module ====================
 
 bool ods::isInsideWorkSpace(const Eigen::Vector3f &pos)
@@ -58,6 +41,8 @@ bool ods::isInsideWorkSpace(const Eigen::Vector3f &pos)
 	Eigen::Vector3f v1 = pos - workspace.col(1);
 	return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
 }
+
+//==================== Primitive Determination Functions ====================
 
 void ods::DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub)
 {
@@ -90,61 +75,10 @@ void ods::DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Sc
 	}
 }
 
-void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr)
-{
-	kinectApp.getDepthBuffer();
-	//=====Preprocessing=====
-	cv::Mat depthImage = cv::Mat(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_16UC1, &kinectApp.depthBuffer[0]);
-	cv::Mat objectImage;
-	depthImage.convertTo(objectImage, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-	cv::Rect roi(
-		cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()),
-		cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()));
-	cv::Mat maskedImage = objectImage(roi); //Masking
-	cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-
-	//detect position of the object
-	cv::Moments mu = cv::moments(maskedImage, true);
-	cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-	if (kinectApp.isInsideDepthView(center.x, center.y))
-	{
-		CameraSpacePoint detectPosition = kinectApp.getPositionAtDepthPixel(center.x, center.y);
-		DWORD currentTime = timeGetTime();
-		if (kinectApp.isReliablePosition(detectPosition))
-		{
-			float detectX = detectPosition.X * 1000;
-			float detectY = detectPosition.Y * 1000;
-			float detectZ = detectPosition.Z * 1000;
-			float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-			float outpor = (detectR + objPtr->radius) / detectR;
-			Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
-			currentPosition = dcmKinect2Global * currentPosition + positionKinect;
-			if (isInsideWorkSpace(currentPosition))
-			{
-				objPtr->updateStates(currentTime, currentPosition);
-				objPtr->isTracked = true;
-			}
-			else
-			{
-				objPtr->isTracked = false;
-			}
-		}
-		else
-		{
-			objPtr->isTracked = false;
-		}
-	}
-	else
-	{
-		objPtr->isTracked = false;
-	}
-	cv::imshow("POSITION", maskedImage);
-}
-
-void ods::DeterminePositionByDepthWithROI(FloatingObjectPtr objPtr)
+void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI)
 {
 	Eigen::Vector3f currentPosition;
-	bool isValid = GetPositionByDepthWithROI(objPtr, currentPosition);
+	bool isValid = GetPositionByDepth(objPtr, currentPosition, useROI);
 	if (isValid)
 	{
 		if (isInsideWorkSpace(currentPosition))
@@ -232,6 +166,8 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 	}
 }
 
+//===================== Observation Functions =====================
+
 bool ods::GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub)
 {
 	bool isValid = false;
@@ -299,7 +235,7 @@ bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 	return isValid;
 }
 
-bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &pos)
+bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI)
 {
 	bool isValid = false;
 	HRESULT hr = kinectApp.getDepthBuffer();
@@ -312,7 +248,7 @@ bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &p
 		cv::imshow("Raw", depthImageUc8); cv::waitKey(1);
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
 		//=====truncate region around the object=====
-		if (objPtr->isTracked)
+		if (objPtr->isTracked && useROI)
 		{
 			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
@@ -349,83 +285,4 @@ bool ods::GetPositionByDepthWithROI(FloatingObjectPtr objPtr, Eigen::Vector3f &p
 		}
 	}
 	return isValid;
-}
-
-void ods::GetMarkerPosition()
-{
-	while (1)
-	{
-		HRESULT hr1 = kinectApp.getInfraredBuffer();
-		HRESULT hr2 = kinectApp.getDepthBuffer();
-		if (SUCCEEDED(hr1))
-		{
-			if (SUCCEEDED(hr2))
-			{
-				break;
-			}
-		}
-	}
-	//cut high intensity noise
-	cv::Mat infraredImage = cv::Mat(kinectApp.getInfraredHeight(), kinectApp.getInfraredWidth(), CV_16UC1, &kinectApp.infraredBuffer[0]);
-	cv::Mat mask = cv::Mat::zeros(kinectApp.getInfraredHeight(), kinectApp.getInfraredWidth(), CV_16UC1);
-	cv::rectangle(mask, cv::Point(100, 100), cv::Point(412, 324), cv::Scalar(1), -1);
-	//infraredImage.copyTo(infraredImage, mask);
-	infraredImage = infraredImage.mul(mask);
-	cv::imshow("Infrared", infraredImage);
-	cv::Mat binaryImage = cv::Mat(kinectApp.getInfraredHeight(), kinectApp.getInfraredWidth(), CV_8UC1);
-	cv::inRange(infraredImage, cv::Scalar(0), cv::Scalar(600), binaryImage);
-	binaryImage = ~binaryImage;
-	cv::imshow("Binary", binaryImage);
-	//find boundaries
-	std::vector<std::vector<cv::Point>> contours;
-	cv::findContours(binaryImage, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-
-	int markerCount = 0;
-	std::vector<Eigen::Vector3f> markerPositionsK;
-
-	for (auto contour = contours.begin(); contour != contours.end(); contour++)
-	{
-		cv::Mat markerImage = cv::Mat::zeros(kinectApp.getInfraredHeight(), kinectApp.getInfraredWidth(), CV_8UC1);
-		//cv::polylines(markerMaskImage, *contour, true, cv::Scalar(255), 1);
-		cv::fillConvexPoly(markerImage, *contour, cv::Scalar(255));
-
-		double markerArea = cv::contourArea(*contour, false);
-		if (markerArea > 5)
-		{
-			cv::imshow("marker", markerImage);
-
-			//get marker position
-			cv::Moments mu = cv::moments(markerImage, true);
-			cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));
-			CameraSpacePoint cameraMarkerPoint = kinectApp.getPositionAtDepthPixel(center.x, center.y);
-			std::cout << "Marker Area : " << markerArea << ", position : [" << cameraMarkerPoint.X * 1000 << ", " << cameraMarkerPoint.Y * 1000 << ", " << cameraMarkerPoint.Z * 1000 << "]" << std::endl;
-			Eigen::Vector3f markerPosition; markerPosition << cameraMarkerPoint.X, cameraMarkerPoint.Y, cameraMarkerPoint.Z;
-			markerPositionsK.insert(markerPositionsK.end(), markerPosition);
-			markerCount++;
-		}
-	}
-	if (markerCount != 3)
-	{
-		std::cout << "ERROR : THE NUMBER OF MARKERS is INVALID." << std::endl;
-		return;
-	}
-
-	Eigen::Vector3f reference12K = (markerPositionsK[2] - markerPositionsK[1]).normalized();
-	Eigen::Vector3f reference01K = (markerPositionsK[1] - markerPositionsK[0]).normalized();
-	Eigen::Vector3f referenceCK = reference12K.cross(reference01K).normalized();
-	Eigen::Vector3f marker0G(410, 185, 400);
-	Eigen::Vector3f marker1G(410, 185, 870);
-	Eigen::Vector3f marker2G(-410, 185, 870);
-	Eigen::Vector3f reference12G = (marker2G - marker1G).normalized();
-	Eigen::Vector3f reference01G = (marker1G - marker0G).normalized();
-	Eigen::Vector3f referenceCG = reference12G.cross(reference01G).normalized();
-
-	Eigen::Matrix3f refVecsG; refVecsG.col(0) << referenceCG; refVecsG.col(1) << reference12G; refVecsG.col(2) << reference01G;
-	Eigen::Matrix3f refVecsK; refVecsK.col(0) << referenceCK; refVecsK.col(1) << reference12K; refVecsK.col(2) << reference01K;
-	dcmKinect2Global = refVecsG * refVecsK.inverse();
-
-	std::cout << "refVecsG : \n" << refVecsG << std::endl;
-	std::cout << "refVecsK : \n" << refVecsK << std::endl;
-	std::cout << "rotationMatrix : \n" << dcmKinect2Global << std::endl;
-	positionKinect = -1000 * dcmKinect2Global * markerPositionsK[1] + marker1G;
 }

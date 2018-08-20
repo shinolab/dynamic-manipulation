@@ -3,9 +3,10 @@
 Eigen::VectorXf propagateLinearSystem(const Eigen::VectorXf &state,
 	Eigen::VectorXf const &input,
 	Eigen::MatrixXf const &A,
-	Eigen::MatrixXf const &B)
+	Eigen::MatrixXf const &B,
+	Eigen::VectorXf const &constant)
 {
-	return A * state + B * input;
+	return A * state + B * input + constant;
 }
 
 void estimateStateKF(Eigen::VectorXf &state,

@@ -25,11 +25,8 @@ int main()
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs odcs;
 	odcs.Initialize();
-	std::vector<FloatingObjectPtr> objPtrs;
-	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350))));
-	//objs.push_back(FloatingObject(Eigen::Vector3f(-250, 100, 1485)));
-
-	odcs.StartControl(objPtrs);
+	odcs.AddObject(Eigen::Vector3f(0, 0, 1350));
+	odcs.StartControl();
 
 	//write your application process here.
 
@@ -53,7 +50,7 @@ int main()
 		}
 
 		Eigen::Vector3f vec = Eigen::Map<Eigen::Vector3f>(&v[0]);
-		objPtrs[0]->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
+		odcs.GetAccess2Object(0)->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
 		std::cout << "target position is updated to : " << vec.transpose() << std::endl;
 
 	} while (strcmp(buffer, "") != 0);

@@ -1,4 +1,5 @@
 #include "odcs.hpp"
+#include "kalmanFilter.hpp"
 #include <iostream>
 #include <fstream>
 #include <Windows.h>
@@ -10,22 +11,21 @@
 
 int main()
 {
-
-	std::ofstream ofs("20180812_sequential_QPEq_Lstep_log.csv");
-	ofs << "time[ms], x[mm], y[mm], z[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], u0, u1, u2, u3, u4" << std::endl;
+	std::ofstream ofs("20180822_kalmanfiltering.csv");
+	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], u0, u1, u2, u3, u4" << std::endl;
 	const int period = 30000;
 	const int loopPeriod = 30;
 	odcs odcs;
 	odcs.Initialize();
-
 	FloatingObjectPtr objPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1500)));
+	odcs.RegisterObject(objPtr);
 	int initTime = timeGetTime();
 	while (1)
 	{
-		//set a target position
-		int loopInitTime = timeGetTime();
-		Eigen::Vector3f positionTarget;
 		bool exitFlag = false;
+		int loopInitTime = timeGetTime();
+		//----------set a target position----------
+		Eigen::Vector3f positionTarget;
 		switch ((loopInitTime - initTime) / period)
 		{
 		case 0:
@@ -35,7 +35,7 @@ int main()
 		case 2:
 			positionTarget << 0, 0, 1500; break;
 		case 3:
-			positionTarget << 0, 0, 1200; break;
+			positionTarget << 200, 0, 1500; break;
 		case 4:
 			positionTarget << 0, 0, 1500; break;
 		default:
@@ -47,23 +47,40 @@ int main()
 			break;
 		}
 		objPtr->updateStatesTarget(positionTarget, Eigen::Vector3f(0, 0, 0));
-		//control sequence
-		odcs.ods.DeterminePositionByDepth(objPtr, true);
-		Eigen::VectorXf force = odcs.ocs.ComputePIDForce(objPtr);
-		Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
-		Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-		odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
+		
+		//----------Observation----------
+		Eigen::Vector3f posObserved;
+		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
+		DWORD observationTime = timeGetTime();
+		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
+		{
+			//----------Determination----------
+			odcs.DetermineStateKF(objPtr, posObserved, observationTime);
+			//PIDController
+			Eigen::VectorXf force = odcs.ocs.ComputePIDForce(objPtr);
+			//Find Control parameters
+			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
+			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
+			odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
+			objPtr->setLatestInput(duties);
+		}
+		else if (observationTime - objPtr->lastDeterminationTime > 1000)
+		{
+			objPtr->isTracked = false;
+		}
 
 		//output log
 		Eigen::Vector3f pos; pos << objPtr->getPosition();
 		Eigen::Vector3f vel; vel << objPtr->getVelocity();
 		Eigen::Vector3f integral; integral << objPtr->getIntegral();
+		Eigen::VectorXf u = objPtr->getLatestInput();
 		
-		ofs << loopInitTime << ", " << pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
+		ofs << loopInitTime << ", " << succeeded << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
+			<< pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< integral.x() << ", " << integral.y() << ", " << integral.z() << ", "
 			<< positionTarget.x() << ", " << positionTarget.y() << ", " << positionTarget.z() << ", "
-			<< duties[0] << ", " << duties[1] << ", " << duties[2] << ", " << duties[3] << ", " << duties[4] << std::endl;
+			<< u[0] << ", " << u[1] << ", " << u[2] << ", " << u[3] << ", " << u[4] << std::endl;
 		
 		int waitTime = loopPeriod - (timeGetTime() - loopInitTime);
 		Sleep(std::max(waitTime, 0));

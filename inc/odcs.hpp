@@ -24,8 +24,11 @@ public:
 	Eigen::Vector3f getIntegral();
 	Eigen::Vector3f getPositionTarget();
 	Eigen::Vector3f getVelocityTarget();
+	Eigen::VectorXf getLatestInput();
+	void setLatestInput(Eigen::VectorXf input);
+	Eigen::VectorXf inputLatest;
 
-	Eigen::Matrix3f covError;
+	Eigen::MatrixXf covError;
 	DWORD lastDeterminationTime;
 	bool isTracked;
 	bool _isStable;
@@ -110,6 +113,7 @@ public:
 	Eigen::MatrixXf eulerAnglesAUTD;
 	Eigen::MatrixXf centerAUTD;
 	std::unique_ptr<arfModelLinearBase> arfModelPtr;
+	void RegisterObject(FloatingObjectPtr objPtr);
 
 private:
 	Eigen::Vector3f gainP = -1.6 * Eigen::Vector3f::Ones();
@@ -146,14 +150,18 @@ class odcs
 {
 public:
 	void Initialize();
-	void StartControl(std::vector<FloatingObjectPtr> &objPtrs);
+	int AddObject(Eigen::Vector3f positionTarget);
+	void RegisterObject(FloatingObjectPtr objPtr);
+	const FloatingObjectPtr GetAccess2Object(int i);
+	void StartControl();
 	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
 	void Close();
-	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::VectorXf &amplitudes);
+	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD determinationTime);
 	ods ods;
 	ocs ocs;
 	std::thread thread_control;
 private:
+	std::vector<FloatingObjectPtr> objPtrs;
 };
 
 #endif

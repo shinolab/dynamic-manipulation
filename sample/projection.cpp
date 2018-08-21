@@ -166,7 +166,6 @@ void runInteractionLoop(Eigen::Affine3f affineKinect2Global, std::vector<Floatin
 						cv::imshow("VIEW", view);
 						cv::waitKey(1);
 						}
-						
 					}
 				}
 			}
@@ -187,15 +186,14 @@ int main()
 	odcs.Initialize();
 	Eigen::Affine3f affineKinect2Global = odcs.ods.getAffineKinect2Global();
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
-	std::vector<FloatingObjectPtr> objPtrs;
-	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1600))));
+	odcs.AddObject(Eigen::Vector3f(0, 0, 1600));
 	cv::Mat image = cv::imread("img/shinolab2.jpg");
 	cv::VideoCapture cap("video/bird2.mp4");
 	//start control thread.
-	odcs.StartControl(objPtrs);
+	odcs.StartControl();
 
 	//start projection thread.
-	std::thread threadProjection([&image, &cap, &objPtrs, &affineGlobal2Kinect](){
+	std::thread threadProjection([&image, &cap, &odcs, &affineGlobal2Kinect](){
 		cv::Mat blank(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
 		imshowPopUp("FULL", blank, MAINDISPLAY_WIDTH, 0);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
@@ -206,7 +204,7 @@ int main()
 		while (1)
 		{
 			DWORD initTimeLoop = timeGetTime();
-			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * objPtrs[0]->getPosition();
+			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * odcs.GetAccess2Object(0)->getPosition();
 			colcount++;
 			//cap >> image;
 			projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
@@ -267,8 +265,8 @@ int main()
 			x = 0; y = 0; z = offsetZ;
 			break;
 		}
-		objPtrs[0]->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
-		Eigen::Vector3f currentPosition = objPtrs[0]->getPosition();
+		odcs.GetAccess2Object(0)->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
+		Eigen::Vector3f currentPosition = odcs.GetAccess2Object(0)->getPosition();
 		ofs << timeGetTime() - initialTime << ", " << currentPosition.x() << ", " << currentPosition.y() << ", " << currentPosition.z() << ", "
 			<< x << ", " << y << "," << z << ", " << vx << ", " << vy << ", " << vz << std::endl;
 		int loopTime = timeGetTime() - beginningOfLoop;
@@ -277,7 +275,7 @@ int main()
 			Sleep(loopPeriod - loopTime);
 		}
 	}
-	objPtrs[0]->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
+	odcs.GetAccess2Object(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
 	return 0;
 	//start interaction thread.
@@ -293,8 +291,8 @@ int main()
 	{
 		DWORD beginningOfLoop = timeGetTime();
 		HRESULT hr = app.getBodies();
-		Eigen::Vector3f objectPosition = objPtrs[0]->getPosition();
-		Eigen::Vector3f targetPosition = objPtrs[0]->getPositionTarget();
+		Eigen::Vector3f objectPosition = odcs.GetAccess2Object(0)->getPosition();
+		Eigen::Vector3f targetPosition = odcs.GetAccess2Object(0)->getPositionTarget();
 
 		if (SUCCEEDED(hr))
 		{
@@ -338,7 +336,7 @@ int main()
 								{
 									if (distR < distThreshold)
 									{
-										objPtrs[0]->updateStatesTarget(objPtrs[0]->getPosition(), Eigen::Vector3f(0, 0, 0));
+										odcs.GetAccess2Object(0)->updateStatesTarget(odcs.GetAccess2Object(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
 										cv::putText(view,
 											"Following (R)",
 											cv::Point(dspHandRight.X, dspHandRight.Y),
@@ -349,7 +347,7 @@ int main()
 									}
 									else
 									{
-										objPtrs[0]->updateStatesTarget(objPtrs[0]->getPosition(), Eigen::Vector3f(0, 0, 0));
+										odcs.GetAccess2Object(0)->updateStatesTarget(odcs.GetAccess2Object(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
 										cv::putText(view,
 											"Following(L)",
 											cv::Point(dspHandRight.X, dspHandRight.Y),

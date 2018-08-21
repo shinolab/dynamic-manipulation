@@ -23,7 +23,7 @@ int main()
 	std::vector<FloatingObjectPtr> objPtrs;
 	objPtrs.push_back(FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1500))));
 	Eigen::Affine3f affineKinect2Global = odcs.ods.getAffineKinect2Global();
-	odcs.StartControl(objPtrs);
+	odcs.StartControl();
 	
 	//interaction sequence
 	KinectApp app; 

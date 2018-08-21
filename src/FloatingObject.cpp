@@ -11,7 +11,7 @@
 
 FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 {
-	position << 0, 0, 0;
+	position << _positionTarget;
 	velocity << 0, 0, 0;
 	integral << 0, 0, 0;
 	positionTarget = _positionTarget;
@@ -29,9 +29,7 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	{
 		*itr = 1;
 	}
-	covError << 100.0, 0, 0,
-		0, 100.0, 0,
-		0, 0, 100.0;
+	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
 }
 
 float FloatingObject::sphereMass()
@@ -131,6 +129,16 @@ Eigen::Vector3f FloatingObject::averageVelocity()
 	}
 	averageVelocity /= period;
 	return averageVelocity;
+}
+
+Eigen::VectorXf FloatingObject::getLatestInput()
+{
+	return inputLatest;
+}
+
+void FloatingObject::setLatestInput(Eigen::VectorXf input)
+{
+	inputLatest = input;
 }
 
 bool FloatingObject::isStable()

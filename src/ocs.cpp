@@ -57,6 +57,12 @@ void ocs::Close()
 	//engClose(ep);
 }
 
+void ocs::RegisterObject(FloatingObjectPtr objPtr)
+{
+	objPtr->inputLatest.resize(positionAUTD.cols());
+	objPtr->inputLatest.setZero();
+}
+
 void ocs::SetArfModel(std::unique_ptr<arfModelLinearBase> _arfModelPtr)
 {
 	this->arfModelPtr = std::move(_arfModelPtr);

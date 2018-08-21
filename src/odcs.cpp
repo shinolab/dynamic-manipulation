@@ -18,6 +18,23 @@ void odcs::Initialize()
 	ocs.Initialize();
 }
 
+int odcs::AddObject(Eigen::Vector3f targetPosition)
+{
+	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
+	return objPtrs.size();
+}
+
+void odcs::RegisterObject(FloatingObjectPtr objPtr)
+{
+	objPtrs.push_back(objPtr);
+	ocs.RegisterObject(objPtr);
+}
+
+const FloatingObjectPtr odcs::GetAccess2Object(int i)
+{
+	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
+}
+
 void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs)
 {
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
@@ -29,9 +46,9 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs)
 	}
 }
 
-void odcs::StartControl(std::vector<FloatingObjectPtr> &objPtrs)
+void odcs::StartControl()
 {
-	thread_control = std::thread([this, &objPtrs](){
+	thread_control = std::thread([this](){
 		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
 		Sleep(5);
 		while (1)
@@ -54,29 +71,33 @@ void odcs::Close()
 	{
 	thread_control.join();
 	}
-	
 	ocs.Close();
 }
 
-void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::VectorXf &amplitudes)
+void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD observationTime)
 {
-	Eigen::Vector3f observe;  ods.GetPositionByDepth(objPtr, observe, true); //observe states of the object
-	float dt = (timeGetTime() - objPtr->lastDeterminationTime) / 1000.0;
+	float dt = (observationTime - objPtr->lastDeterminationTime) / 1000.0;
+	//-----Construct System Matrix
 	Eigen::MatrixXf A(6, 6);
 	A << Eigen::Matrix3f::Identity(), dt * Eigen::Matrix3f::Identity(),
-		Eigen::Matrix3f::Zero(), Eigen::Matrix3f::Identity();
+		Eigen::Matrix3f::Zero(), dt * Eigen::Matrix3f::Identity();
 	Eigen::MatrixXf B(6, ocs.positionAUTD.cols());
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.positionAUTD;
-	Eigen::MatrixXf F = this->ocs.arfModelPtr->arf(posRel, ocs.directionsAUTD) / objPtr->totalMass();
-	B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()), F;
-	Eigen::VectorXf g(6); g << 0, 0, 0, 0, 0, objPtr->additionalMass * 9.806 / objPtr->totalMass();
-	Eigen::VectorXf state;
-	Eigen::MatrixXf P;
-	Eigen::MatrixXf C(3, 6);
-	Eigen::MatrixXf D(6, 6);
-	Eigen::MatrixXf W(6, 6); // parameters of environment
-	Eigen::MatrixXf V(3, 3); // parameters of kinect
-	estimateStateKF(state, P, amplitudes, observe, A, B, g, C, D, W, V);
-	//update states of object
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.centerAUTD;
+	B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()),
+		ocs.arfModelPtr->arf(posRel, ocs.eulerAnglesAUTD) / objPtr->totalMass() * dt;
+	Eigen::VectorXf g(6); g << Eigen::Vector3f::Zero(), dt * objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.801e3) / objPtr->totalMass() * dt;
+	Eigen::MatrixXf C(3, 6); C << Eigen::Matrix3f::Identity(), Eigen::Matrix3f::Zero();
+	Eigen::MatrixXf D(6, 6); D.setIdentity();
+	Eigen::VectorXf w(6); w << 10, 10, 10, 0.25 * Eigen::Vector3f::Ones() * dt / objPtr->totalMass();
+	Eigen::MatrixXf covDisturbance(6, 6); covDisturbance = w.asDiagonal();
+	Eigen::Matrix3f covNoise = 3 * Eigen::Matrix3f::Identity(); //assuming that errors in all directions are independent.
+	//-----estimation
+	Eigen::VectorXf state(6); state << objPtr->getPosition(), objPtr->getVelocity();
+	Eigen::MatrixXf covError = objPtr->covError;
+	estimateStateKF(state, covError, objPtr->getLatestInput(), observe, A, B, g, C, D, covDisturbance, covNoise);
+	Eigen::Vector3f pos_next = state.head(3);
+	Eigen::Vector3f vel_next = state.tail(3);
+	objPtr->updateStates(observationTime, pos_next, vel_next);
+	objPtr->covError = covError;
 }
 

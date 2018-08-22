@@ -204,7 +204,7 @@ int main()
 		while (1)
 		{
 			DWORD initTimeLoop = timeGetTime();
-			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * odcs.GetAccess2Object(0)->getPosition();
+			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * odcs.GetFloatingObject(0)->getPosition();
 			colcount++;
 			//cap >> image;
 			projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
@@ -265,8 +265,8 @@ int main()
 			x = 0; y = 0; z = offsetZ;
 			break;
 		}
-		odcs.GetAccess2Object(0)->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
-		Eigen::Vector3f currentPosition = odcs.GetAccess2Object(0)->getPosition();
+		odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
+		Eigen::Vector3f currentPosition = odcs.GetFloatingObject(0)->getPosition();
 		ofs << timeGetTime() - initialTime << ", " << currentPosition.x() << ", " << currentPosition.y() << ", " << currentPosition.z() << ", "
 			<< x << ", " << y << "," << z << ", " << vx << ", " << vy << ", " << vz << std::endl;
 		int loopTime = timeGetTime() - beginningOfLoop;
@@ -275,7 +275,7 @@ int main()
 			Sleep(loopPeriod - loopTime);
 		}
 	}
-	odcs.GetAccess2Object(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
+	odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
 	return 0;
 	//start interaction thread.
@@ -291,8 +291,8 @@ int main()
 	{
 		DWORD beginningOfLoop = timeGetTime();
 		HRESULT hr = app.getBodies();
-		Eigen::Vector3f objectPosition = odcs.GetAccess2Object(0)->getPosition();
-		Eigen::Vector3f targetPosition = odcs.GetAccess2Object(0)->getPositionTarget();
+		Eigen::Vector3f objectPosition = odcs.GetFloatingObject(0)->getPosition();
+		Eigen::Vector3f targetPosition = odcs.GetFloatingObject(0)->getPositionTarget();
 
 		if (SUCCEEDED(hr))
 		{
@@ -336,7 +336,7 @@ int main()
 								{
 									if (distR < distThreshold)
 									{
-										odcs.GetAccess2Object(0)->updateStatesTarget(odcs.GetAccess2Object(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
+										odcs.GetFloatingObject(0)->updateStatesTarget(odcs.GetFloatingObject(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
 										cv::putText(view,
 											"Following (R)",
 											cv::Point(dspHandRight.X, dspHandRight.Y),
@@ -347,7 +347,7 @@ int main()
 									}
 									else
 									{
-										odcs.GetAccess2Object(0)->updateStatesTarget(odcs.GetAccess2Object(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
+										odcs.GetFloatingObject(0)->updateStatesTarget(odcs.GetFloatingObject(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
 										cv::putText(view,
 											"Following(L)",
 											cv::Point(dspHandRight.X, dspHandRight.Y),

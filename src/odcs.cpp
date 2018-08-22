@@ -30,7 +30,7 @@ void odcs::RegisterObject(FloatingObjectPtr objPtr)
 	ocs.RegisterObject(objPtr);
 }
 
-const FloatingObjectPtr odcs::GetAccess2Object(int i)
+const FloatingObjectPtr odcs::GetFloatingObject(int i)
 {
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }

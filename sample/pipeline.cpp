@@ -50,7 +50,7 @@ int main()
 		}
 
 		Eigen::Vector3f vec = Eigen::Map<Eigen::Vector3f>(&v[0]);
-		odcs.GetAccess2Object(0)->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
+		odcs.GetFloatingObject(0)->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
 		std::cout << "target position is updated to : " << vec.transpose() << std::endl;
 
 	} while (strcmp(buffer, "") != 0);

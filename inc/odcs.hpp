@@ -152,7 +152,7 @@ public:
 	void Initialize();
 	int AddObject(Eigen::Vector3f positionTarget);
 	void RegisterObject(FloatingObjectPtr objPtr);
-	const FloatingObjectPtr GetAccess2Object(int i);
+	const FloatingObjectPtr GetFloatingObject(int i);
 	void StartControl();
 	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
 	void Close();

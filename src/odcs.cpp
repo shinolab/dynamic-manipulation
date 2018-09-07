@@ -67,7 +67,7 @@ void odcs::StartControl()
 void odcs::Close()
 {
 	
-	if (!thread_control.joinable())
+	if (thread_control.joinable())
 	{
 	thread_control.join();
 	}

@@ -11,9 +11,9 @@
 
 int main()
 {
-	std::ofstream ofs("20180822_kalmanfiltering.csv");
+	std::ofstream ofs("20180907_kalmanfiltering.csv");
 	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], u0, u1, u2, u3, u4" << std::endl;
-	const int period = 30000;
+	const int period = 10000;
 	const int loopPeriod = 30;
 	odcs odcs;
 	odcs.Initialize();
@@ -55,7 +55,9 @@ int main()
 		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
-			odcs.DetermineStateKF(objPtr, posObserved, observationTime);
+			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
+			objPtr->updateStates(observationTime, posObserved);
+			objPtr->isTracked = true;
 			//PIDController
 			Eigen::VectorXf force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
@@ -75,7 +77,7 @@ int main()
 		Eigen::Vector3f integral; integral << objPtr->getIntegral();
 		Eigen::VectorXf u = objPtr->getLatestInput();
 		
-		ofs << loopInitTime << ", " << succeeded << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
+		ofs << loopInitTime << ", " << succeeded << "," << objPtr->isTracked << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 			<< pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< integral.x() << ", " << integral.y() << ", " << integral.z() << ", "

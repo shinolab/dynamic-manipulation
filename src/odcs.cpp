@@ -35,15 +35,19 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 30)
 {
+	DWORD timeInit = timeGetTime();
+	int periodPerObject = loopPeriod / objPtrs.size();
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
 		ods.DeterminePositionByDepth(*itr, true);
 		Eigen::VectorXf amplitudes = ocs.FindDutyQP((*itr)) * objPtrs.size();
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-		ocs.DirectSemiPlaneWave((*itr), duties);
+		ocs.DirectSemiPlaneWave((*itr), duties);	
 	}
+	int waitTime = loopPeriod - (timeGetTime() - timeInit);
+	Sleep(std::max(waitTime, 0));
 }
 
 void odcs::StartControl()

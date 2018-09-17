@@ -1,7 +1,7 @@
-#define SUBDISPLAY_WIDTH 1024
-#define SUBDISPLAY_HEIGHT 768
-#define MAINDISPLAY_WIDTH 1366
-#define MAINDISPLAY_HEIGHT 768
+#define SUBDISPLAY_WIDTH 3840
+#define SUBDISPLAY_HEIGHT 2160
+#define MAINDISPLAY_WIDTH 1920
+#define MAINDISPLAY_HEIGHT 1080
 
 #include <thread>
 #include <fstream>
@@ -44,12 +44,12 @@ void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv:
 	//here comes conversion from object position to object points
 	std::vector<cv::Point2f> imagePoints2d;
 	cv::Mat internalParam = (cv::Mat_<float>(3, 3) <<
-		771, 0, 498,
-		0, 771, 886,
+		5933, 0, 1398,
+		0, 5998, 2018,
 		0, 0, 1);
-	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << 0, 0, 0, 0, 0);
-	cv::Mat rvec = (cv::Mat_<float>(3, 1) << 0.02436, 0.01095, 3.131);
-	cv::Mat tvec = (cv::Mat_<float>(3, 1) << 39.9, -768.8, 209.8);
+	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << -0.0355, 0.0376, -0.0167, 0.00095, 0);
+	cv::Mat rvec = (cv::Mat_<float>(3, 1) << 0.825, 0.0783, 3.01);
+	cv::Mat tvec = (cv::Mat_<float>(3, 1) << -395.46, -406.26, 1095.4);
 
 	cv::Point2f centerImage;
 	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, distCoeff, imagePoints2d);

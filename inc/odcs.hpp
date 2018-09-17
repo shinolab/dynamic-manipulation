@@ -154,7 +154,7 @@ public:
 	void RegisterObject(FloatingObjectPtr objPtr);
 	const FloatingObjectPtr GetFloatingObject(int i);
 	void StartControl();
-	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs);
+	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 	void Close();
 	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD determinationTime);
 	ods ods;

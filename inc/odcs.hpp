@@ -85,6 +85,8 @@ public:
 
 	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
 
+	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
+
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);

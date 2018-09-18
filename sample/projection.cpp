@@ -55,7 +55,7 @@ void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv:
 	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, distCoeff, imagePoints2d);
 	
 	cv::Mat dst(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
-	float scale = 1.0 * 1000.0 / objectPosition.z;
+	float scale = 5.0 * 1000.0 / objectPosition.z;
 	float zscale = 1000.0 / objectPosition.z;
 	cv::Rect roi(cv::Point(0 * image.cols, 0),cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
@@ -72,113 +72,6 @@ void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv:
 	cv::imshow(windowName, dst);
 }
 
-void runInteractionLoop(Eigen::Affine3f affineKinect2Global, std::vector<FloatingObjectPtr> objPtrs)
-{
-	KinectApp app;
-	app.initialize();
-	bool isGrabbed = false;
-	DWORD timeGrabbed;
-	const float distThreshold = 500;
-	const int timeThreshold = 3000;
-	std::cout << "initialization completed." << std::endl;
-	while (1)
-	{
-		Sleep(30);
-		HRESULT hr = app.getBodies();
-		if (SUCCEEDED(hr))
-		{
-			for (auto itr = app.pBodies.begin(); itr != app.pBodies.end(); itr++)
-			{
-				BOOLEAN isTracked = false;
-				HRESULT hrTrack = (*itr)->get_IsTracked(&isTracked);
-				if (isTracked && SUCCEEDED(hrTrack))
-				{
-					std::vector<Joint> joints(JointType::JointType_Count);
-					HRESULT hrJoints = (*itr)->GetJoints(JointType::JointType_Count, &joints[0]);
-					if (SUCCEEDED(hrJoints))
-					{
-						CameraSpacePoint cspHandRight = joints[JointType::JointType_HandRight].Position;
-						CameraSpacePoint cspHandLeft = joints[JointType::JointType_HandLeft].Position;
-						DepthSpacePoint dspHandRight = app.convertPositionToDepthPixel(cspHandRight);
-						DepthSpacePoint dspHandLeft = app.convertPositionToDepthPixel(cspHandLeft);
-						Eigen::Vector3f positionHandRight =
-							affineKinect2Global * Eigen::Vector3f(1000 * cspHandRight.X, 1000 * cspHandRight.Y, 1000 * cspHandRight.Z);
-						Eigen::Vector3f positionHandLeft =
-							affineKinect2Global * Eigen::Vector3f(1000 * cspHandLeft.X, 1000 * cspHandLeft.Y, 1000 * cspHandLeft.Z);
-						float distR = (objPtrs[0]->getPosition() - positionHandRight).norm();
-						float distL = (objPtrs[0]->getPosition() - positionHandLeft).norm();
-						cv::Mat depthImage(app.getDepthHeight(), app.getDepthWidth(), CV_16UC1);
-						HRESULT hrDepth = app.getDepthBuffer();
-						depthImage = cv::Mat(app.getDepthHeight(), app.getDepthWidth(), CV_16UC1, &app.depthBuffer[0]);
-						cv::Mat grayView(app.getDepthHeight(), app.getDepthWidth(), CV_8UC1);
-						depthImage.convertTo(grayView, CV_8UC1, 255.0 / (float)app.depthMaxReliableDistance, 0);
-						cv::Mat view(app.getDepthHeight(), app.getDepthWidth(), CV_8UC3);
-						cv::cvtColor(grayView, view, CV_GRAY2BGR);
-						cv::circle(view, cv::Point(dspHandRight.X, dspHandRight.Y), 10, cv::Scalar(0, 0, 255));
-						cv::circle(view, cv::Point(dspHandLeft.X, dspHandLeft.Y), 10, cv::Scalar(0, 255, 0));
-						cv::putText(view, std::to_string(distR), cv::Point(0, 50), CV_FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 0, 255));
-						cv::putText(view, std::to_string(distL), cv::Point(0, 100), CV_FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(0, 255, 0));
-
-
-						if (distR < distThreshold || distL < distThreshold)
-						{
-							if (isGrabbed)
-							{
-								if ((timeGetTime() - timeGrabbed) > timeThreshold)
-								{
-									if (distR < distThreshold)
-									{
-										objPtrs[0]->updateStatesTarget(objPtrs[0]->getPosition(), Eigen::Vector3f(0, 0, 0));
-										cv::putText(view,
-											"Following (R)",
-											cv::Point(dspHandRight.X, dspHandRight.Y),
-											CV_FONT_HERSHEY_SIMPLEX,
-											0.6,
-											cv::Scalar(0, 0, 255)
-										);
-									}
-									else
-									{
-										objPtrs[0]->updateStatesTarget(objPtrs[0]->getPosition(), Eigen::Vector3f(0, 0, 0));
-										cv::putText(view,
-											"Following(L)",
-											cv::Point(dspHandRight.X, dspHandRight.Y),
-											CV_FONT_HERSHEY_SIMPLEX,
-											0.6,
-											cv::Scalar(0, 255, 0)
-										);
-									}
-								}
-							}
-							else
-							{
-								isGrabbed = true;
-								timeGrabbed = timeGetTime();
-							}
-						}
-						else
-						{
-							isGrabbed = false;
-						}
-						
-						if (SUCCEEDED(hrDepth))
-						{
-						cv::imshow("VIEW", view);
-						cv::waitKey(1);
-						}
-					}
-				}
-			}
-
-		}
-		auto key = cv::waitKey(1);
-		if (key == 'q')
-		{
-			break;
-		}
-	}
-}
-
 int main()
 {
 	//initialization
@@ -186,57 +79,65 @@ int main()
 	odcs.Initialize();
 	Eigen::Affine3f affineKinect2Global = odcs.ods.getAffineKinect2Global();
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
-	odcs.AddObject(Eigen::Vector3f(0, 0, 1600));
-	cv::Mat image = cv::imread("img/shinolab2.jpg");
+	Eigen::Matrix3f dcmGlobal2Kinect = odcs.ods.getDcmGlobal2Kinect();
+	odcs.AddObject(Eigen::Vector3f(0, 0, 1300));
+	cv::Mat image = cv::imread("img/shinolab3.jpg");
 	cv::VideoCapture cap("video/bird2.mp4");
 	//start control thread.
 	odcs.StartControl();
 
 	//start projection thread.
-	std::thread threadProjection([&image, &cap, &odcs, &affineGlobal2Kinect](){
+	std::thread threadProjection([&image, &cap, &odcs, &affineGlobal2Kinect, &dcmGlobal2Kinect](){
 		cv::Mat blank(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
 		imshowPopUp("FULL", blank, MAINDISPLAY_WIDTH, 0);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
 		int count_frame = 0;
-		int num_average = 7;
+		int num_average = 3;
 		Eigen::MatrixXf posBuffer(3, num_average);
 		unsigned int colcount = 0;
 		while (1)
 		{
 			DWORD initTimeLoop = timeGetTime();
-			posBuffer.col(colcount%num_average) << affineGlobal2Kinect * odcs.GetFloatingObject(0)->getPosition();
-			colcount++;
-			//cap >> image;
-			projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
-			std::cout << posBuffer.rowwise().sum().transpose() << std::endl; ;
-			auto key = cv::waitKey(1);
-			count_frame++;
-			/*
-			count_frame++;
-			if (count_frame >= num_frame / 2)
+			if (odcs.GetFloatingObject(0)->isTracked)
 			{
-			cap.set(cv::CAP_PROP_POS_FRAMES, 0);
-			count_frame = 0;
+				Eigen::Vector3f pos = affineGlobal2Kinect * odcs.GetFloatingObject(0)->getPosition();
+				posBuffer.col(colcount%num_average) << pos;
+				//Eigen::Vector3f vel = dcmGlobal2Kinect * odcs.GetFloatingObject(0)->getVelocity();
+				colcount++;
+				//cap >> image;
+				//projectImageOnObject("FULL", pos + vel * (timeGetTime() - odcs.GetFloatingObject(0)->lastDeterminationTime)/1000, image);
+				projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
+				//std::cout << posBuffer.rowwise().sum().transpose() << std::endl; ;
+				auto key = cv::waitKey(1);
+				count_frame++;
+				/*
+				count_frame++;
+				if (count_frame >= num_frame / 2)
+				{
+				cap.set(cv::CAP_PROP_POS_FRAMES, 0);
+				count_frame = 0;
+				}
+				*/
+				if (key == 'q') { break; }
+				int loopTime = (timeGetTime() - initTimeLoop);
+				if (loopTime < 30) { Sleep(30 - loopTime); }
+
+
 			}
-			*/
-			if (key == 'q') { break; }
-			int loopTime = (timeGetTime() - initTimeLoop);
-			if (loopTime < 30) { Sleep(30-loopTime); }
-			
 		}
 	});
 
-	std::ofstream ofs("20180811_projection_log_with_moving_average3.csv");
+	std::ofstream ofs("20180918_projection_log2.csv");
 	float lengthX = 300;
 	float offsetX = 0;
 	float offsetY = 0;
-	float offsetZ = 1600;
-	int period = 10000;
-	Sleep(40000);
+	float offsetZ = 1300;
+	int period = 6000;
+	Sleep(20000);
 	ofs << "time, x, y, z, v_x, v_y, v_z, I_x, I_y, I_z, x_tgt, y_tgt, z_tgt, v_x, v_y, v_z, u0, u1, u2, u3, u4" << std::endl;
 	DWORD initialTime = timeGetTime();
 	DWORD loopPeriod = 30;
-	while (1)//(timeGetTime()-initialTime) < 2 * period)
+	while ((timeGetTime()-initialTime) < 4 * period)
 	{
 		DWORD beginningOfLoop = timeGetTime();
 		float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
@@ -246,19 +147,19 @@ int main()
 		{
 		case 0:
 			vx = 0; vy = 0; vz = 0;
-			x = lengthX;  y = 0; z = offsetZ; 
+			x = lengthX;  y = lengthX ; z = offsetZ;
 			break;
 		case 1:
 			vx = 0; vy = 0; vz = 0;
-			x = lengthX / 2;  y = lengthX / 2; z = offsetZ;
+			x = 0;  y = 0; z = offsetZ;
 			break;
 		case 2:
 			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = lengthX; z = offsetZ;
+			x = 0;  y = 0; z = offsetZ-300;
 			break;
 		case 3:
 			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = 0; z = offsetZ;
+			x = 0;  y = 0; z = offsetZ+200;
 			break;
 		default:
 			vx = 0; vy = 0; vz = 0;
@@ -277,7 +178,7 @@ int main()
 	}
 	odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
-	return 0;
+	
 	//start interaction thread.
 	//interaction sequence
 	KinectApp app;
@@ -285,8 +186,9 @@ int main()
 	bool isGrabbed = false;
 	DWORD timeGrabbed;
 	const float distThreshold = 500;
-	const int timeThreshold = 1500;
+	const int timeThreshold = 1000;
 	std::cout << "initialization completed." << std::endl;
+	initialTime = timeGetTime();
 	while (timeGetTime() - initialTime < 90000)
 	{
 		DWORD beginningOfLoop = timeGetTime();
@@ -350,7 +252,7 @@ int main()
 										odcs.GetFloatingObject(0)->updateStatesTarget(odcs.GetFloatingObject(0)->getPosition(), Eigen::Vector3f(0, 0, 0));
 										cv::putText(view,
 											"Following(L)",
-											cv::Point(dspHandRight.X, dspHandRight.Y),
+											cv::Point(dspHandLeft.X, dspHandLeft.Y),
 											CV_FONT_HERSHEY_SIMPLEX,
 											0.6,
 											cv::Scalar(0, 255, 0)

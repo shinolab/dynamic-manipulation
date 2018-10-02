@@ -30,6 +30,15 @@ int ods::Initialize()
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
 	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	while (1)
+	{
+		HRESULT hr = updateBackgroundDepth();
+		if (SUCCEEDED(hr))
+		{
+			break;
+		}
+		Sleep(10);
+	}
 	return 0;
 }
 
@@ -40,6 +49,17 @@ bool ods::isInsideWorkSpace(const Eigen::Vector3f &pos)
 	Eigen::Vector3f v0 = pos - workspace.col(0);
 	Eigen::Vector3f v1 = pos - workspace.col(1);
 	return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
+}
+
+HRESULT ods::updateBackgroundDepth()
+{
+	HRESULT hr = kinectApp.getDepthBuffer();
+	if (SUCCEEDED(hr))
+	{
+		backgroundDepth.resize(kinectApp.depthBuffer.size());
+		backgroundDepth = kinectApp.depthBuffer;
+	}
+	return hr;
 }
 
 //==================== Primitive Determination Functions ====================
@@ -242,8 +262,23 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 	if (SUCCEEDED(hr))
 	{
 		cv::Mat depthImageRaw = cv::Mat(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_16UC1, &kinectApp.depthBuffer[0]).clone();
+		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
+		cv::imshow("Raw", depthImageUc8);
+
+		//Background Subtraction
+		if (!backgroundDepth.empty())
+		{
+			cv::Mat subtracted;
+			cv::Mat imgBackground = cv::Mat(depthImageRaw.size(), CV_16UC1, &backgroundDepth[0]);
+			cv::Mat invalidPixels; cv::compare(imgBackground, cv::Mat::zeros(imgBackground.size(), imgBackground.type()), invalidPixels, cv::CMP_EQ);
+			cv::Mat maskBackground;
+			cv::inRange(imgBackground - depthImageRaw, cv::Scalar(10), cv::Scalar(kinectApp.depthMaxReliableDistance), maskBackground);
+			depthImageRaw.copyTo(subtracted, maskBackground + invalidPixels);
+			subtracted.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance);
+			cv::imshow("Subtracted", depthImageUc8);
+		}
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
 		//=====truncate region around the object=====
@@ -260,8 +295,10 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
+		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 		//cv::imshow("ROI-masked", maskedImage);
-
+		cv::imshow("In-range", maskedImage);
+		
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);
 		cv::Point center = cv::Point((int)(mu.m10 / mu.m00), (int)(mu.m01 / mu.m00));

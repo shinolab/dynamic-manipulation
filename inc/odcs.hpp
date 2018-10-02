@@ -79,6 +79,7 @@ private:
 	Eigen::Matrix3f dcmKinect2Global; // x_kinect = attitudeKinect * x_global
 	Eigen::Affine3f affineKinect2Global;
 	Eigen::Matrix<float, 3, 2> workspace;
+	std::vector<UINT16> backgroundDepth;
 
 public:
 	int Initialize();
@@ -103,6 +104,8 @@ public:
 
 	//This function only observes a position of the object and do NOT update its position.
 	bool GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI);
+
+	HRESULT updateBackgroundDepth();
 
 };
 

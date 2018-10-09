@@ -76,13 +76,13 @@ int main()
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
 	Eigen::Matrix3f dcmGlobal2Kinect = odcs.ods.getDcmGlobal2Kinect();
 	odcs.AddObject(Eigen::Vector3f(0, 0, 1300));
-	cv::Mat image = cv::imread("img/shinolab3.jpg");
 	cv::VideoCapture cap("video/bird2.mp4");
 	//start control thread.
 	odcs.StartControl();
 
 	//start projection thread.
-	std::thread threadProjection([&image, &cap, &odcs, &affineGlobal2Kinect, &dcmGlobal2Kinect](){
+	std::thread threadProjection([&cap, &odcs, &affineGlobal2Kinect, &dcmGlobal2Kinect](){
+		cv::Mat image = cv::imread("img/shinolab3.jpg");
 		std::string projectorName = "projector1";
 		projector proj(projectorName);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
@@ -101,7 +101,7 @@ int main()
 				colcount++;
 				//cap >> image;
 				//projectImageOnObject("FULL", pos + vel * (timeGetTime() - odcs.GetFloatingObject(0)->lastDeterminationTime)/1000, image);
-				projectImageOnObject("FULL", posBuffer.rowwise().sum() / num_average, image);
+				proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, image, cv::Size(100, 100));
 				//std::cout << posBuffer.rowwise().sum().transpose() << std::endl; ;
 				auto key = cv::waitKey(1);
 				count_frame++;

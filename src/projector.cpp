@@ -1,8 +1,3 @@
-#define SUBDISPLAY_WIDTH 3840
-#define SUBDISPLAY_HEIGHT 2160
-#define MAINDISPLAY_WIDTH 1920
-#define MAINDISPLAY_HEIGHT 1080
-
 #include "projector.hpp"
 #include <Windows.h>
 #include <Eigen/Geometry>
@@ -15,11 +10,11 @@
 #include <opencv2/core/eigen.hpp>
 #include <string>
 
-projector::projector(std::string _name
-	, const int _posX = GetSystemMetrics(SM_CXSCREEN)
-	, const int _posY = 0
-	, const int _width = SUBDISPLAY_WIDTH
-	, const int _height = SUBDISPLAY_HEIGHT)
+projector::projector(std::string _projectorName
+	, const int _posX
+	, const int _posY
+	, const int _width
+	, const int _height)
 {
 	internalParam = (cv::Mat_<float>(3, 3) <<
 		5933, 0, 1398,
@@ -33,7 +28,7 @@ projector::projector(std::string _name
 	this->posY = _posY;
 	this->width = _width;
 	this->height = _height;
-	this->name = _name;
+	this->name = _projectorName;
 	CreateScreen();
 }
 
@@ -65,7 +60,7 @@ Eigen::Affine3f projector::affineReference2Projector()
 }
 
 //size should be specified in [mm]c
-void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor = cv::Scalar(255, 255, 255))
+void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor)
 {
 	float distance = (affineReference2Projector()*posRef).z();
 	cv::Point3f objectPosition(posRef.x(), posRef.y(), posRef.z());

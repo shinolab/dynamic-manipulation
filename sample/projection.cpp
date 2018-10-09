@@ -4,6 +4,7 @@
 #define MAINDISPLAY_HEIGHT 1080
 
 #include "odcs.hpp"
+#include "projector.hpp"
 #include <Eigen/Geometry>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -14,6 +15,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <thread>
 #include <fstream>
+#include <string>
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -81,8 +83,8 @@ int main()
 
 	//start projection thread.
 	std::thread threadProjection([&image, &cap, &odcs, &affineGlobal2Kinect, &dcmGlobal2Kinect](){
-		cv::Mat blank(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
-		imshowPopUp("FULL", blank, MAINDISPLAY_WIDTH, 0);
+		std::string projectorName = "projector1";
+		projector proj(projectorName);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
 		int count_frame = 0;
 		int num_average = 3;

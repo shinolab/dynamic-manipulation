@@ -19,54 +19,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-void imshowPopUp(const char* windowName, cv::Mat image, int posX, int posY)
-{
-	cv::namedWindow(windowName, CV_WINDOW_NORMAL);
-
-	HWND windowHandle = ::FindWindowA(NULL, windowName);
-
-	if (windowHandle != NULL)
-	{
-		SetWindowLongPtrA(windowHandle, GWL_STYLE, WS_POPUP);
-		SetWindowLongPtrA(windowHandle, GWL_EXSTYLE, WS_EX_TOPMOST);
-
-		ShowWindow(windowHandle, SW_MAXIMIZE);
-		cv::setWindowProperty(windowName, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-
-		SetWindowPos(windowHandle, NULL,
-			posX, posY, image.cols, image.rows, SWP_FRAMECHANGED | SWP_NOZORDER);
-	}
-	cv::imshow(windowName, image);
-}
-
-void projectImageOnObject(const char* windowName, Eigen::Vector3f posKinect, cv::Mat image)
-{
-	cv::Point3f objectPosition(posKinect.x(), posKinect.y(), posKinect.z());
-	std::vector<cv::Point3f> imagePoints3d = { objectPosition };
-	//here comes conversion from object position to object points
-	std::vector<cv::Point2f> imagePoints2d;
-	cv::Mat internalParam = (cv::Mat_<float>(3, 3) <<
-		5933, 0, 1398,
-		0, 5998, 2018,
-		0, 0, 1);
-	cv::Mat distCoeff = (cv::Mat_<float>(1, 5) << -0.0355, 0.0376, -0.0167, 0.00095, 0);
-	cv::Mat rvec = (cv::Mat_<float>(3, 1) << 0.825, 0.0783, 3.01);
-	cv::Mat tvec = (cv::Mat_<float>(3, 1) << -395.46, -406.26, 1095.4);
-
-	cv::Point2f centerImage;
-	cv::projectPoints(imagePoints3d, rvec, tvec, internalParam, distCoeff, imagePoints2d);
-	
-	cv::Mat dst(SUBDISPLAY_HEIGHT, SUBDISPLAY_WIDTH, CV_8UC3, cv::Scalar(255, 255, 255));
-	float scale = 5.0 * 1000.0 / objectPosition.z;
-	float zscale = 1000.0 / objectPosition.z;
-	cv::Rect roi(cv::Point(0 * image.cols, 0),cv::Point(1.0 * image.cols, 1.0 * image.rows));
-	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
-		scale, 0, ((int)(imagePoints2d[0].x - 0.5 * scale * image.cols + 1.0 * zscale)),
-		0, scale, ((int)(imagePoints2d[0].y - 0.5 * scale * image.rows - 1.0 * zscale)));
-	cv::warpAffine(image(roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
-	cv::imshow(windowName, dst);
-}
-
 int main()
 {
 	//initialization

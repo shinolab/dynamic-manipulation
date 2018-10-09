@@ -32,12 +32,12 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 include_directories(deps/dlib-19.0)
 
 add_library(DynamicLevitation STATIC
+ inc/odcs.hpp
  src/odcs.cpp
  inc/additionalGain.hpp
  src/additionalGain.cpp
  inc/KinectApp.hpp
  src/KinectApp.cpp
- inc/odcs.hpp
  src/ocs.cpp
  src/ods.cpp
  src/FloatingObject.cpp
@@ -47,6 +47,8 @@ add_library(DynamicLevitation STATIC
  src/arfModel.cpp
  inc/kalmanFilter.hpp
  src/kalmanFilter.cpp
+ inc/projector.hpp
+ src/projector.cpp
  )
 
 target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} )

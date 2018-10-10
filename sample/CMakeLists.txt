@@ -21,7 +21,7 @@ target_link_libraries(interaction DynamicLevitation)
 
 add_executable(projection projection.cpp)
 include_directories(../inc)
-target_link_libraries(projection DynamicLevitation)
+target_link_libraries(projection DynamicLevitation Projector)
 
 add_executable(sequential sequential.cpp)
 include_directories(../inc)

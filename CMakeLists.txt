@@ -47,9 +47,12 @@ add_library(DynamicLevitation STATIC
  src/arfModel.cpp
  inc/kalmanFilter.hpp
  src/kalmanFilter.cpp
- inc/projector.hpp
- src/projector.cpp
- )
+)
+
+add_library(Projector STATIC
+	inc/projector.hpp
+	src/projector.cpp
+)
 
 target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} )
 

@@ -17,13 +17,14 @@ projector::projector(std::string _projectorName
 	, const int _height)
 {
 	internalParam = (cv::Mat_<float>(3, 3) <<
-		5933, 0, 1398,
-		0, 5998, 2018,
+		5628, 0, 1505,
+		0, 5659, 2391,
 		0, 0, 1);
-	distCoeffs = (cv::Mat_<float>(1, 5) << -0.0355, 0.0376, -0.0167, 0.00095, 0);
+	distCoeffs = (cv::Mat_<float>(1, 5) <<
+		0.2475, -0.8598, 0.0251, -0.0145, 0);
 	//kinect cooradinate system is temporally used as a reference of the external parameters. 
-	rvec = (cv::Mat_<float>(3, 1) << 0.825, 0.0783, 3.01);
-	tvec = (cv::Mat_<float>(3, 1) << -395.46, -406.26, 1095.4);
+	rvec = (cv::Mat_<float>(3, 1) << -0.9727, 0.00287, -2.976);
+	tvec = (cv::Mat_<float>(3, 1) << -417.1, -467.3, 996.5);
 	this->posX = _posX;
 	this->posY = _posY;
 	this->width = _width;

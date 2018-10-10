@@ -17,6 +17,11 @@
 
 #pragma comment (lib, "winmm")
 
+class FloatingObject;
+typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
+class ods;
+class ocs;
+
 class FloatingObject {
 public:
 	Eigen::Vector3f getPosition();
@@ -53,6 +58,8 @@ private:
 public:
 	FloatingObject(Eigen::Vector3f _positionTarget);
 
+	static FloatingObjectPtr Create(Eigen::Vector3f posTgt);
+
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 
 	float totalMass(); 
@@ -68,7 +75,6 @@ public:
 	Eigen::Vector3f averageVelocity();
 };
 
-typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
 
 class ods
 {

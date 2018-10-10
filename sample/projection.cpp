@@ -1,8 +1,3 @@
-#define SUBDISPLAY_WIDTH 3840
-#define SUBDISPLAY_HEIGHT 2160
-#define MAINDISPLAY_WIDTH 1920
-#define MAINDISPLAY_HEIGHT 1080
-
 #include "odcs.hpp"
 #include "projector.hpp"
 #include <Eigen/Geometry>

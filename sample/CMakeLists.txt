@@ -26,3 +26,7 @@ target_link_libraries(projection DynamicLevitation Projector)
 add_executable(sequential sequential.cpp)
 include_directories(../inc)
 target_link_libraries(sequential DynamicLevitation)
+
+add_executable(acuityTest acuityTest.cpp)
+include_directories(../inc)
+target_link_libraries(acuityTest DynamicLevitation Projector)

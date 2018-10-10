@@ -32,6 +32,11 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
 }
 
+FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f posTgt)
+{
+	return FloatingObjectPtr(new FloatingObject(posTgt));
+}
+
 float FloatingObject::sphereMass()
 {
 	return 1.293 * 4.0 * M_PI * pow(radius/1000, 3) / 3.0;

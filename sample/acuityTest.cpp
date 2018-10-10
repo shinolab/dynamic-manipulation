@@ -11,9 +11,10 @@
 
 int main()
 {
-	const int numOptoPerLine = 10;
-	const int numFailedCriteria = 7;
-	std::string name = "testee_name";
+	const int numOptoPerLine = 5;
+	const int numFailedCriteria = 3
+		;
+	std::string name = "furuchan";
 	//Step 0: initialization
 	std::cout << "Press enter to capture the background including a tripod." << std::endl;
 	std::getline(std::cin, std::string());
@@ -142,6 +143,7 @@ int main()
 			Eigen::Vector3f posTarget = objPtr->getPositionTarget();
 			ofsObj << timeGetTime() - initTime << ", " << pos.x() << ", " << pos.y() << "," << pos.z() << ", "
 				<< posTarget.x() << ", " << posTarget.y() << ", " << posTarget.z() << std::endl;
+			Sleep(30);
 		}
 	}
 	);
@@ -290,9 +292,10 @@ int main()
 		}
 	}
 	ofsD2.close();
-	odcs.Close();
 	log_stop = true;
 	thread_log.join();
+	odcs.Close();
+
 	std::cout << "All tests finished." << std::endl;
 	return 0;
 }

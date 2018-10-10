@@ -58,7 +58,7 @@ int main()
 	unsigned int count_failed = 0;
 	int try_count = 0;
 	int tenth_acuity = 1;
-	int distance = 2000;
+	int distance = 3000;
 	while (!finished && !(tenth_acuity == 11))
 	{
 		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100));
@@ -132,7 +132,7 @@ int main()
 	odcs.StartControl();
 
 	bool log_stop = false;
-	std::thread th1([&objPtr, &log_stop, &name](){
+	std::thread thread_log([&objPtr, &log_stop, &name](){
 		std::ofstream ofsObj(name + "manipulation_log.csv");
 		DWORD initTime = timeGetTime();
 		ofsObj << "time[ms], x[mm], y[mm], z[mm], xTgt[mm], yTgt[mm], zTgt[mm]" << std::endl;
@@ -291,6 +291,8 @@ int main()
 	}
 	ofsD2.close();
 	odcs.Close();
+	log_stop = true;
+	thread_log.join();
 	std::cout << "All tests finished." << std::endl;
 	return 0;
 }

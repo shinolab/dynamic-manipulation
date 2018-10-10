@@ -60,7 +60,7 @@ Eigen::Affine3f projector::affineReference2Projector()
 	return Eigen::Translation3f(translation)*Eigen::AngleAxisf(rodrigues.norm(), rodrigues.normalized());
 }
 
-//size should be specified in [mm]c
+//size should be specified in [mm]
 void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor)
 {
 	float distance = (affineReference2Projector()*posRef).z();

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <thread>
 
 int main()
 {
@@ -129,7 +130,22 @@ int main()
 
 	odcs.RegisterObject(objPtr);
 	odcs.StartControl();
-	tenth_acuity = 10;
+
+	bool log_stop = false;
+	std::thread th1([&objPtr, &log_stop, &name](){
+		std::ofstream ofsObj(name + "manipulation_log.csv");
+		DWORD initTime = timeGetTime();
+		ofsObj << "time[ms], x[mm], y[mm], z[mm], xTgt[mm], yTgt[mm], zTgt[mm]" << std::endl;
+		while (!log_stop)
+		{
+			Eigen::Vector3f pos = objPtr->getPosition();
+			Eigen::Vector3f posTarget = objPtr->getPositionTarget();
+			ofsObj << timeGetTime() - initTime << ", " << pos.x() << ", " << pos.y() << "," << pos.z() << ", "
+				<< posTarget.x() << ", " << posTarget.y() << ", " << posTarget.z() << std::endl;
+		}
+	}
+	);
+	
 	std::ofstream ofsD1(name + "_dynamic_test1.log");
 	ofsD1 << "acuity, true direction, answer" << std::endl;
 	failed = false;

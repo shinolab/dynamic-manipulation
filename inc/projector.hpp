@@ -35,7 +35,7 @@ public:
 
 	Eigen::Affine3f affineReference2Projector();
 
-	void projectImageOnObject(Eigen::Vector3f position, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor = cv::Scalar(255, 255, 255));
+	void projectImageOnObject(Eigen::Vector3f position, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor = cv::Scalar(255, 255, 255), float distanceOffset = 0);
 
 	void projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints);
 };

@@ -61,9 +61,9 @@ Eigen::Affine3f projector::affineReference2Projector()
 }
 
 //size should be specified in [mm]
-void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor)
+void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor, float distanceOffset)
 {
-	float distance = (affineReference2Projector()*posRef).z();
+	float distance = (affineReference2Projector()*posRef).z() + distanceOffset;
 	cv::Point3f objectPosition(posRef.x(), posRef.y(), posRef.z());
 	std::vector<cv::Point3f> imagePoints3d = { objectPosition };
 	//here comes conversion from object position to object points

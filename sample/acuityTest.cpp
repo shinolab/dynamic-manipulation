@@ -12,16 +12,16 @@
 int main()
 {
 	const int numOptoPerLine = 5;
-	const int numFailedCriteria = 3
-		;
+	const int numFailedCriteria = 3;
+	const int tenth_acuity_max = 15;
 	std::string name = "furuchan";
 	//Step 0: initialization
-	std::cout << "Press enter to capture the background including a tripod." << std::endl;
+	std::cout << "Press enter key to capture the background including a tripod." << std::endl;
 	std::getline(std::cin, std::string());
 	odcs odcs;
 	odcs.Initialize();
 	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(0, 0, 1300));
-	std::cout << "Press any key to determine a default position of the balloon." << std::endl;
+	std::cout << "Press enter key to determine a default position of the balloon." << std::endl;
 	std::getline(std::cin, std::string());
 	//Step 1: Determine Position on a tripod.
 	Eigen::Vector3f posTgt;
@@ -42,11 +42,11 @@ int main()
 	//Step 2: Start visual acuity test(static)
 	projector proj("projecor");
 	std::random_device rng;
-	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up.bmp");
-	cv::Mat LandoltCDown = cv::imread("img/LandoltC_down.bmp");
-	cv::Mat LandoltCRight = cv::imread("img/LandoltC_right.bmp");
-	cv::Mat LandoltCLeft = cv::imread("img/LandoltC_left.bmp");
-	cv::Mat LandoltO = cv::imread("img/LandoltC.bmp");
+	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up_black.bmp");
+	cv::Mat LandoltCDown = cv::imread("img/LandoltC_down_black.bmp");
+	cv::Mat LandoltCRight = cv::imread("img/LandoltC_right_black.bmp");
+	cv::Mat LandoltCLeft = cv::imread("img/LandoltC_left_black.bmp");
+	cv::Mat LandoltO = cv::imread("img/LandoltC_black.bmp");
 	Eigen::Vector3f projectionPoint = odcs.ods.getAffineKinect2Global().inverse() * posTgt;
 	std::cout << "posTgt : " << posTgt.transpose() << std::endl;
 	std::cout << "projection point : " << projectionPoint.transpose() << std::endl;
@@ -60,29 +60,30 @@ int main()
 	int try_count = 0;
 	int tenth_acuity = 1;
 	int distance = 3000;
-	while (!finished && !(tenth_acuity == 11))
+	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
-		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100));
+		//white screen is displayed at the interval
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 		cv::waitKey(1000);
-		float size = 5 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
+		float size = 6 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
 		int direction = rng() % 4;
 		std::cout << "acuity / size: " << tenth_acuity / 10.0 << ", " << size << std::endl;
 		switch (direction)
 		{
 		case 0:
-			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 1:
-			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 2:
-			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 3:
-			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		default:
-			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		}
 		auto key = cv::waitKey(0);
@@ -126,12 +127,15 @@ int main()
 		}
 	}
 	ofsS.close();
-	std::cout << "Static Test Ended.\n Please remove the tripod. Then, press any key to begin dynamic acuity test." << std::endl;
+	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+
+	std::cout << "Static Test Ended.\n Please remove the tripod. Then, press enter key to begin dynamic acuity test." << std::endl;
 	std::getline(std::cin, std::string());
 
 	odcs.RegisterObject(objPtr);
 	odcs.StartControl();
 
+	std::cout << "Wait until the screen is stabilized. Then, press enter key to proceed to dynamic acuity test." << std::endl;
 	bool log_stop = false;
 	std::thread thread_log([&objPtr, &log_stop, &name](){
 		std::ofstream ofsObj(name + "manipulation_log.csv");
@@ -155,28 +159,28 @@ int main()
 	count_failed = 0;
 	try_count = 0;
 	tenth_acuity = 1;
-	while (!finished && !(tenth_acuity == 11))
+	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
-		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100));
+		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 		cv::waitKey(1000);
-		float size = 5 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
+		float size = 6 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
 		int direction = rng() % 4;
 		switch (direction)
 		{
 		case 0:
-			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 1:
-			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 2:
-			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 3:
-			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		default:
-			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		}
 		auto key = cv::waitKey(0);
@@ -220,6 +224,11 @@ int main()
 		}
 	}
 	ofsD1.close();
+
+	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+	std::cout << "Dynamic Test (1) Ended.\n Press enter key to begin dynamic acuity test (2)." << std::endl;
+	std::getline(std::cin, std::string());
+
 	std::ofstream ofsD2(name + "_dynamic_test2.log");
 	ofsD2 << "acuity, true direction, answer" << std::endl;
 	failed = false;
@@ -227,28 +236,28 @@ int main()
 	count_failed = 0;
 	try_count = 0;
 	tenth_acuity = 1;
-	while (!finished && !(tenth_acuity == 11))
+	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
-		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100));
+		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 		cv::waitKey(1000);
-		float size = 5 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
+		float size = 6 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
 		int direction = rng() % 4;
 		switch (direction)
 		{
 		case 0:
-			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 1:
-			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 2:
-			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		case 3:
-			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		default:
-			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size));
+			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size), cv::Scalar::all(0), -100);
 			break;
 		}
 		auto key = cv::waitKey(0);

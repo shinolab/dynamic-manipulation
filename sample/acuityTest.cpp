@@ -14,7 +14,7 @@ int main()
 	const int numOptoPerLine = 5;
 	const int numFailedCriteria = 3;
 	const int tenth_acuity_max = 15;
-	std::string name = "furuchan";
+	std::string name = "name";
 	//Step 0: initialization
 	std::cout << "Press enter key to capture the background including a tripod." << std::endl;
 	std::getline(std::cin, std::string());
@@ -127,7 +127,7 @@ int main()
 		}
 	}
 	ofsS.close();
-	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 
 	std::cout << "Static Test Ended.\n Please remove the tripod. Then, press enter key to begin dynamic acuity test." << std::endl;
 	std::getline(std::cin, std::string());
@@ -161,7 +161,7 @@ int main()
 	tenth_acuity = 1;
 	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
-		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 		cv::waitKey(1000);
 		float size = 6 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
 		int direction = rng() % 4;
@@ -225,7 +225,7 @@ int main()
 	}
 	ofsD1.close();
 
-	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	std::cout << "Dynamic Test (1) Ended.\n Press enter key to begin dynamic acuity test (2)." << std::endl;
 	std::getline(std::cin, std::string());
 
@@ -238,7 +238,7 @@ int main()
 	tenth_acuity = 1;
 	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
-		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(255)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 		cv::waitKey(1000);
 		float size = 6 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
 		int direction = rng() % 4;

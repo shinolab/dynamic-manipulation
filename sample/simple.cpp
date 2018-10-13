@@ -12,6 +12,7 @@
 
 int main()
 {
+	
 	odcs odcs;
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs.Initialize();
@@ -19,9 +20,9 @@ int main()
 	odcs.RegisterObject(objPtr); // add object
 	odcs.StartControl();
 	Sleep(20000);
-	objPtr->updateStatesTarget(Eigen::Vector3f(0, 0, 1150), Eigen::Vector3f(0, 0, 0));
-	Sleep(20000);
-	objPtr->updateStatesTarget(Eigen::Vector3f(0, 0, 1350), Eigen::Vector3f(0, 0, 0));
+	objPtr->updateStatesTarget(Eigen::Vector3f(20, 25, 1140), Eigen::Vector3f(0, 0, 0));
+	//Sleep(20000);
+	//objPtr->updateStatesTarget(Eigen::Vector3f(43, 1, 1000), Eigen::Vector3f(0, 0, 0));
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	odcs.Close();

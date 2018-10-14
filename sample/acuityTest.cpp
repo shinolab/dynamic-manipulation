@@ -11,9 +11,10 @@
 
 int main()
 {
-	const int numOptoPerLine = 5;
-	const int numFailedCriteria = 3;
+	const int numOptoPerLine = 10;
+	const int numFailedCriteria = 4;
 	const int tenth_acuity_max = 15;
+	const int tenth_acuity_min = 1;
 	std::string name = "name";
 	//Step 0: initialization
 	std::cout << "Press enter key to capture the background including a tripod." << std::endl;
@@ -42,11 +43,11 @@ int main()
 	//Step 2: Start visual acuity test(static)
 	projector proj("projecor");
 	std::random_device rng;
-	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up_black.bmp");
-	cv::Mat LandoltCDown = cv::imread("img/LandoltC_down_black.bmp");
-	cv::Mat LandoltCRight = cv::imread("img/LandoltC_right_black.bmp");
-	cv::Mat LandoltCLeft = cv::imread("img/LandoltC_left_black.bmp");
-	cv::Mat LandoltO = cv::imread("img/LandoltC_black.bmp");
+	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up.bmp");
+	cv::Mat LandoltCDown = cv::imread("img/LandoltC_down.bmp");
+	cv::Mat LandoltCRight = cv::imread("img/LandoltC_right.bmp");
+	cv::Mat LandoltCLeft = cv::imread("img/LandoltC_left.bmp");
+	cv::Mat LandoltO = cv::imread("img/LandoltC.bmp");
 	Eigen::Vector3f projectionPoint = odcs.ods.getAffineKinect2Global().inverse() * posTgt;
 	std::cout << "posTgt : " << posTgt.transpose() << std::endl;
 	std::cout << "projection point : " << projectionPoint.transpose() << std::endl;
@@ -58,7 +59,7 @@ int main()
 	bool finished = false;
 	unsigned int count_failed = 0;
 	int try_count = 0;
-	int tenth_acuity = 1;
+	int tenth_acuity = tenth_acuity_min;
 	int distance = 3000;
 	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
@@ -128,7 +129,7 @@ int main()
 	}
 	ofsS.close();
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
-
+	cv::waitKey(10); // time to display empty image
 	std::cout << "Static Test Ended.\n Please remove the tripod. Then, press enter key to begin dynamic acuity test." << std::endl;
 	std::getline(std::cin, std::string());
 
@@ -158,7 +159,7 @@ int main()
 	finished = false;
 	count_failed = 0;
 	try_count = 0;
-	tenth_acuity = 1;
+	tenth_acuity = tenth_acuity_min;
 	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
 		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
@@ -227,6 +228,7 @@ int main()
 
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	std::cout << "Dynamic Test (1) Ended.\n Press enter key to begin dynamic acuity test (2)." << std::endl;
+	cv::waitKey(10); // time to display empty image
 	std::getline(std::cin, std::string());
 
 	std::ofstream ofsD2(name + "_dynamic_test2.log");
@@ -235,7 +237,7 @@ int main()
 	finished = false;
 	count_failed = 0;
 	try_count = 0;
-	tenth_acuity = 1;
+	tenth_acuity = tenth_acuity_min;
 	while (!finished && !(tenth_acuity == tenth_acuity_max))
 	{
 		proj.projectImageOnObject(posTgt, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);

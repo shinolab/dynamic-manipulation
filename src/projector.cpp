@@ -72,6 +72,7 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::Mat dst(height, width, CV_8UC3, backGroundColor);
 	float fx = internalParam.at<float>(0, 0);
 	float fy = internalParam.at<float>(1, 1);
+	cv::circle(dst, imagePoints2d[0], 60 * fx / distance, cv::Scalar::all(255));
 	cv::Rect roi(cv::Point(0 * image.cols, 0), cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
 		fx * sizeReal.width / distance / image.cols, 0, ((int)(imagePoints2d[0].x - sizeReal.width * fx / distance / 2)),

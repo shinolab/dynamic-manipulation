@@ -9,6 +9,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <string>
+#include <iostream>
 
 projector::projector(std::string _projectorName
 	, const int _posX
@@ -61,7 +62,7 @@ Eigen::Affine3f projector::affineReference2Projector()
 }
 
 //size should be specified in [mm]
-void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size sizeReal, cv::Scalar backGroundColor, float distanceOffset)
+void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::Size2f sizeReal, cv::Scalar backGroundColor, float distanceOffset)
 {
 	float distance = (affineReference2Projector()*posRef).z() + distanceOffset;
 	cv::Point3f objectPosition(posRef.x(), posRef.y(), posRef.z());
@@ -72,7 +73,7 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::Mat dst(height, width, CV_8UC3, backGroundColor);
 	float fx = internalParam.at<float>(0, 0);
 	float fy = internalParam.at<float>(1, 1);
-	cv::circle(dst, imagePoints2d[0], 60 * fx / distance, cv::Scalar::all(255));
+	cv::circle(dst, imagePoints2d[0], 30 * fx / distance, cv::Scalar::all(255), -1);
 	cv::Rect roi(cv::Point(0 * image.cols, 0), cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
 		fx * sizeReal.width / distance / image.cols, 0, ((int)(imagePoints2d[0].x - sizeReal.width * fx / distance / 2)),

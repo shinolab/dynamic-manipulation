@@ -31,7 +31,11 @@ public:
 		, const int _height = SUBDISPLAY_HEIGHT //height of the projector screen [px]
 	);
 
+	~projector();
+
 	void CreateScreen();
+
+	void RefleshScreen();
 
 	Eigen::Affine3f affineReference2Projector();
 

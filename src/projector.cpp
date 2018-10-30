@@ -34,6 +34,17 @@ projector::projector(std::string _projectorName
 	CreateScreen();
 }
 
+projector::~projector()
+{
+	cv::destroyWindow(name);
+}
+
+void projector::RefleshScreen()
+{
+	cv::destroyWindow(name);
+	CreateScreen();
+}
+
 void projector::CreateScreen()
 {
 	cv::Mat blank(height, width, CV_8UC1, cv::Scalar(255));

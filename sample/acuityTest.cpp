@@ -6,15 +6,141 @@
 #include <Windows.h>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 #include <random>
 #include <thread>
+#include <algorithm>
 
-void runProjectionSequence(const std::string testName, projector &proj, const Eigen::Vector3f projectionPoint, const int distance)
+void projectCalibrationRing(projector &proj, const Eigen::Vector3f &projectionPoint)
 {
-	const int numOptoPerLine = 5;
-	const int numFailedCriteria = 3;
-	const int tenth_acuity_max = 29; //maximum 15@1000mm, 29 @ 2000mm
-	const int tenth_acuity_min = 7;
+	cv::Mat LandoltO = cv::imread("img/LandoltC.bmp");
+	proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(10, 10), cv::Scalar::all(0), -100);
+	cv::waitKey(100);
+}
+
+
+
+void runProjectionSequenceSimple(const std::string testName, projector &proj, const Eigen::Vector3f &projectionPoint, const int distance, bool ascending = true)
+{
+	const int tenth_acuity_max = 26; //maximum 14@1000mm, 29 @ 2000mm
+	const int tenth_acuity_min = 3;
+	const int displayTime = 2000; //[ms]
+
+	bool finished = false;
+	proj.RefleshScreen(); cv::waitKey(1);
+	std::random_device rng;
+	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up.bmp");
+	cv::Mat LandoltCDown = cv::imread("img/LandoltC_down.bmp");
+	cv::Mat LandoltCRight = cv::imread("img/LandoltC_right.bmp");
+	cv::Mat LandoltCLeft = cv::imread("img/LandoltC_left.bmp");
+	cv::Mat LandoltO = cv::imread("img/LandoltC.bmp");
+
+	int tenth_acuity = (ascending ? tenth_acuity_min : tenth_acuity_max);
+	//static image test
+	std::string postfix = (ascending ? "_ascend.csv" : "_descend.csv");
+	std::ofstream ofs(testName + postfix);
+	bool failed = false;
+	int count = 0;
+	while (!finished)
+	{
+		//white screen is displayed at the interval
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		std::cout << "press any key to proceed" << std::endl;
+		cv::waitKey(0);
+		float size = 5 * distance * tanf(10.0 * M_PI / 180 / 60 / tenth_acuity);
+		int direction = rng() % 4;
+		if (ascending) {
+			std::cout << "acuity: " << tenth_acuity / 10.0 << ", failed: " << failed << ", finished: " << finished << std::endl;
+		}
+		else{
+			std::cout << "acuity: " << tenth_acuity / 10.0 << ", succeeded: " << !failed << ", finished: " << finished << std::endl;
+		}
+		switch (direction)
+		{
+		case 0:
+			proj.projectImageOnObject(projectionPoint, LandoltCUp, cv::Size(size, size), cv::Scalar::all(0), -100);
+			break;
+		case 1:
+			proj.projectImageOnObject(projectionPoint, LandoltCDown, cv::Size(size, size), cv::Scalar::all(0), -100);
+			break;
+		case 2:
+			proj.projectImageOnObject(projectionPoint, LandoltCRight, cv::Size(size, size), cv::Scalar::all(0), -100);
+			break;
+		case 3:
+			proj.projectImageOnObject(projectionPoint, LandoltCLeft, cv::Size(size, size), cv::Scalar::all(0), -100);
+			break;
+		default:
+			proj.projectImageOnObject(projectionPoint, LandoltO, cv::Size(size, size), cv::Scalar::all(0), -100);
+			break;
+		}
+		cv::waitKey(displayTime);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		std::cout << "please answer." << std::endl;
+		auto key = cv::waitKey(0);
+		int answer = -1;
+		switch (key)
+		{
+		case 'z':
+			answer = 3;
+			break;
+		case 's':
+			answer = 0;
+			break;
+		case 'c':
+			answer = 2;
+			break;
+		case 'x':
+			answer = 1;
+			break;
+		case 'q':
+			answer = -1;
+			finished = true;
+			break;
+		case 'n':
+			answer = -3;
+			break;
+		case 'b':
+			answer = -2;
+			tenth_acuity += (ascending ? -2 : 2);
+			break;
+		default:
+			break;
+		}
+		failed = (answer != direction) ? true : false;
+		ofs << tenth_acuity / 10.0 << ", " << direction << "," << answer << "," << failed << std::endl;
+		count += false ? (ascending ? 1 : 0) : (ascending ? 0 : 1);
+		tenth_acuity += (ascending ? 1 : -1);
+
+	}
+
+}
+
+void runMethodOfLimits(const std::string testName, projector &proj, const Eigen::Vector3f &projectionPoint, const int distance, const int num = 6)
+{
+	std::vector<int> order(num);
+	for (int i = 0; i < num; i++)
+	{
+		order[i] = i;
+	}
+	std::random_device seed_gen;
+	std::mt19937 engine(seed_gen());
+	std::shuffle(order.begin(), order.end(), engine);
+	for (int i = 0; i < num; i++)
+	{
+		bool isAscending = (order[i] % 2 == 0);
+		runProjectionSequenceSimple(testName + std::to_string(i), proj, projectionPoint, distance, isAscending);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+	}
+}
+
+void runProjectionSequence(const std::string testName, projector &proj, const Eigen::Vector3f &projectionPoint, const int distance)
+{
+	proj.RefleshScreen(); cv::waitKey(1);
+	const int numOptoPerLine = 10;
+	const int numFailedCriteria = 7;
+	const int tenth_acuity_max = 20; //maximum 14@1000mm, 29 @ 2000mm
+	const int tenth_acuity_min = 5;
 	const int displayTime = 2000; //[ms]
 	std::random_device rng;
 	cv::Mat LandoltCUp = cv::imread("img/LandoltC_up.bmp");
@@ -59,6 +185,7 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		}
 		cv::waitKey(displayTime);
 		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		std::cout << "please answer." << std::endl;
 		auto key = cv::waitKey(0);
 		int answer = -1;
 		switch (key)
@@ -75,6 +202,20 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		case 'x':
 			answer = 1;
 			break;
+		case 'q':
+			finished = true;
+			break;
+		case 'n':
+			try_count = numOptoPerLine;
+			count_failed = -1;
+			answer = -2;
+			break;
+		case 'b':
+			try_count = numOptoPerLine;
+			count_failed = -1;
+			answer = -3;
+			tenth_acuity -= 2;
+			break;
 		default:
 			break;
 		}
@@ -84,7 +225,7 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		{
 			count_failed++;
 		}
-		if (try_count == numOptoPerLine)
+		if (try_count >= numOptoPerLine)
 		{
 			if (failed)
 			{
@@ -139,7 +280,7 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		}
 		cv::waitKey(displayTime);
 		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), 0);
-
+		std::cout << "please answer." << std::endl;
 		auto key = cv::waitKey(0);
 		int answer = -1;
 		switch (key)
@@ -156,6 +297,20 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		case 'x':
 			answer = 1;
 			break;
+		case 'q':
+			finished = true;
+			break;
+		case 'n':
+			try_count = numOptoPerLine;
+			count_succeeded = -1;
+			answer = -2;
+			break;
+		case 'b':
+			try_count = numOptoPerLine;
+			count_succeeded = -1;
+			answer = -3;
+			tenth_acuity += 2;
+			break;
 		default:
 			break;
 		}
@@ -165,7 +320,7 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		{
 			count_succeeded++;
 		}
-		if (try_count == numOptoPerLine)
+		if (try_count >= numOptoPerLine)
 		{
 			if (succeeded)
 			{
@@ -181,6 +336,7 @@ void runProjectionSequence(const std::string testName, projector &proj, const Ei
 		}
 	}
 	ofsSDown.close();
+
 }
 
 int main()
@@ -218,29 +374,55 @@ int main()
 	std::cout << "projection point : " << projectionPoint.transpose() << std::endl;
 
 	projector proj("projecor");
+	projectCalibrationRing(proj, projectionPoint);
 
-	runProjectionSequence(name + "_static_practice", proj, projectionPoint, distance);
-	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
-	cv::waitKey(10);
-	std::cout << "Practice test (static) Ended.\n Press enter key to begin static acuity test." << std::endl;
-	std::getline(std::cin, std::string());
+	std::cout << "Which test do you conduct first ? [s:static] / d:dynamic :";
+	std::string which;
+	std::getline(std::cin, which);
+	if (which != "d")
+	{
 
-	runProjectionSequence(name + "static1", proj, projectionPoint, distance);
-	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
-	cv::waitKey(10);
-	std::cout << "Static Test (1) Ended.\n Press enter key to begin static acuity test (2)." << std::endl;
-	std::getline(std::cin, std::string());
+		std::cout << "Press enter key to start practice (static)." << std::endl;
+		std::getline(std::cin, std::string());
 
-	runProjectionSequence(name + "static2", proj, projectionPoint, distance);
-	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
-	cv::waitKey(10);
+		runProjectionSequenceSimple(name + "_static_practice", proj, projectionPoint, distance, true);
+		runProjectionSequenceSimple(name + "_static_practice", proj, projectionPoint, distance, false);
 
-	std::cout << "Static Test Ended.\n Please remove the tripod. Then, press enter key to begin dynamic control." << std::endl;
+		//runProjectionSequence(name + "_static_practice", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+		std::cout << "Practice test (static) Ended.\n Press enter key to begin static acuity test." << std::endl;
+		std::getline(std::cin, std::string());
+
+		runMethodOfLimits(name + "_static1_", proj, projectionPoint, distance);
+		//runProjectionSequence(name + "static1", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+
+		/*
+		std::cout << "Static Test (1) Ended.\n Press enter key to begin static acuity test (2)." << std::endl;
+		std::getline(std::cin, std::string());
+		runMethodOfLimits(name + "_static2_", proj, projectionPoint, distance);
+		//runProjectionSequence(name + "static2", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+
+		*/
+
+		std::cout << "Static Test Ended.\n Please remove the tripod. Then, press enter key to begin dynamic control." << std::endl;
+
+	}
+	else
+	{
+		std::cout << "Please remove the tripod. Then, press enter key to begin dynamic control." << std::endl;
+	}
 	std::getline(std::cin, std::string());
 
 	odcs.RegisterObject(objPtr);
 	odcs.StartControl();
 	std::cout << "Wait until the screen is stabilized. Then, press enter key to proceed to dynamic acuity test." << std::endl;
+	projectCalibrationRing(proj, projectionPoint);
+	cv::waitKey(10);
 	std::getline(std::cin, std::string());
 
 	bool log_stop = false;
@@ -258,35 +440,84 @@ int main()
 		}
 	}
 	);
-	runProjectionSequence(name + "practice_dynamic", proj, projectionPoint, distance);
+
+	runProjectionSequenceSimple(name + "_dynamic_practice", proj, projectionPoint, distance, true);
+	runProjectionSequenceSimple(name + "_dynamic_practice", proj, projectionPoint, distance, false);
+
+	//runProjectionSequence(name + "practice_dynamic", proj, projectionPoint, distance);
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	cv::waitKey(10);
 	std::cout << "Practice Test (dynamic) Ended.\n Press enter key to begin dynamic acuity test." << std::endl;
 	std::getline(std::cin, std::string());
 
-	runProjectionSequence(name + "dynamic1", proj, projectionPoint, distance);
+	runMethodOfLimits(name + "_dynamic1_", proj, projectionPoint, distance);
+	//runProjectionSequence(name + "dynamic1", proj, projectionPoint, distance);
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	cv::waitKey(10);
+	std::cout << "Dynamic Test (1) Ended.\n Press enter key to proceed." << std::endl;
+	std::getline(std::cin, std::string());
+	
+	/*
 	std::cout << "Dynamic Test (1) Ended.\n Press enter key to begin dynamic acuity test (2)." << std::endl;
 	std::getline(std::cin, std::string());
 
-	runProjectionSequence(name + "dynamic2", proj, projectionPoint, distance);
+	runMethodOfLimits(name + "_dynamic2_", proj, projectionPoint, distance);
+
+	//runProjectionSequence(name + "dynamic2", proj, projectionPoint, distance);
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
-	cv::waitKey(10); 
+	cv::waitKey(10);
 	std::cout << "Dynamic Test (2) Ended.\n Press enter key to begin dynamic acuity test (3)." << std::endl;
 	std::getline(std::cin, std::string());
 
-	runProjectionSequence(name + "dynamic3", proj, projectionPoint, longDistance);
+	runMethodOfLimits(name + "_dynamic3_", proj, projectionPoint, longDistance);
+	//runProjectionSequence(name + "dynamic3", proj, projectionPoint, longDistance);
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	cv::waitKey(10);
 	std::cout << "Dynamic Test (3) Ended.\n Press enter key to begin dynamic acuity test (4)." << std::endl;
 	std::getline(std::cin, std::string());
 
-	runProjectionSequence(name + "dynamic4", proj, projectionPoint, longDistance);
+	runMethodOfLimits(name + "_dynamic4_", proj, projectionPoint, longDistance);
+	//runProjectionSequence(name + "dynamic4", proj, projectionPoint, longDistance);
 	proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
 	cv::waitKey(10);
 	std::cout << "Dynamic Test (4) Ended." << std::endl;
 	std::getline(std::cin, std::string());
+	*/
+	if (which == "d")
+	{
+		log_stop = true;
+
+		std::cout << "Dynamic Test (1) Ended.\n Place the balloon on a tripod. Then, press enter ket to proceed." << std::endl;
+		std::getline(std::cin, std::string());
+		std::cout << "Press enter key to start practice (static)." << std::endl;
+		std::getline(std::cin, std::string());
+
+		runProjectionSequenceSimple(name + "_static_practice", proj, projectionPoint, distance, true);
+		runProjectionSequenceSimple(name + "_static_practice", proj, projectionPoint, distance, false);
+
+		//runProjectionSequence(name + "_static_practice", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+		std::cout << "Practice test (static) Ended.\n Press enter key to begin static acuity test." << std::endl;
+		std::getline(std::cin, std::string());
+
+		runMethodOfLimits(name + "_static1_", proj, projectionPoint, distance);
+		//runProjectionSequence(name + "static1", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+
+		/*
+		std::cout << "Static Test (1) Ended.\n Press enter key to begin static acuity test (2)." << std::endl;
+		std::getline(std::cin, std::string());
+		runMethodOfLimits(name + "_static2_", proj, projectionPoint, distance);
+		//runProjectionSequence(name + "static2", proj, projectionPoint, distance);
+		proj.projectImageOnObject(projectionPoint, cv::Mat(100, 100, CV_8UC3, cv::Scalar::all(0)), cv::Size(100, 100), cv::Scalar::all(0), -100);
+		cv::waitKey(10);
+
+		*/
+
+		std::cout << "Static Test Ended.\n Thank you very much." << std::endl;
+	}
 
 	log_stop = true;
 	thread_log.join();

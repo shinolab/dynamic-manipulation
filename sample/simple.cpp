@@ -19,7 +19,7 @@ int main()
 	FloatingObjectPtr objPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350)));
 	odcs.RegisterObject(objPtr); // add object
 	odcs.StartControl();
-	Sleep(20000);
+	Sleep(10000);
 	objPtr->updateStatesTarget(Eigen::Vector3f(20, 25, 1140), Eigen::Vector3f(0, 0, 0));
 	//Sleep(20000);
 	//objPtr->updateStatesTarget(Eigen::Vector3f(43, 1, 1000), Eigen::Vector3f(0, 0, 0));

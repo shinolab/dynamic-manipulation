@@ -30,3 +30,7 @@ target_link_libraries(sequential DynamicLevitation)
 add_executable(acuityTest acuityTest.cpp)
 include_directories(../inc)
 target_link_libraries(acuityTest DynamicLevitation Projector)
+
+add_executable(asiaHapticsDemo asiaHapticsDemo.cpp)
+include_directories(../inc)
+target_link_libraries(asiaHapticsDemo DynamicLevitation)

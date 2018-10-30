@@ -25,11 +25,11 @@ public:
 
 	std::vector<IBody*> pBodies;
 
+	CComPtr<ICoordinateMapper> coordinateMapper = nullptr;
+
 private:
 
 	CComPtr<IKinectSensor> kinect;
-
-	CComPtr<ICoordinateMapper> coordinateMapper = nullptr;
 
 	CComPtr<IColorFrameReader> colorFrameReader;
 

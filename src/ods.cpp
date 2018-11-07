@@ -293,7 +293,15 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		{
 			cv::Point center; float radius;
 			bool isFound = findSphere(depthImageUc8, center, radius);
-			isFound ? cv::circle(mask, center, radius, cv::Scalar::all(255), -1) : cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+			if (isFound)
+			{
+				cv::circle(mask, center, radius, cv::Scalar::all(255), -1);
+			}
+			else
+			{
+				//return isValid;
+				cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+			}
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
@@ -327,6 +335,8 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 
 bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 {
+	//cv::Mat mask(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1, cv::Scalar::all(0));
+	//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 	cv::Mat depthMapDenoised;
 	cv::morphologyEx(depthMap, depthMapDenoised, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 	const float threshold1 = 100;

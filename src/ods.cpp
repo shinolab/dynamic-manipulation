@@ -291,7 +291,9 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		else
 		{
-			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+			cv::Point center; float radius;
+			bool isFound = findSphere(depthImageUc8, center, radius);
+			isFound ? cv::circle(mask, center, radius, cv::Scalar::all(255), -1) : cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
@@ -321,4 +323,45 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 	}
 	return isValid;
+}
+
+bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
+{
+	cv::Mat depthMapDenoised;
+	cv::morphologyEx(depthMap, depthMapDenoised, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
+	const float threshold1 = 100;
+	const float threshold2 = 200;
+	cv::Mat edges;
+	cv::Canny(depthMapDenoised, edges, threshold1, threshold2);
+	CameraIntrinsics depthIntrinsics;
+	kinectApp.coordinateMapper->GetDepthCameraIntrinsics(&depthIntrinsics);
+	std::vector<std::vector<cv::Point>> contours;
+	cv::findContours(edges, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
+	if (!contours.empty())
+	{
+		cv::Point centerCandidate(-1, -1);
+		float radiusCandidate = 0;
+		float similarity = 10000;
+		for (auto itrCont = contours.begin(); itrCont != contours.end(); itrCont++)
+		{
+			cv::Point2f centerTemp;
+			float radiusTemp;
+			cv::minEnclosingCircle(*itrCont, centerTemp, radiusTemp);
+			float distance = kinectApp.getDepthAtDepthPixel(centerTemp.x, centerTemp.y);
+			float scale = distance / depthIntrinsics.FocalLengthX;
+			float similarityTemp = (radiusTemp * scale - 130) * (radiusTemp * scale - 130) + abs(cv::contourArea(*itrCont) * scale * scale - M_PI * 130 * 130);
+			if (similarityTemp < similarity)
+			{
+				centerCandidate = centerTemp;
+				radiusCandidate = radiusTemp;
+			}
+		}
+		if (similarity < 10000)
+		{
+			center = centerCandidate;
+			radius = radiusCandidate;
+			return true;
+		}
+	}
+	return false;
 }

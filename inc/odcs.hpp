@@ -113,6 +113,7 @@ public:
 
 	HRESULT updateBackgroundDepth();
 
+	bool findSphere(const cv::Mat src, cv::Point &center, float &radius);
 };
 
 class ocs

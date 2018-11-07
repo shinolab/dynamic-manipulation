@@ -2,6 +2,7 @@
 #include "kalmanFilter.hpp"
 #include <iostream>
 #include <fstream>
+#include <opencv2/highgui.hpp>
 #include <Windows.h>
 
 #define _USE_MATH_DEFINES
@@ -11,6 +12,22 @@
 
 int main()
 {
+	auto objPtr = FloatingObject::Create(Eigen::Vector3f(0, 0, 1350));
+	odcs odcs;
+	odcs.Initialize();
+	cv::imshow("controlWindow", cv::Mat(100, 100, CV_8UC1, cv::Scalar::all(0)));
+	while (1)
+	{
+		Eigen::Vector3f pos;
+		odcs.ods.GetPositionByDepth(objPtr, pos, true);
+		auto key = cv::waitKey(5);
+		if (key == 'q')
+		{
+			break;
+		}
+	}
+	return 0;
+	/*
 	std::ofstream ofs("20180907_kalmanfiltering.csv");
 	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], u0, u1, u2, u3, u4" << std::endl;
 	const int period = 10000;
@@ -89,4 +106,6 @@ int main()
 	}
 	odcs.Close();
 	return 0;
+	*/
+	
 }

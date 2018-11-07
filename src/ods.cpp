@@ -335,8 +335,13 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 
 bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 {
-	//cv::Mat mask(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1, cv::Scalar::all(0));
-	//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+	cv::Mat mask(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1, cv::Scalar::all(0));
+	cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+	cv::Mat maskDepth; cv::inRange(depthMap, cv::Scalar(5), cv::Scalar(102), maskDepth);
+	cv::bitwise_and(mask, maskDepth, mask);
+	depthMap.copyTo(depthMap, mask);
+	cv::imshow("raw", depthMap);
+	cv::imshow("depthMask", maskDepth);
 	cv::Mat depthMapDenoised;
 	cv::morphologyEx(depthMap, depthMapDenoised, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 	const float threshold1 = 100;
@@ -351,7 +356,7 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 	{
 		cv::Point centerCandidate(-1, -1);
 		float radiusCandidate = 0;
-		float similarity = 10000;
+		float similarity = 10000000;
 		for (auto itrCont = contours.begin(); itrCont != contours.end(); itrCont++)
 		{
 			cv::Point2f centerTemp;
@@ -360,18 +365,21 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 			float distance = kinectApp.getDepthAtDepthPixel(centerTemp.x, centerTemp.y);
 			float scale = distance / depthIntrinsics.FocalLengthX;
 			float similarityTemp = (radiusTemp * scale - 130) * (radiusTemp * scale - 130) + abs(cv::contourArea(*itrCont) * scale * scale - M_PI * 130 * 130);
+			std::cout << similarityTemp << std::endl;
 			if (similarityTemp < similarity)
 			{
 				centerCandidate = centerTemp;
 				radiusCandidate = radiusTemp;
 			}
 		}
+
 		if (similarity < 10000)
 		{
 			center = centerCandidate;
 			radius = radiusCandidate;
 			return true;
 		}
+		cv::imshow("edge", edges);
 	}
 	return false;
 }

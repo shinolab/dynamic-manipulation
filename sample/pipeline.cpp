@@ -30,19 +30,11 @@ Eigen::Vector3f transformUnity2Global(Eigen::Vector3f const &r)
 		-0.0178, -1.002, -0.006054;
 
 	return (r.transpose() * rotation + Eigen::Vector3f(571.6, 688.7, -121).transpose()).transpose();
-	/*
-	return Eigen::Translation3f(Eigen::Vector3f(-30, 405, -93))
-	* Eigen::AngleAxisf(183*M_PI/180,Eigen::Vector3f::UnitZ())
-	* Eigen::AngleAxisf(-M_PI_2, Eigen::Vector3f::UnitX())
-	* (1000 * Eigen::Vector3f(r.x()-15, -r.y(), r.z()-15));
-	*/
 
 }
 
 int main()
 {
-
-
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs odcs;
 	odcs.Initialize();
@@ -77,10 +69,9 @@ int main()
 		{
 			v.push_back(atof(temp.c_str()));
 		}
-
-		Eigen::Vector3f vec = Eigen::Map<Eigen::Vector3f>(&v[0]);
-		odcs.GetFloatingObject(0)->updateStatesTarget(vec, Eigen::Vector3f(0, 0, 0));
-		std::cout << "target position is updated to : " << vec.transpose() << std::endl;
+		Eigen::Vector3f pos = Eigen::Map<Eigen::Vector3f>(&v[0]);
+		odcs.GetFloatingObject(0)->updateStatesTarget(pos, Eigen::Vector3f(0, 0, 0));
+		std::cout << "target position is updated to : " << odcs.GetFloatingObject(0)->getPositionTarget().transpose() << std::endl;
 
 	} while (strcmp(buffer, "") != 0);
 

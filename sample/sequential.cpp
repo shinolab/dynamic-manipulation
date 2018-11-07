@@ -19,7 +19,17 @@ int main()
 	while (1)
 	{
 		Eigen::Vector3f pos;
-		odcs.ods.GetPositionByDepth(objPtr, pos, true);
+		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, pos, true);
+		DWORD observationTime = timeGetTime();
+		if (succeeded)
+		{
+			objPtr->isTracked = true;
+			objPtr->updateStates(observationTime, pos);
+		}
+		else if (observationTime - objPtr->lastDeterminationTime > 1000)
+		{
+			objPtr->isTracked = false;
+		}
 		auto key = cv::waitKey(5);
 		if (key == 'q')
 		{

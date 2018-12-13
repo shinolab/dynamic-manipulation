@@ -18,14 +18,14 @@ projector::projector(std::string _projectorName
 	, const int _height)
 {
 	internalParam = (cv::Mat_<float>(3, 3) <<
-		6532, 0, 1345,
-		0, 6514, 2324,
+		5752.482513627768, 0, 2108.730456578023,
+		0, 5683.544422424523, 2380.697983083306,
 		0, 0, 1);
 	distCoeffs = (cv::Mat_<float>(1, 5) <<
-		0.3016, -2.275, -0.00559, -0.0171, 0);
+		-0.1980807182777715, 0.3086291425475489, -0.008436505514143884, 0.008727957374133679, 0);
 	//kinect cooradinate system is temporally used as a reference of the external parameters. 
-	rvec = (cv::Mat_<float>(3, 1) << -1.274, -0.003, -2.867);
-	tvec = (cv::Mat_<float>(3, 1) << -675.7, -261, -69.1);
+	rvec = (cv::Mat_<float>(3, 1) << -0.4877771880016805, 0.009152296925027666, -3.090781468236619);
+	tvec = (cv::Mat_<float>(3, 1) << -544.2122015242982, -380.5129628128426, 1070.945634793596);
 	this->posX = _posX;
 	this->posY = _posY;
 	this->width = _width;
@@ -87,7 +87,7 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::circle(dst, imagePoints2d[0], 30 * fx / distance, cv::Scalar::all(255), -1);
 	cv::Rect roi(cv::Point(0 * image.cols, 0), cv::Point(1.0 * image.cols, 1.0 * image.rows));
 	cv::Mat affine = (cv::Mat_<float>(2, 3) <<
-		fx * sizeReal.width / distance / image.cols, 0, ((int)(imagePoints2d[0].x - sizeReal.width * fx / distance / 2)),
+		fx * sizeReal.width / distance / image.cols, 0, ((int)(imagePoints2d[0].x - sizeReal.width * fx / distance / 2) - 30),
 		0, fy * sizeReal.height / distance / image.rows, ((int)(imagePoints2d[0].y - sizeReal.height * fy / distance / 2)));
 	cv::warpAffine(image(roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 	cv::imshow(name, dst);

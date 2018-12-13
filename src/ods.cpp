@@ -17,19 +17,22 @@
 int ods::Initialize()
 {
 	//set workspace
-	Eigen::Vector3f wsCorner1(-1000, -1000, 0);
+	Eigen::Vector3f wsCorner1(-1000, -1000, 800);
 	Eigen::Vector3f wsCorner2(1000, 1000, 2000);
 	workspace << wsCorner1, wsCorner2;
 	// ========== Initialize Kinect ==========
 	kinectApp.initialize();
-	positionKinect = Eigen::Vector3f(35, -962, 1350);
+	positionKinect = Eigen::Vector3f(41.7, -1006, 1313);
+
 	dcmGlobal2Kinect = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
 	dcmKinect2Global = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
+
 	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	/*
 	while (1)
 	{
 		HRESULT hr = updateBackgroundDepth();
@@ -39,6 +42,8 @@ int ods::Initialize()
 		}
 		Sleep(10);
 	}
+	*/
+	
 	return 0;
 }
 
@@ -265,7 +270,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		//cv::imshow("Raw", depthImageUc8);
+		cv::imshow("Raw", depthImageUc8);
 
 		//Background Subtraction
 		if (!backgroundDepth.empty())
@@ -277,7 +282,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			cv::inRange(imgBackground - depthImageRaw, cv::Scalar(10), cv::Scalar(kinectApp.depthMaxReliableDistance), maskBackground);
 			depthImageRaw.copyTo(subtracted, maskBackground + invalidPixels);
 			subtracted.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance);
-			//cv::imshow("Subtracted", depthImageUc8);
+			cv::imshow("Subtracted", depthImageUc8);
 		}
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
@@ -291,17 +296,15 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		else
 		{
-			cv::Point center; float radius;
-			bool isFound = findSphere(depthImageUc8, center, radius);
-			if (isFound)
-			{
-				cv::circle(mask, center, radius, cv::Scalar::all(255), -1);
-			}
-			else
-			{
-				return isValid;
-				//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
-			}
+			//cv::Point center; float radius;
+			//bool isFound = findSphere(depthImageUc8, center, radius);
+			Eigen::Vector3f posTgt = affineKinect2Global.inverse() * (objPtr->getPositionTarget());
+			cv::Point p(posTgt.x() * 365.6 / posTgt.z() + 0.5 * kinectApp.getDepthWidth()
+				, -posTgt.y() * 367.2 / posTgt.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
+			cv::circle(mask, p, 150 * 365.6 / posTgt.z(), cv::Scalar(255), -1, 8);
+
+			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+		
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);

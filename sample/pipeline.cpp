@@ -25,11 +25,11 @@ Eigen::Vector3f transformGlobal2Unity(Eigen::Vector3f const &r)
 Eigen::Vector3f transformUnity2Global(Eigen::Vector3f const &r)
 {
 	Eigen::Matrix3f rotation;
-	rotation << -0.9912, 0.01577, 0.04323,
-		0.02818, 0.01999, 1.045,
-		-0.0178, -1.002, -0.006054;
-
-	return (r.transpose() * rotation + Eigen::Vector3f(571.6, 688.7, -121).transpose()).transpose();
+	rotation << -1,0,0,
+		0,0,-1,
+		0,1,0;
+	return (rotation * r + Eigen::Vector3f(610, 800, 95));
+	//return (r.transpose() * rotation + Eigen::Vector3f(610,570,-55).transpose()).transpose();
 
 }
 
@@ -70,7 +70,7 @@ int main()
 			v.push_back(atof(temp.c_str()));
 		}
 		Eigen::Vector3f pos = Eigen::Map<Eigen::Vector3f>(&v[0]);
-		odcs.GetFloatingObject(0)->updateStatesTarget(pos, Eigen::Vector3f(0, 0, 0));
+		odcs.GetFloatingObject(0)->updateStatesTarget(transformUnity2Global(pos), Eigen::Vector3f(0, 0, 0));
 		std::cout << "target position is updated to : " << odcs.GetFloatingObject(0)->getPositionTarget().transpose() << std::endl;
 
 	} while (strcmp(buffer, "") != 0);

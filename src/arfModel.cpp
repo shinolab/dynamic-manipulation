@@ -79,6 +79,56 @@ Eigen::MatrixXf arfModelTheoreticalTable::arf(Eigen::MatrixXf posRel, Eigen::Mat
 	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
 }
 
+arfModelFocusOnSphereExperimental::arfModelFocusOnSphereExperimental()
+{
+	this->tableDistance = Eigen::VectorXf::LinSpaced(11, 200, 2000);
+	this->tableAngle = Eigen::VectorXf::LinSpaced(5, 0, M_PI / 3);
+	this->tableARF.resize(10, 5);
+	this->tableARF << 8.77695175, 7.7668668, 6.16838285, 4.79545185, 3.79517355, 2.97141495, 2.28494945, 1.8044236, 1.36312435, 1.0983448,
+		7.6099604, 6.5704555, 5.22694445, 3.91285335, 3.01064155, 2.44185585, 1.93191005, 1.5886773, 1.48080415, 1.1964113,
+		4.5698989, 3.5500073, 3.0204482, 2.44185585, 2.04958985, 1.5102241, 1.32389775, 1.12776475, 0.9610517, 0.77472535,
+		3.08909475, 2.8047019, 2.4712758, 2.06920315, 1.67693715, 1.22583125, 1.06892485, 0.89240515, 0.7060788, 0.588399,
+		1.67693715, 1.36312435, 1.1964113, 0.9414384, 0.7649187, 0.61781895, 0.4903325, 0.40207265, 0.36284605, 0.28439285;
+}
+
+Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(Eigen::MatrixXf posRel, Eigen::MatrixXf eulerAnglesAUTD)
+{
+	posRel /= 1000;
+	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
+	for (int i = 0; i < directionsAUTD.cols(); i++)
+	{
+		directionsAUTD.col(i) <<
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
+	}
+	Eigen::RowVectorXf dists = posRel.colwise().norm();
+	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAUTD.colwise().normalized()).colwise().sum();
+	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).array().acos().matrix();
+	Eigen::RowVectorXi indexesDist = (dists.replicate(tableDistance.rows(), 1) - tableDistance.replicate(1, dists.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
+	indexesDist = (indexesDist.array() - 1).cwiseMax(0).cwiseMin(tableDistance.rows() - 2); // correct index outside the table
+	Eigen::RowVectorXi indexesAngle = (angles.replicate(tableAngle.rows(), 1) - tableAngle.replicate(1, angles.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
+	indexesAngle = (indexesAngle.array() - 1).cwiseMax(0).cwiseMin(tableAngle.rows() - 2);
+	Eigen::RowVectorXf forces(posRel.cols());
+
+	for (int i = 0; i < posRel.cols(); i++)
+	{
+		float f00 = tableARF(indexesDist[i], indexesAngle[i]);
+		float f10 = tableARF(indexesDist[i] + 1, indexesAngle[i]);
+		float f01 = tableARF(indexesDist[i], indexesAngle[i] + 1);
+		float f11 = tableARF(indexesDist[i] + 1, indexesAngle[i] + 1);
+		float r0 = tableDistance[indexesDist[i]];
+		float r1 = tableDistance[indexesDist[i] + 1];
+		float t0 = tableAngle[indexesAngle[i]];
+		float t1 = tableAngle[indexesAngle[i] + 1];
+		float dr = (dists[i] - r0) / (r1 - r0);
+		float dt = (angles[i] - t0) / (t1 - t0);
+		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr)*dt + f11 * dr*dt;
+		forces[i] = f;
+	}
+	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
+}
+
 //Return 3-by-(numAUTD) matrix where each column represents ARF by AUTD at muximum duty. 
 Eigen::MatrixXf arfModel::arf(Eigen::MatrixXf posRel)
 {

@@ -47,7 +47,8 @@ int ocs::Initialize()
 		centerAUTD.col(i) << affineGlobal2AUTD * Eigen::Vector3f(85, 65, 0);
 		directionsAUTD.col(i) << quo * Eigen::Vector3f::UnitZ();
 	}
-	arfModelPtr.reset(new arfModelTheoreticalTable());
+	//arfModelPtr.reset(new arfModelTheoreticalTable());
+	arfModelPtr.reset(new arfModelFocusOnSphereExperimental());
 	return 0;
 }
 
@@ -91,6 +92,14 @@ void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitud
 	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(farPoints, amplitudes));
 	autd.AppendModulation(autd::Modulation::Create(255));
 }
+
+void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
+{
+	Eigen::MatrixXf focus = centerAUTD + (objPtr->getPosition().replicate(1, centerAUTD.cols()) - centerAUTD);
+	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
+	autd.AppendModulation(autd::Modulation::Create(255));
+}
+
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)
 {

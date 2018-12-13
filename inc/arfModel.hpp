@@ -33,6 +33,18 @@ public:
 	Eigen::MatrixXf tableARF;
 };
 
+class arfModelFocusOnSphereExperimental : public arfModelLinearBase
+{
+public:
+	arfModelFocusOnSphereExperimental();
+	Eigen::MatrixXf arf(const Eigen::MatrixXf _posRel, const Eigen::MatrixXf _eulerAnglesAUTD);
+	
+private:
+	Eigen::VectorXf tableDistance;
+	Eigen::VectorXf tableAngle;
+	Eigen::MatrixXf tableARF;
+};
+
 namespace arfModel
 {
 	Eigen::MatrixXf arf(Eigen::MatrixXf posRel);

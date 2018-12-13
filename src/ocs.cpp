@@ -20,10 +20,10 @@ int ocs::Initialize()
 	if (!autd.isOpen()) return ENXIO;
 
 	Eigen::Vector3f positionAUTD0(-85, -65, 0); Eigen::Vector3f eulerAngleAUTD0(0, 0, 0);
-	Eigen::Vector3f positionAUTD1(-1000, 65, 1000); Eigen::Vector3f eulerAngleAUTD1(M_PI, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD2(1000, -65, 1000); Eigen::Vector3f eulerAngleAUTD2(0, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD3(-65, -1000, 1000); Eigen::Vector3f eulerAngleAUTD3(-M_PI_2, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD4(65, 1000, 1000); Eigen::Vector3f eulerAngleAUTD4(M_PI_2, -M_PI_2, 0);
+	Eigen::Vector3f positionAUTD1(-998, 65, 1038); Eigen::Vector3f eulerAngleAUTD1(M_PI, -M_PI_2, 0);
+	Eigen::Vector3f positionAUTD2(998, -65, 1038); Eigen::Vector3f eulerAngleAUTD2(0, -M_PI_2, 0);
+	Eigen::Vector3f positionAUTD3(-65, -998, 1038); Eigen::Vector3f eulerAngleAUTD3(-M_PI_2, -M_PI_2, 0);
+	Eigen::Vector3f positionAUTD4(65, 998, 1038); Eigen::Vector3f eulerAngleAUTD4(M_PI_2, -M_PI_2, 0);
 
 	autd.geometry()->AddDevice(positionAUTD0, eulerAngleAUTD0);
 	autd.geometry()->AddDevice(positionAUTD1, eulerAngleAUTD1);
@@ -99,7 +99,6 @@ void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitud
 	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
 	autd.AppendModulation(autd::Modulation::Create(255));
 }
-
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)
 {

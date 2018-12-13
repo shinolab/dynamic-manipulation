@@ -29,12 +29,32 @@ int main()
 	//start projection thread.
 	std::thread threadProjection([&odcs, &affineGlobal2Kinect, &dcmGlobal2Kinect](){
 		cv::VideoCapture cap("video/bird2.mp4");
-		cv::Mat image = cv::imread("img/shinolab3.jpg");
+		cv::Mat image = cv::imread("img/ieeevr2019.png");
+		cv::Mat phone0 = cv::imread("img/phone0b.png");
+		cv::Mat phone1 = cv::imread("img/phone1b.png");
+		cv::Mat phone2 = cv::imread("img/phone2b.png");
+		cv::Mat phone3 = cv::imread("img/phone3b.png");
+		cv::Mat earth0 = cv::imread("img/earth0.jpg");
+
+		cv::Mat earth1 = cv::imread("img/earth1.jpg");
+		cv::Mat earth2 = cv::imread("img/earth2.jpg");
+		cv::Mat earth3 = cv::imread("img/earth3.jpg");
+		cv::Mat earth4 = cv::imread("img/earth4.jpg");
+		cv::Mat earth5 = cv::imread("img/earth5.jpg");
+		cv::Mat earth6 = cv::imread("img/earth6.jpg");
+		cv::Mat earth7 = cv::imread("img/earth7.jpg");
+		cv::Mat earth8 = cv::imread("img/earth8.jpg");
+		cv::Mat earth9 = cv::imread("img/earth9.jpg");
+		cv::Mat earth10 = cv::imread("img/earth10.jpg");
+		cv::Mat earth11 = cv::imread("img/earth11.jpg");
+		cv::Mat earth12 = cv::imread("img/earth12.jpg");
+
 		std::string projectorName = "projector1";
 		projector proj(projectorName);
 		const int num_frame = cap.get(cv::CAP_PROP_FRAME_COUNT);
 		int count_frame = 0;
 		int num_average = 3;
+		int period = 100;
 		Eigen::MatrixXf posBuffer(3, num_average);
 		unsigned int colcount = 0;
 		while (1)
@@ -42,13 +62,60 @@ int main()
 			DWORD initTimeLoop = timeGetTime();
 			if (odcs.GetFloatingObject(0)->isTracked)
 			{
-				Eigen::Vector3f pos = affineGlobal2Kinect * odcs.GetFloatingObject(0)->getPosition();
+				Eigen::Vector3f pos = affineGlobal2Kinect * (odcs.GetFloatingObject(0)->getPosition());
 				posBuffer.col(colcount%num_average) << pos;
 				//Eigen::Vector3f vel = dcmGlobal2Kinect * odcs.GetFloatingObject(0)->getVelocity();
 				colcount++;
+				cv::Size earthSize(193, 198);
 				//cap >> image;
 				//projectImageOnObject("FULL", pos + vel * (timeGetTime() - odcs.GetFloatingObject(0)->lastDeterminationTime)/1000, image);
-				proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, image, cv::Size(100, 100));
+				//proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, image, cv::Size(187, 89), cv::Scalar::all(0)); // for VR LOGO
+				proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth0, earthSize, cv::Scalar::all(0)); // for earth
+				/*
+				switch (initTimeLoop % (11*period) / period )
+				{
+				case 0 :
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth1, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 1:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth2, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 2:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth3, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 3:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth4, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 4:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth5, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 5:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth6, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 6:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth7, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 7:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth8, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 8:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth9, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 9:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth10, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 10:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth11, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				case 11:
+					proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, earth12, earthSize, cv::Scalar::all(0)); // for VR LOGO
+					break;
+				default:
+					break;
+
+				}
+				*/
+				
 				auto key = cv::waitKey(1);
 				count_frame++;
 				/*
@@ -65,46 +132,49 @@ int main()
 			}
 		}
 	});
+	/*
+	
+	*/
 
-	std::ofstream ofs("20180918_projection_log2.csv");
-	float lengthX = 300;
+	std::ofstream ofs("20181129_xy1300retry2.csv");
+	float lengthX = 500;
 	float offsetX = 0;
 	float offsetY = 0;
 	float offsetZ = 1300;
-	int period = 6000;
-	Sleep(20000);
-	ofs << "time, x, y, z, v_x, v_y, v_z, I_x, I_y, I_z, x_tgt, y_tgt, z_tgt, v_x, v_y, v_z, u0, u1, u2, u3, u4" << std::endl;
+	int period = 20000;
+	//Sleep(20000);
+	ofs << "time, x, y, z, x_tgt, y_tgt, z_tgt, v_x, v_y, v_z, u0, u1, u2, u3, u4" << std::endl;
 	DWORD initialTime = timeGetTime();
 	DWORD loopPeriod = 30;
-	while ((timeGetTime()-initialTime) < 4 * period)
+	while ((timeGetTime()-initialTime) <  period * 20)
 	{
 		DWORD beginningOfLoop = timeGetTime();
 		float phase = 2 * M_PI * ((timeGetTime() - initialTime) % period) / (float)period;
+		float omega = 2 * M_PI * 1000 / period;
 		DWORD t = beginningOfLoop - initialTime;
 		float x, y, z, vx, vy, vz;
+		vx = 0; vy = 0; vz = 0;
+		x = 35 * (t / period); y = 35 * (t / period); z = offsetZ;
+		/*
 		switch(t / period)
 		{
 		case 0:
-			vx = 0; vy = 0; vz = 0;
-			x = lengthX;  y = lengthX ; z = offsetZ;
-			break;
+		vx = omega * lengthX * cosf(phase); vy = 0; vz = 0;
+		x = lengthX * sinf(phase);  y = 0 ; z = offsetZ;
+		break;
 		case 1:
-			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = 0; z = offsetZ;
-			break;
-		case 2:
-			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = 0; z = offsetZ-300;
-			break;
-		case 3:
-			vx = 0; vy = 0; vz = 0;
-			x = 0;  y = 0; z = offsetZ+200;
-			break;
+		vx = 0; vy = 0; vz = -omega * 300 * cosf(phase);
+		x = 0;  y = 0; z = offsetZ - 300 * sinf(phase);
+		break;
+
 		default:
-			vx = 0; vy = 0; vz = 0;
-			x = 0; y = 0; z = offsetZ;
-			break;
+		vx = 0; vy = 0; vz = 0;
+		x = 0; y = 0; z = offsetZ;
+		break;
 		}
+		*/
+
+		
 		odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(x, y, z), Eigen::Vector3f(vx, vy, vz));
 		Eigen::Vector3f currentPosition = odcs.GetFloatingObject(0)->getPosition();
 		ofs << timeGetTime() - initialTime << ", " << currentPosition.x() << ", " << currentPosition.y() << ", " << currentPosition.z() << ", "
@@ -115,11 +185,12 @@ int main()
 			Sleep(loopPeriod - loopTime);
 		}
 	}
-	odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ), Eigen::Vector3f(0, 0, 0));
+	odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ-100), Eigen::Vector3f(0, 0, 0));
 	std::cout << "transition to interaction mode." << std::endl;
 	
 	//start interaction thread.
 	//interaction sequence
+	/*
 	KinectApp app;
 	app.initialize();
 	bool isGrabbed = false;
@@ -227,6 +298,8 @@ int main()
 		DWORD loopTime = timeGetTime() - beginningOfLoop;
 		if (loopTime < loopPeriod) { Sleep(loopPeriod - loopTime); }
 	}
+
+	*/
 	std::cout << "Closing..." << std::endl;
 	odcs.Close();
 	threadProjection.join();

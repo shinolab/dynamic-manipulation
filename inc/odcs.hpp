@@ -75,7 +75,6 @@ public:
 	Eigen::Vector3f averageVelocity();
 };
 
-
 class ods
 {
 private:
@@ -152,6 +151,8 @@ public:
 	
 	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
 	
+	void CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
+
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
 

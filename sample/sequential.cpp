@@ -13,10 +13,10 @@
 int main()
 {
 	std::ofstream ofs("20181211_controlByFocus.csv");
-	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], "
+	ofs << "time[ms], succeeded, isTracked, x(raw)[mm], y(raw)[mm], z(raw)[mm], "
 		<< "x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], "
 		<< "Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], "
-		<< "Fx[mN], Fy[mN], Fz[mN], u0, u1, u2, u3, u4" << std::endl;
+		<< "Fx[mN], Fy[mN], Fz[mN], Fx_actual[mN], Fy_actual[mN], Fz_actual[mN], u0, u1, u2, u3, u4" << std::endl;
 	const int period = 10000;
 	const int loopPeriod = 30;
 	odcs odcs;
@@ -82,13 +82,14 @@ int main()
 		Eigen::Vector3f vel; vel << objPtr->getVelocity();
 		Eigen::Vector3f integral; integral << objPtr->getIntegral();
 		Eigen::VectorXf u = objPtr->getLatestInput();
-		
+		Eigen::Vector3f force_actual = odcs.ocs.arfModelPtr->arf(objPtr->getPosition().replicate(1, odcs.ocs.positionsAUTD.cols()) - odcs.ocs.centersAUTD, odcs.ocs.eulerAnglesAUTD);
 		ofs << loopInitTime << ", " << succeeded << "," << objPtr->isTracked << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 			<< pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< integral.x() << ", " << integral.y() << ", " << integral.z() << ", "
 			<< positionTarget.x() << ", " << positionTarget.y() << ", " << positionTarget.z() << ", "
 			<< force.x() << ", " << force.y() << ", " << force.z() << ", "
+			<< force_actual.x() << ", " << force_actual.y() << ", " << force_actual.z() << ", "
 			<< u[0] << ", " << u[1] << ", " << u[2] << ", " << u[3] << ", " << u[4] << std::endl;
 		
 		int waitTime = loopPeriod - (timeGetTime() - loopInitTime);

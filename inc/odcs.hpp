@@ -119,10 +119,10 @@ class ocs
 {
 public:
 	autd::Controller autd;
-	Eigen::MatrixXf positionAUTD;
+	Eigen::MatrixXf positionsAUTD;
 	Eigen::MatrixXf directionsAUTD;
 	Eigen::MatrixXf eulerAnglesAUTD;
-	Eigen::MatrixXf centerAUTD;
+	Eigen::MatrixXf centersAUTD;
 	std::unique_ptr<arfModelLinearBase> arfModelPtr;
 	void RegisterObject(FloatingObjectPtr objPtr);
 

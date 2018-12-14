@@ -13,7 +13,10 @@
 int main()
 {
 	std::ofstream ofs("20181211_controlByFocus.csv");
-	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], u0, u1, u2, u3, u4" << std::endl;
+	ofs << "time[ms], succeeded, x(raw)[mm], y(raw)[mm], z(raw)[mm], "
+		<< "x(est)[mm], y(est)[mm], z(est)[mm], vx[mm/s], vy[mm/s], vz[mm/s], "
+		<< "Ix[mms], Iy[mms], Iz[mms], x_tgt[mm], y_tgt[mm], z_tgt[mm], "
+		<< "Fx[mN], Fy[mN], Fz[mN], u0, u1, u2, u3, u4" << std::endl;
 	const int period = 10000;
 	const int loopPeriod = 30;
 	odcs odcs;
@@ -53,6 +56,7 @@ int main()
 		Eigen::Vector3f posObserved;
 		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
+		Eigen::Vector3f force; // for log
 		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
@@ -60,11 +64,12 @@ int main()
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->isTracked = true;
 			//PIDController
-			Eigen::VectorXf force = odcs.ocs.ComputePIDForce(objPtr);
+			force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
 			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-			odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
+			//odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
+			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
 			objPtr->setLatestInput(duties);
 		}
 		else if (observationTime - objPtr->lastDeterminationTime > 1000)
@@ -83,6 +88,7 @@ int main()
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< integral.x() << ", " << integral.y() << ", " << integral.z() << ", "
 			<< positionTarget.x() << ", " << positionTarget.y() << ", " << positionTarget.z() << ", "
+			<< force.x() << ", " << force.y() << ", " << force.z() << ", "
 			<< u[0] << ", " << u[1] << ", " << u[2] << ", " << u[3] << ", " << u[4] << std::endl;
 		
 		int waitTime = loopPeriod - (timeGetTime() - loopInitTime);

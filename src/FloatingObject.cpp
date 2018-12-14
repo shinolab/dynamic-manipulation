@@ -9,13 +9,14 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
+FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget, float _additionalMass)
 {
 	position << _positionTarget;
 	velocity << 0, 0, 0;
 	integral << 0, 0, 0;
 	positionTarget = _positionTarget;
 	velocityTarget << 0, 0, 0;
+	additionalMass = _additionalMass;
 	lastDeterminationTime = 0;
 	isTracked = false;
 	isControlled = true;
@@ -32,9 +33,9 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget)
 	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
 }
 
-FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f posTgt)
+FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f posTgt, float _additionalMass)
 {
-	return FloatingObjectPtr(new FloatingObject(posTgt));
+	return FloatingObjectPtr(new FloatingObject(posTgt, _additionalMass));
 }
 
 float FloatingObject::sphereMass()

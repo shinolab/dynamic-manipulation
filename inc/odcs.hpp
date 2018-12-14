@@ -56,9 +56,9 @@ private:
 	std::mutex mtxStateTarget;
 
 public:
-	FloatingObject(Eigen::Vector3f _positionTarget);
+	FloatingObject(Eigen::Vector3f _positionTarget, float _additionalMass = 0.1e-3);
 
-	static FloatingObjectPtr Create(Eigen::Vector3f posTgt);
+	static FloatingObjectPtr Create(Eigen::Vector3f posTgt, float _additionalMass = 0.1e-3);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 

@@ -15,10 +15,6 @@ add_executable(pipeline pipeline.cpp)
 include_directories(../inc)
 target_link_libraries(pipeline DynamicLevitation)
 
-add_executable(interaction interaction.cpp)
-include_directories(../inc)
-target_link_libraries(interaction DynamicLevitation)
-
 add_executable(projection projection.cpp)
 include_directories(../inc)
 target_link_libraries(projection DynamicLevitation Projector)
@@ -27,10 +23,6 @@ add_executable(sequential sequential.cpp)
 include_directories(../inc)
 target_link_libraries(sequential DynamicLevitation)
 
-add_executable(acuityTest acuityTest.cpp)
+add_executable(impactor impactor.cpp)
 include_directories(../inc)
-target_link_libraries(acuityTest DynamicLevitation Projector)
-
-add_executable(asiaHapticsDemo asiaHapticsDemo.cpp)
-include_directories(../inc)
-target_link_libraries(asiaHapticsDemo DynamicLevitation)
+target_link_libraries(impactor DynamicLevitation)

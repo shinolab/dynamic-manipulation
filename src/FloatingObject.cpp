@@ -151,3 +151,8 @@ bool FloatingObject::isStable()
 {
 	return (averageVelocity().norm() < speedLimit);
 }
+
+bool FloatingObject::isConverged(float tolPos, float tolVel)
+{
+	return ((getPosition() - getPositionTarget()).norm() < tolPos) && ((this->getVelocity() - this->getVelocityTarget()).norm() < tolVel);
+}

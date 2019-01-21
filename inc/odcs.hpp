@@ -72,6 +72,8 @@ public:
 
 	bool isStable();
 
+	bool isConverged(float tolPos, float tolVel);
+
 	Eigen::Vector3f averageVelocity();
 };
 

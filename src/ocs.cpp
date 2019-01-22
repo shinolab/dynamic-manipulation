@@ -69,7 +69,7 @@ void ocs::SetArfModel(std::unique_ptr<arfModelLinearBase> _arfModelPtr)
 	this->arfModelPtr = std::move(_arfModelPtr);
 }
 
-void ocs::SetGain(Eigen::Vector3f _gainP, Eigen::Vector3f _gainD, Eigen::Vector3f _gainI)
+void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, Eigen::Vector3f const &_gainI)
 {
 	this->gainP = _gainP;
 	this->gainD = _gainD;
@@ -85,7 +85,7 @@ Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
 	return force;
 }
 
-void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
+void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes)
 {
 	float outpor = 100;
 	Eigen::MatrixXf farPoints = centersAUTD + outpor * (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
@@ -93,7 +93,7 @@ void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitud
 	autd.AppendModulation(autd::Modulation::Create(255));
 }
 
-void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
+void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes)
 {
 	Eigen::MatrixXf focus = centersAUTD + (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
 	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
@@ -156,7 +156,7 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 	return duties;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position, Eigen::VectorXf const &duty_forward)
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward)
 {
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
 	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
@@ -178,7 +178,7 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position,
 	return duty;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position)
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position)
 {
 	FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }

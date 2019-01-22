@@ -56,9 +56,9 @@ private:
 	std::mutex mtxStateTarget;
 
 public:
-	FloatingObject(Eigen::Vector3f _positionTarget, float _additionalMass = 0.1e-3);
+	FloatingObject(Eigen::Vector3f &_positionTarget, float _additionalMass = 0.1e-3);
 
-	static FloatingObjectPtr Create(Eigen::Vector3f posTgt, float _additionalMass = 0.1e-3);
+	static FloatingObjectPtr Create(Eigen::Vector3f &posTgt, float _additionalMass = 0.1e-3);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 
@@ -141,19 +141,19 @@ public:
 
 	void SetArfModel(std::unique_ptr<arfModelLinearBase> arfModelPtr);
 
-	void SetGain(Eigen::Vector3f gainP, Eigen::Vector3f gainD, Eigen::Vector3f gainI);
+	void SetGain(Eigen::Vector3f const &gainP, Eigen::Vector3f const &gainD, Eigen::Vector3f const &gainI);
 
 	Eigen::Vector3f ComputePIDForce(FloatingObjectPtr objPtr);
 
-	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position);
+	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
 
-	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position, Eigen::VectorXf const &duty_forward);
+	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward);
 
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
 	
-	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
+	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
 	
-	void CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes);
+	void CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
 
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
@@ -165,13 +165,13 @@ class odcs
 {
 public:
 	void Initialize();
-	int AddObject(Eigen::Vector3f positionTarget);
+	int AddObject(Eigen::Vector3f const &positionTarget);
 	void RegisterObject(FloatingObjectPtr objPtr);
 	const FloatingObjectPtr GetFloatingObject(int i);
 	void StartControl();
 	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 	void Close();
-	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD determinationTime);
+	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD determinationTime);
 	ods ods;
 	ocs ocs;
 	std::thread thread_control;

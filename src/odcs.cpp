@@ -18,7 +18,7 @@ void odcs::Initialize()
 	ocs.Initialize();
 }
 
-int odcs::AddObject(Eigen::Vector3f targetPosition)
+int odcs::AddObject(Eigen::Vector3f const &targetPosition)
 {
 	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
 	return objPtrs.size();
@@ -103,7 +103,7 @@ void odcs::Close()
 	ocs.Close();
 }
 
-void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD observationTime)
+void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD observationTime)
 {
 	float dt = (observationTime - objPtr->lastDeterminationTime) / 1000.0;
 	//-----Construct System Matrix

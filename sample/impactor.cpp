@@ -21,7 +21,6 @@ Eigen::Vector3f ComputeAnisotropicPIDForce(FloatingObjectPtr objPtr
 	return force;
 }
 
-
 int main()
 {
 	std::ofstream ofs("20190121_bangbang_log.csv");

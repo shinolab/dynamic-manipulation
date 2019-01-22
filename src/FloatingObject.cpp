@@ -9,7 +9,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget, float _additionalMass)
+FloatingObject::FloatingObject(Eigen::Vector3f &_positionTarget, float _additionalMass)
 {
 	position << _positionTarget;
 	velocity << 0, 0, 0;
@@ -33,7 +33,7 @@ FloatingObject::FloatingObject(Eigen::Vector3f _positionTarget, float _additiona
 	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
 }
 
-FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f posTgt, float _additionalMass)
+FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f &posTgt, float _additionalMass)
 {
 	return FloatingObjectPtr(new FloatingObject(posTgt, _additionalMass));
 }

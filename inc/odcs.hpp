@@ -147,7 +147,7 @@ public:
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position);
 
-	Eigen::VectorXf FindDutyQP(FloatingObjectPtr objPtr);
+	Eigen::VectorXf FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position, Eigen::VectorXf const &duty_forward);
 
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
 	

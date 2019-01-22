@@ -156,24 +156,29 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 	return duties;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position)
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position, Eigen::VectorXf const &duty_forward)
 {
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
 	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 	Eigen::MatrixXf Q = F.transpose() * F;
 	Eigen::VectorXf b = -F.transpose() * force;
-	Eigen::VectorXf duty(NUM_AUTDS);
+	Eigen::VectorXf duty_reserved = Eigen::VectorXf::Ones(duty_forward.size()) - duty_forward;
+	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::mat(duty_reserved);
 	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
 	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
 	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
 	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::ones_matrix<float>(centersAUTD.cols(), 1);
 	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(centersAUTD.cols(), 1);
 	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
+	Eigen::VectorXf duty(centersAUTD.cols());
 	for (int index = 0; index < NUM_AUTDS; index++)
 	{
 		duty[index] = u(index, 0);
 	}
 	return duty;
+}
 
-	
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position)
+{
+	FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }

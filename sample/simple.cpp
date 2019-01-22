@@ -16,6 +16,7 @@ int main()
 	odcs odcs;
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs.Initialize();
+	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	FloatingObjectPtr objPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350)));
 	odcs.RegisterObject(objPtr); // add object
 	odcs.StartControl();

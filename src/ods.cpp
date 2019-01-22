@@ -296,15 +296,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		else
 		{
-			//cv::Point center; float radius;
-			//bool isFound = findSphere(depthImageUc8, center, radius);
-			Eigen::Vector3f posTgt = affineKinect2Global.inverse() * (objPtr->getPositionTarget());
-			cv::Point p(posTgt.x() * 365.6 / posTgt.z() + 0.5 * kinectApp.getDepthWidth()
-				, -posTgt.y() * 367.2 / posTgt.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
-			cv::circle(mask, p, 150 * 365.6 / posTgt.z(), cv::Scalar(255), -1, 8);
-
-			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
-		
+			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);		
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);

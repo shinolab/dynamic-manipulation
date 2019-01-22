@@ -81,7 +81,7 @@ Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dv = objPtr->getVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f accerelation = gainP.asDiagonal() * dr + gainD.asDiagonal() * dv + gainI.asDiagonal() * objPtr->getIntegral();
-	Eigen::Vector3f force = (objPtr->totalMass()) * accerelation - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.806e3);
+	Eigen::Vector3f force = (objPtr->totalMass()) * accerelation - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.80665e3f);
 	return force;
 }
 
@@ -167,7 +167,6 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
 	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
 	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::ones_matrix<float>(centersAUTD.cols(), 1);
 	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(centersAUTD.cols(), 1);
 	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
 	Eigen::VectorXf duty(centersAUTD.cols());
@@ -175,10 +174,11 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 	{
 		duty[index] = u(index, 0);
 	}
+
 	return duty;
 }
 
 Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position)
 {
-	FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
+	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }

@@ -10,14 +10,14 @@ Eigen::Vector3f ComputeAnisotropicPIDForce(FloatingObjectPtr objPtr
 	, Eigen::Matrix3f directions
 	, Eigen::Matrix3f gains)
 {
-	
 	Eigen::Matrix3f Kp = directions * gains.col(0).asDiagonal();
 	Eigen::Matrix3f Kd = directions * gains.col(1).asDiagonal();
 	Eigen::Matrix3f Ki = directions * gains.col(2).asDiagonal();
 	Eigen::Vector3f dPos = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dVel = objPtr->getVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f dInt = objPtr->getIntegral();
-	Eigen::Vector3f force = -Kp * dPos - Kd * dVel - Ki * dInt;
+	Eigen::Vector3f acceleration = -Kp * dPos - Kd * dVel - Ki * dInt;
+	Eigen::Vector3f force = objPtr->totalMass() * acceleration;// +objPtr->additionalMass * Eigen::Vector3f(0, 0, 9.80665e3f);
 	return force;
 }
 
@@ -34,17 +34,17 @@ int main()
 	float vf = 0.3f;//[m/s]
 
 	/*control parameters*/
-	float duty_limit = 0.8;
-	float kpv = 1.0f;
-	float kdv = 2.0f * sqrtf(kpv);
-	float kiv = 0.182f * powf(kpv, 1.5f);
-	Eigen::Matrix3f gainPhase1; gainPhase1 << kpv * Eigen::Vector3f::Ones()
-		, kdv * Eigen::Vector3f::Ones()
-		, kiv*Eigen::Vector3f(1.0f, 1.0f, 1.0f);
+	float duty_limit = 0.6f;
+	float kpv = 1.6f;
+	float kdv = 2.6f;
+	float kiv = 0.36f;
+	Eigen::Matrix3f gainBB; gainBB << kpv * Eigen::Vector3f(1.0f, 1.0f, 0.0f)
+		, kdv * Eigen::Vector3f(1.0f, 1.0f, 0.0f)
+		, kiv * Eigen::Vector3f(1.0f, 1.0f, 0.0f);
 
 	Eigen::Matrix3f gainPhase2; gainPhase2 << kpv * Eigen::Vector3f::Ones()
 		, kdv * Eigen::Vector3f::Ones()
-		, kiv*Eigen::Vector3f(1.0f, 1.0f, 0.0f);
+		, kiv * Eigen::Vector3f(1.0f, 1.0f, 0.0f);
 
 	//==========phase 0: Compute restingPosition==========
 	//polynomial to solve
@@ -54,7 +54,7 @@ int main()
 	float A0 = -hf*hf*hf*hf - A3 * hf*hf*hf - A2 * hf*hf - A1 * hf + 2.0f * totalMass * vf * vf / (1.8455e-4f) / duty_limit;
 	
 	float h0 = findRootQuarticPoly(A0, A1, A2, A3, 1.0f, hf, 0.0f, 2.0f * hf);
-	Eigen::Vector3f pos0(0.0f, 0.0f, 1000.0f*h0);
+	Eigen::Vector3f pos0(0.0f, 0.0f, 1000.0f * h0);
 
 	std::cout << "A0: " << A0 << ", A1: " << A1 << ", A2: " << A2 << ", A3: " << A3 << std::endl;
 	std::cout << "terminal state: (" << hf << ", " << vf << "), initial height: " << h0 << std::endl;
@@ -86,7 +86,7 @@ int main()
 			force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
+			Eigen::VectorXi amplitudes = (510.0 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
 			distBuffer.push_back((posObserved-objPtr->getPositionTarget()).norm());
@@ -123,7 +123,7 @@ int main()
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->isTracked = true;
 			//PIDController
-			force = ComputeAnisotropicPIDForce(objPtr, directions, gainPhase1);
+			force = ComputeAnisotropicPIDForce(objPtr, directions, gainBB);
 			//force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition(), duty_forward) + duty_forward;

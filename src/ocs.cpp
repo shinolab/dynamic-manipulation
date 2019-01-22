@@ -174,7 +174,6 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 	{
 		duty[index] = u(index, 0);
 	}
-
 	return duty;
 }
 

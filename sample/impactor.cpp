@@ -67,8 +67,6 @@ int main()
 	float tolVel = 1.0f;
 	
 	//use wait_until
-	
-	
 	std::vector<float> distBuffer;
 	while (1)
 	{
@@ -125,11 +123,10 @@ int main()
 			//force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition()) + duty_forward;
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
+			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin()).cast<int>().max(0).min(255).matrix();
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
 			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z()
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << std::endl;
-
 		}
 		else if (observationTime - objPtr->lastDeterminationTime > 1000)
 		{

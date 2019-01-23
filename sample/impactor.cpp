@@ -17,20 +17,20 @@ Eigen::Vector3f ComputeAnisotropicPIDForce(FloatingObjectPtr objPtr
 	Eigen::Vector3f dVel = objPtr->getVelocity() - objPtr->getVelocityTarget();
 	Eigen::Vector3f dInt = objPtr->getIntegral();
 	Eigen::Vector3f acceleration = -Kp * dPos - Kd * dVel - Ki * dInt;
-	Eigen::Vector3f force = objPtr->totalMass() * acceleration;// +objPtr->additionalMass * Eigen::Vector3f(0, 0, 9.80665e3f);
+	Eigen::Vector3f force = objPtr->totalMass() * acceleration + objPtr->additionalMass * Eigen::Vector3f(0, 0, 9.80665e3f);
 	return force;
 }
 
 int main()
 {
-	std::ofstream ofs("20190122_bangbang_log.csv");
+	std::ofstream ofs("20190122_bangbang_log_Lim06_w_gravity_comp.csv");
 	/*condition*/
-	float additionalMass = 1.0e-4;
+	float additionalMass = 0.095e-4;
 	float airMass = 5.4e-3;
 	float totalMass = additionalMass + airMass;
 	
 	/*terminal condition*/
-	float hf = 1.5f;//[m]
+	float hf = 1.6f;//[m]
 	float vf = 0.3f;//[m/s]
 
 	/*control parameters*/
@@ -63,7 +63,7 @@ int main()
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, u0, u1, u2, u3, u4" << std::endl;
 	odcs odcs;
 	odcs.Initialize();
-	odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.1f));
+	odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.05f));
 	auto objPtr = FloatingObject::Create(pos0, additionalMass);
 
 	float tolPos = 30.0f;
@@ -129,8 +129,8 @@ int main()
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition(), duty_forward) + duty_forward;
 			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin()).cast<int>().max(0).min(255).matrix();
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
-			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", " << posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z()
-				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << std::endl;
+			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", " << pos0.x() << ", " << pos0.y() << ", " << pos0.z()
+				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ", " << force.x() << ", " << force.y() << ", " << force.z() << std::endl;
 		}
 		else if (observationTime - objPtr->lastDeterminationTime > 1000)
 		{

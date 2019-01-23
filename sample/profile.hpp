@@ -6,17 +6,17 @@
 class profile
 {
 public:
-	virtual Eigen::Vector3f posTgt(DWORD time) = 0;
-	virtual Eigen::Vector3f velTgt(DWORD time) = 0;
-	virtual Eigen::Vector3f accelTgt(DWORD time) = 0;
+	virtual Eigen::Vector3f posTgt(float const &time) = 0;
+	virtual Eigen::Vector3f velTgt(float const & time) = 0;
+	virtual Eigen::Vector3f accelTgt(float const & time) = 0;
 };
 
 class profileUniAccel : profile
 {
 public:
 	profileUniAccel(Eigen::Vector3f const &acceleration
-		, DWORD const &timeEnd
-		, DWORD const &timeInit
+		, float const &timeEnd
+		, float const &timeInit
 		, Eigen::Vector3f const &posInit
 		, Eigen::Vector3f const &velInit)
 	{
@@ -26,14 +26,40 @@ public:
 		this->velInit = velInit;
 	}
 
-	Eigen::Vector3f posTgt(DWORD time = timeGetTime());
-	Eigen::Vector3f velTgt(DWORD time = timeGetTime());
-	Eigen::Vector3f accelTgt(DWORD time = timeGetTime());
+	Eigen::Vector3f posTgt(float const &time = timeGetTime() / 1000.0f);
+	Eigen::Vector3f velTgt(float  const &time = timeGetTime() / 1000.0f);
+	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.0f);
 
 private:
-	DWORD timeInit;
-	DWORD timeEnd;
+	float timeInit;
+	float timeEnd;
 	Eigen::Vector3f accel;
 	Eigen::Vector3f posInit;
 	Eigen::Vector3f velInit;
+};
+
+class profileBangBang
+{
+public:
+	profileBangBang(float const &timeTotal,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd)
+	{
+		this->timeInit = timeInit;
+		this->timeTotal = timeTotal;
+		this->posInit = posInit;
+		this->posEnd = posEnd;
+	}
+	Eigen::Vector3f posTgt(float const &time = timeGetTime() / 1000.0f);
+	Eigen::Vector3f velTgt(float const &time = timeGetTime() / 1000.0f);
+	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.0f);
+
+private:
+	float timeTotal;
+	float timeInit;
+	Eigen::Vector3f posInit;
+	Eigen::Vector3f posEnd;
+	Eigen::Vector3f velInit;
+	Eigen::Vector3f velEnd;
 };

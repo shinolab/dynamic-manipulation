@@ -23,6 +23,8 @@ add_executable(sequential sequential.cpp)
 include_directories(../inc)
 target_link_libraries(sequential DynamicLevitation)
 
-add_executable(impactor impactor.cpp ../inc/rootFindingPoly.hpp)
-include_directories(../inc)
+add_executable(impactor impactor.cpp
+	profile.hpp
+	profile.cpp
+	../inc/rootFindingPoly.hpp)
 target_link_libraries(impactor DynamicLevitation)

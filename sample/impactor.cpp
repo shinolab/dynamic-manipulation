@@ -33,22 +33,27 @@ float deriveRestingPosition(float const &hf, float const &vf, float const &addit
 
 int main()
 {
-	std::ofstream ofs("20190123_bangbang_log_3.csv");
+	std::ofstream ofs("20190125_bangbang_log_7.csv");
 	/*condition*/
 	float additionalMass = 0.095e-4;
 	float airMass = 5.4e-3;
 	float totalMass = additionalMass + airMass;
+	float duty_limit = 0.6;
+	float timeTrans = 7.0f;
+	const int loopPeriod = 30;
+
+	float gainP = -1.6f, gainD = -4.0f, gainI = -0.05f;
 
 	//==========phase 0: Compute restingPosition==========
 
-	Eigen::Vector3f pos0(0.0f, 0.0f, 1300.0f);
-	Eigen::Vector3f pos1(300.0f, 0.0f, 1300.0f);
+	Eigen::Vector3f pos0(350.0f, 0.0f, 1200.0f);
+	Eigen::Vector3f pos1(-350.0f, 0.0f, 1500.0f);
 
 	//phase I: move to stand-by point
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, u0, u1, u2, u3, u4, Fxf, Fyf, Fzf, Fxb, Fyb, Fzb" << std::endl;
 	odcs odcs;
 	odcs.Initialize();
-	odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-4.0f), Eigen::Vector3f::Constant(-0.05f));
+	odcs.ocs.SetGain(Eigen::Vector3f::Constant(gainP), Eigen::Vector3f::Constant(gainD), Eigen::Vector3f::Constant(gainI));
 	auto objPtr = FloatingObject::Create(pos0, additionalMass);
 	
 	float tolPos = 50.0f;
@@ -58,6 +63,7 @@ int main()
 	std::vector<float> distBuffer;
 	while (1)
 	{
+		int loopInitTime = timeGetTime();
 		Eigen::Vector3f posObserved;
 		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
@@ -75,7 +81,7 @@ int main()
 
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
 			distBuffer.push_back((posObserved-pos0).norm());
-			if (distBuffer.size() > 30) { distBuffer.erase(distBuffer.begin()); }
+			if (distBuffer.size() > 50) { distBuffer.erase(distBuffer.begin()); }
 			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", " << pos0.x() << ", " << pos0.y() << ", " << pos0.z() << ",0,0,0"
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ",0,0,0, " << force.x() << ", " << force.y() << ", " << force.z() <<  std::endl;
 			std::cout << *std::max_element(distBuffer.begin(), distBuffer.end()) << " size: " << distBuffer.size() << std::endl;
@@ -84,19 +90,24 @@ int main()
 		{
 			objPtr->isTracked = false;
 		}
-		if (distBuffer.size() == 30 && *std::max_element(distBuffer.begin(), distBuffer.end()) < tolPos)
+		if (distBuffer.size() == 50 && *std::max_element(distBuffer.begin(), distBuffer.end()) < tolPos)
 		{
 			break;
 		}
+		int waitTime = loopPeriod - (timeGetTime() - loopInitTime);
+		Sleep(std::max(waitTime, 0));
 	}
 	float tolVelTgt = 10.0f;
 	//Phase II: follow profile
 	std::cout << "Phase II started" << std::endl;
-	profileBangBang profile(10.0f, timeGetTime() / 1000.0f, pos0, pos1);
+	odcs.ocs.SetGain(Eigen::Vector3f::Constant(gainP), Eigen::Vector3f::Constant(gainD), Eigen::Vector3f(gainI, gainI, 0));
+	//profileBangBang profile(timeTrans, timeGetTime() / 1000.0f, pos0, pos1);
+	profileMaxVerticalVelocity profile(duty_limit);
 	//Eigen::Matrix3f directions; directions.setIdentity();
 	distBuffer.resize(0);
 	while (1)
 	{
+		int loopInitTime = timeGetTime();
 		Eigen::Vector3f posObserved;
 		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
@@ -106,9 +117,10 @@ int main()
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->isTracked = true;
 			//PIDController
-			Eigen::Vector3f force_forward = profile.accelTgt() * objPtr->totalMass();
-			Eigen::Vector3f posTgt = profile.posTgt();
-			Eigen::Vector3f velTgt = profile.velTgt();
+	
+			Eigen::Vector3f force_forward = profile.accelTgt(posObserved.z()) * objPtr->totalMass();
+			Eigen::Vector3f posTgt = profile.posTgt(posObserved.z());
+			Eigen::Vector3f velTgt = profile.velTgt(posObserved.z());
 			objPtr->updateStatesTarget(posTgt, velTgt);
 			//force = ComputeAnisotropicPIDForce(objPtr, directions, gainBB);
 			Eigen::Vector3f force_feedback = odcs.ocs.ComputePIDForce(objPtr);

@@ -38,3 +38,25 @@ Eigen::Vector3f profileBangBang::accelTgt(float const &time)
 	return 	2.0f * (time - timeInit) < timeTotal ? 4.0f * (posEnd - posInit) / timeTotal / timeTotal :  4.0f * (posInit - posEnd) / timeTotal / timeTotal;
 }
 
+profileMaxVerticalVelocity::profileMaxVerticalVelocity(float const &duty_limit)
+{
+	this->duty_limit = duty_limit;
+}
+
+Eigen::Vector3f profileMaxVerticalVelocity::posTgt(float const &z)
+{
+	return Eigen::Vector3f(0.0f, 0.0f, z);
+}
+
+Eigen::Vector3f profileMaxVerticalVelocity::velTgt(float const &z)
+{
+	return Eigen::Vector3f(0.0f, 0.0f, vel);
+}
+
+Eigen::Vector3f profileMaxVerticalVelocity::accelTgt(float const &height)
+{
+	float z = height / 1000.0f;
+	float forceMax = ((1.8455e-1f * z + 1.4013f) * z - 8.228f) * z +10.532;
+	return duty_limit * forceMax * Eigen::Vector3f::UnitZ();
+}
+

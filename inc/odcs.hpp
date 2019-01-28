@@ -150,6 +150,8 @@ public:
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward);
 
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
+
+	Eigen::VectorXf FindDutyMaximizeForce(Eigen::Vector3f const &direction, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_limit);
 	
 	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
 	

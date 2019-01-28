@@ -38,7 +38,7 @@ private:
 	Eigen::Vector3f velInit;
 };
 
-class profileBangBang
+class profileBangBang : profile
 {
 public:
 	profileBangBang(float const &timeTotal,
@@ -62,4 +62,15 @@ private:
 	Eigen::Vector3f posEnd;
 	Eigen::Vector3f velInit;
 	Eigen::Vector3f velEnd;
+};
+
+class profileMaxVerticalVelocity : profile
+{
+public:
+	profileMaxVerticalVelocity(float const &duty_limit);
+	Eigen::Vector3f posTgt(float const &z);
+	Eigen::Vector3f velTgt(float const &z);
+	Eigen::Vector3f accelTgt(float const &z);
+private:
+	float duty_limit;
 };

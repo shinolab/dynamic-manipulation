@@ -2,6 +2,7 @@
 #include "autd3.hpp"
 #include "arfModel.hpp"
 #include "additionalGain.hpp"
+#include "QPSolver.h"
 #include <Eigen\Geometry>
 #include <dlib\matrix.h>
 #include <dlib\optimization.h>
@@ -180,4 +181,21 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position)
 {
 	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
+}
+
+Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
+	Eigen::MatrixXf const &constrainedDirections,
+	Eigen::Vector3f const &position,
+	Eigen::VectorXf const &duty_limit)
+{
+	Eigen::VectorXf result;
+	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
+	EigenLinearProgrammingSolver(result,
+		constrainedDirections.transpose()*arfModelPtr->arf(posRel, eulerAnglesAUTD),
+		Eigen::VectorXf::Zero(constrainedDirections.cols()), //right hand side of constraints.
+		direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //coeffs of the objective function
+		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
+		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
+		duty_limit); //upper bound
+	return result;
 }

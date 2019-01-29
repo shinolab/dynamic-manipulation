@@ -50,7 +50,7 @@ Eigen::Vector3f profileMaxVerticalVelocity::posTgt(float const &z)
 
 Eigen::Vector3f profileMaxVerticalVelocity::velTgt(float const &z)
 {
-	return Eigen::Vector3f(0.0f, 0.0f, vel);
+	return Eigen::Vector3f(0.0f, 0.0f, 0.0f);
 }
 
 Eigen::Vector3f profileMaxVerticalVelocity::accelTgt(float const &height)

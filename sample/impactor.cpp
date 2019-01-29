@@ -118,16 +118,22 @@ int main()
 			objPtr->isTracked = true;
 			//PIDController
 	
-			Eigen::Vector3f force_forward = profile.accelTgt(posObserved.z()) * objPtr->totalMass();
 			Eigen::Vector3f posTgt = profile.posTgt(posObserved.z());
 			Eigen::Vector3f velTgt = profile.velTgt(posObserved.z());
 			objPtr->updateStatesTarget(posTgt, velTgt);
 			//force = ComputeAnisotropicPIDForce(objPtr, directions, gainBB);
 			Eigen::Vector3f force_feedback = odcs.ocs.ComputePIDForce(objPtr);
+			Eigen::VectorXf duty_feedback = odcs.ocs.FindDutyQP(force_feedback, posObserved);
+			Eigen::VectorXf constraint(3, 2); constraint << Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY();
+			Eigen::VectorXf duty_forward = odcs.ocs.FindDutyMaximizeForce(Eigen::Vector3f::UnitZ()
+				, constraint
+				, posObserved
+				, Eigen::VectorXf::Ones(duty_feedback.size()) - duty_feedback);
 			//Find Control parameters
-			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force_forward + force_feedback, objPtr->getPosition());
+			Eigen::VectorXf duties = duty_forward + duty_feedback;
 			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin()).cast<int>().max(0).min(255).matrix();
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
+			Eigen::VectorXf force_forward = odcs.ocs.arfModelPtr->arf(posObserved.replicate(1, odcs.ocs.centersAUTD.cols()) - odcs.ocs.centersAUTD, odcs.ocs.eulerAnglesAUTD) * duty_forward;
 			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 				<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", " << velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z()
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ", " 

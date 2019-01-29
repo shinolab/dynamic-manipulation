@@ -193,7 +193,7 @@ Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	EigenLinearProgrammingSolver(result,
 		constrainedDirections.transpose()*arfModelPtr->arf(posRel, eulerAnglesAUTD),
 		Eigen::VectorXf::Zero(constrainedDirections.cols()), //right hand side of constraints.
-		direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //coeffs of the objective function
+		-direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
 		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
 		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
 		duty_limit); //upper bound

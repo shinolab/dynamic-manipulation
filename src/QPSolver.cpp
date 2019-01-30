@@ -2,6 +2,7 @@
 #include <CGAL/QP_functions.h>
 #include <CGAL/QP_solution.h>
 #include <Eigen/Dense>
+#include <iostream>
 
 // choose exact integral type
 #ifdef CGAL_USE_GMP
@@ -36,22 +37,22 @@ void EigenLinearProgrammingSolver(
 		_A[i] = A.data() + i * (A.rows());
 	}
 	CGAL::Comparison_result* r = new CGAL::Comparison_result[A.rows()];
-	bool* flb = new bool[A.rows()];
-	bool* fub = new bool[A.rows()];
-	for (int iRow = 0; iRow < A.rows(); iRow++)
+	bool* flb = new bool[A.cols()];
+	bool* fub = new bool[A.cols()];
+	for (int i = 0; i < A.cols(); i++)
 	{
-		flb[iRow] = true;
-		fub[iRow] = true;
-		if (equalityConditions[iRow] < 0)
-			r[iRow] = CGAL::SMALLER;
-		else if (equalityConditions[iRow] > 0)
-			r[iRow] = CGAL::LARGER;
+		flb[i] = true;
+		fub[i] = true;
+		if (equalityConditions[i] < 0)
+			r[i] = CGAL::SMALLER;
+		else if (equalityConditions[i] > 0)
+			r[i] = CGAL::LARGER;
 		else
-			r[iRow] = CGAL::EQUAL;
+			r[i] = CGAL::EQUAL;
 	}
-	Program lp(A.rows(), A.cols(), _A, b.data(), r, flb, lowerbound.data(), fub, upperbound.data(), c.data(), 0.f);
+	Program lp(A.cols(), A.rows(), _A, b.data(), r, flb, lowerbound.data(), fub, upperbound.data(), c.data(), 0.f);
 	Solution s = CGAL::solve_linear_program(lp, ET());
-	result.resize(A.rows());
+	result.resize(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)
 	{
 		int index = std::distance(s.variable_values_begin(), itr);

@@ -67,7 +67,7 @@ int main()
 			force = odcs.ocs.ComputePIDForce(objPtr);
 			//Find Control parameters
 			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
+			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 			//odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
 			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
 			objPtr->setLatestInput(duties);

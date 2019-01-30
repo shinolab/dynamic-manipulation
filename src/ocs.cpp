@@ -188,14 +188,15 @@ Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	Eigen::Vector3f const &position,
 	Eigen::VectorXf const &duty_limit)
 {
+	int const scale = 100000; // scale variables because CGAL LP solver accepts only integer numbers
 	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
 	EigenLinearProgrammingSolver(result,
-		constrainedDirections.transpose()*arfModelPtr->arf(posRel, eulerAnglesAUTD),
+		scale*constrainedDirections.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD),
 		Eigen::VectorXf::Zero(constrainedDirections.cols()), //right hand side of constraints.
-		-direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
+		-scale * direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
 		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
 		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
-		duty_limit); //upper bound
-	return result;
+		scale * duty_limit); //upper bound
+	return result / scale;
 }

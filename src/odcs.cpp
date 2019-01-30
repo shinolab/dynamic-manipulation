@@ -55,7 +55,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			Eigen::VectorXf force = ocs.ComputePIDForce((*itr));
 			//Find Control parameters
 			Eigen::VectorXf duties = ocs.FindDutyQP(force, (*itr)->getPosition());
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
+			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 			ocs.DirectSemiPlaneWave((*itr), amplitudes);
 			(*itr)->setLatestInput(duties);
 		}

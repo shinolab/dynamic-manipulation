@@ -33,21 +33,25 @@ float deriveRestingPosition(float const &hf, float const &vf, float const &addit
 
 int main()
 {
-	std::ofstream ofs("20190125_bangbang_log_7.csv");
+	std::ofstream ofs("20190129_bangbang_log_7.csv");
 	/*condition*/
 	float additionalMass = 0.095e-4;
 	float airMass = 5.4e-3;
 	float totalMass = additionalMass + airMass;
-	float duty_limit = 0.6;
+	float duty_limit = 1.0;
 	float timeTrans = 7.0f;
 	const int loopPeriod = 30;
-
+	float hf = 1.5f;
+	float vf = 0.4f;
+	float h0 = deriveRestingPosition(hf, vf, additionalMass, totalMass, duty_limit);
 	float gainP = -1.6f, gainD = -4.0f, gainI = -0.05f;
 
 	//==========phase 0: Compute restingPosition==========
 
-	Eigen::Vector3f pos0(350.0f, 0.0f, 1200.0f);
-	Eigen::Vector3f pos1(-350.0f, 0.0f, 1500.0f);
+	Eigen::Vector3f pos0(0.0f, 0.0f, 1000*h0);
+	Eigen::Vector3f pos1(0.0f, 0.0f, 1000*hf);
+	std::cout << "terminal condition: hf: " << hf << "[m], vf:" << vf << "[m/s]" << std::endl;
+	std::cout << "initial condition: h0: " << h0 << std::endl;
 
 	//phase I: move to stand-by point
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, u0, u1, u2, u3, u4, Fxf, Fyf, Fzf, Fxb, Fyb, Fzb" << std::endl;

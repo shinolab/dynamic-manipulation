@@ -188,7 +188,7 @@ Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	Eigen::Vector3f const &position,
 	Eigen::VectorXf const &duty_limit)
 {
-	int const scale = 100000; // scale variables because CGAL LP solver accepts only integer numbers
+	int const scale = 10000000; // scale variables because CGAL LP solver accepts only integer numbers
 	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
 	EigenLinearProgrammingSolver(result,

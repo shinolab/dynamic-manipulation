@@ -39,16 +39,21 @@ void EigenLinearProgrammingSolver(
 	CGAL::Comparison_result* r = new CGAL::Comparison_result[A.rows()];
 	bool* flb = new bool[A.cols()];
 	bool* fub = new bool[A.cols()];
+
 	for (int i = 0; i < A.cols(); i++)
 	{
 		flb[i] = true;
 		fub[i] = true;
-		if (equalityConditions[i] < 0)
-			r[i] = CGAL::SMALLER;
-		else if (equalityConditions[i] > 0)
-			r[i] = CGAL::LARGER;
+	}
+
+	for (int iCond = 0; iCond < A.rows(); iCond++)
+	{
+		if (equalityConditions[iCond] < 0)
+			r[iCond] = CGAL::SMALLER;
+		else if (equalityConditions[iCond] > 0)
+			r[iCond] = CGAL::LARGER;
 		else
-			r[i] = CGAL::EQUAL;
+			r[iCond] = CGAL::EQUAL;
 	}
 	Program lp(A.cols(), A.rows(), _A, b.data(), r, flb, lowerbound.data(), fub, upperbound.data(), c.data(), 0.f);
 	Solution s = CGAL::solve_linear_program(lp, ET());
@@ -58,6 +63,7 @@ void EigenLinearProgrammingSolver(
 		int index = std::distance(s.variable_values_begin(), itr);
 		result[index] = (*itr).numerator().to_double() / (*itr).denominator().to_double();
 	}
+
 	delete _A;
 	delete fub;
 	delete flb;

@@ -29,7 +29,3 @@ add_executable(impactor impactor.cpp
 	../inc/rootFindingPoly.hpp)
 target_link_libraries(impactor DynamicLevitation)
 
-#[[add_executable(LPTest
-	LPTest.cpp
-)
-target_link_libraries(LPTest DynamicLevitation)]]

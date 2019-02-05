@@ -21,14 +21,15 @@ typedef CGAL::Quadratic_program_solution<ET> Solution;
 Solve Linear Programming minimize: y = c'x subject to Ax </=/> b, .
 sign of the coefficients of equality conditions specifies inequality/equlaity conditions of the row number.
 */
-void EigenLinearProgrammingSolver(
+float EigenLinearProgrammingSolver(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,
 	Eigen::VectorXf const &c,
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
-	Eigen::VectorXf const &upperbound
+	Eigen::VectorXf const &upperbound,
+	int scale = 10000000
 )
 {
 	const float** _A = new const float*[A.cols()];
@@ -63,11 +64,11 @@ void EigenLinearProgrammingSolver(
 		int index = std::distance(s.variable_values_begin(), itr);
 		result[index] = (*itr).numerator().to_double() / (*itr).denominator().to_double();
 	}
-
 	delete _A;
 	delete fub;
 	delete flb;
 	delete r;
+	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() / scale;
 }
 
 //define QP

@@ -50,6 +50,7 @@ int ocs::Initialize()
 	}
 	//arfModelPtr.reset(new arfModelTheoreticalTable());
 	arfModelPtr.reset(new arfModelFocusOnSphereExperimental());
+	std::cout << "centersAUTD\n" << centersAUTD << std::endl;
 	return 0;
 }
 
@@ -186,17 +187,19 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	Eigen::MatrixXf const &constrainedDirections,
 	Eigen::Vector3f const &position,
-	Eigen::VectorXf const &duty_limit)
+	Eigen::VectorXf const &duty_limit,
+	float &force)
 {
-	int const scale = 10000000; // scale variables because CGAL LP solver accepts only integer numbers
+	int const scale = 1e7f; // variables are scaled for CGAL LP solver accepts only integer numbers
 	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
-	EigenLinearProgrammingSolver(result,
+	force = EigenLinearProgrammingSolver(result,
 		scale*constrainedDirections.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD),
 		Eigen::VectorXf::Zero(constrainedDirections.cols()), //right hand side of constraints.
 		-scale * direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
 		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
 		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
-		scale * duty_limit); //upper bound
+		scale * duty_limit,
+		scale); //upper bound
 	return result / scale;
 }

@@ -33,18 +33,18 @@ float deriveRestingPosition(float const &hf, float const &vf, float const &addit
 
 int main()
 {
-	std::ofstream ofs("20190130_bangbang_log_8_weak.csv");
 	/*condition*/
-	float additionalMass = 0.095e-4;
+	float additionalMass = 0.1e-3;
 	float airMass = 5.4e-3;
 	float totalMass = additionalMass + airMass;
-	float duty_limit = 1.0;
+	float duty_limit = 1.0f;
 	float timeTrans = 7.0f;
 	const int loopPeriod = 30;
-	float hf = 1.5f;
+	float hf = 1.1f;
 	float vf = 0.3f;
 	float h0 = deriveRestingPosition(hf, vf, additionalMass, totalMass, duty_limit);
 	float gainP = -1.6f, gainD = -4.0f, gainI = -0.2f;
+
 
 	//==========phase 0: Compute restingPosition==========
 
@@ -52,6 +52,8 @@ int main()
 	Eigen::Vector3f pos1(0.0f, 0.0f, 1100*hf);
 	std::cout << "terminal condition: hf: " << hf << "[m], vf:" << vf << "[m/s]" << std::endl;
 	std::cout << "initial condition: h0: " << h0 << std::endl;
+	return 0;
+	std::ofstream ofs("20190130_bangbang_log_8_weak.csv");
 
 	//phase I: move to stand-by point
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, u0, u1, u2, u3, u4, Fxf, Fyf, Fzf, Fxb, Fyb, Fzb" << std::endl;
@@ -130,10 +132,12 @@ int main()
 			Eigen::VectorXf duty_feedback = odcs.ocs.FindDutyQP(force_feedback, posObserved);
 			Eigen::VectorXf duty_limit = 0.6*(Eigen::VectorXf::Ones(duty_feedback.size()) - duty_feedback);
 			Eigen::MatrixXf constraint(3, 2); constraint << Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY();
+			float force_forward_norm;
 			Eigen::VectorXf duty_forward = odcs.ocs.FindDutyMaximizeForce(Eigen::Vector3f::UnitZ()
 				, constraint
 				, posObserved
-				, duty_limit);
+				, duty_limit
+				, force_forward_norm);
 			//Find Control parameters
 			Eigen::VectorXf duties = duty_forward + duty_feedback;
 			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();

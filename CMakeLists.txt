@@ -64,3 +64,4 @@ target_link_libraries(QPSolver CGAL::CGAL)
 target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} QPSolver)
 
 add_subdirectory(sample)
+add_subdirectory(test)

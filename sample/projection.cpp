@@ -19,9 +19,9 @@ int main()
 	//initialization
 	odcs odcs;
 	odcs.Initialize();
-	Eigen::Affine3f affineKinect2Global = odcs.ods.getAffineKinect2Global();
+	Eigen::Affine3f affineKinect2Global = odcs.odsPtr->getAffineKinect2Global();
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
-	Eigen::Matrix3f dcmGlobal2Kinect = odcs.ods.getDcmGlobal2Kinect();
+	Eigen::Matrix3f dcmGlobal2Kinect = odcs.odsPtr->getDcmGlobal2Kinect();
 	odcs.AddObject(Eigen::Vector3f(0, 0, 1300));
 	//start control thread.
 	odcs.StartControl();

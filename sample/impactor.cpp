@@ -45,7 +45,6 @@ int main()
 	float h0 = deriveRestingPosition(hf, vf, additionalMass, totalMass, duty_limit);
 	float gainP = -1.6f, gainD = -4.0f, gainI = -0.2f;
 
-
 	//==========phase 0: Compute restingPosition==========
 
 	Eigen::Vector3f pos0(0.0f, 0.0f, 1000*h0);
@@ -59,7 +58,7 @@ int main()
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, u0, u1, u2, u3, u4, Fxf, Fyf, Fzf, Fxb, Fyb, Fzb" << std::endl;
 	odcs odcs;
 	odcs.Initialize();
-	odcs.ocs.SetGain(Eigen::Vector3f::Constant(gainP), Eigen::Vector3f::Constant(gainD), Eigen::Vector3f::Constant(gainI));
+	odcs.ocsPtr->SetGain(Eigen::Vector3f::Constant(gainP), Eigen::Vector3f::Constant(gainD), Eigen::Vector3f::Constant(gainI));
 	auto objPtr = FloatingObject::Create(pos0, additionalMass);
 	
 	float tolPos = 50.0f;
@@ -71,21 +70,21 @@ int main()
 	{
 		int loopInitTime = timeGetTime();
 		Eigen::Vector3f posObserved;
-		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
+		bool succeeded = odcs.odsPtr->GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
 		Eigen::Vector3f force; // for log
-		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
+		if (succeeded && odcs.odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->isTracked = true;
 			//PIDController
-			force = odcs.ocs.ComputePIDForce(objPtr);
+			force = odcs.ocsPtr->ComputePIDForce(objPtr);
 			//Find Control parameters
-			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
+			Eigen::VectorXf duties = odcs.ocsPtr->FindDutyQP(force, objPtr->getPosition());
 			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 
-			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
+			odcs.ocsPtr->CreateFocusOnCenter(objPtr, amplitudes);
 			distBuffer.push_back((posObserved-pos0).norm());
 			if (distBuffer.size() > 50) { distBuffer.erase(distBuffer.begin()); }
 			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", " << pos0.x() << ", " << pos0.y() << ", " << pos0.z() << ",0,0,0"
@@ -106,7 +105,7 @@ int main()
 	float tolVelTgt = 10.0f;
 	//Phase II: follow profile
 	std::cout << "Phase II started" << std::endl;
-	odcs.ocs.SetGain(Eigen::Vector3f(gainP, gainP, 0.f), Eigen::Vector3f(gainD, gainD, 0.f), Eigen::Vector3f(gainI, gainI, 0.f));
+	odcs.ocsPtr->SetGain(Eigen::Vector3f(gainP, gainP, 0.f), Eigen::Vector3f(gainD, gainD, 0.f), Eigen::Vector3f(gainI, gainI, 0.f));
 	//profileBangBang profile(timeTrans, timeGetTime() / 1000.0f, pos0, pos1);
 	profileMaxVerticalVelocity profile(duty_limit);
 	//Eigen::Matrix3f directions; directions.setIdentity();
@@ -115,9 +114,9 @@ int main()
 	{
 		int loopInitTime = timeGetTime();
 		Eigen::Vector3f posObserved(0, 0, 0);
-		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
+		bool succeeded = odcs.odsPtr->GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
-		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
+		if (succeeded && odcs.odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
 			objPtr->updateStates(observationTime, posObserved);
@@ -128,12 +127,12 @@ int main()
 			Eigen::Vector3f velTgt = profile.velTgt(posObserved.z());
 			objPtr->updateStatesTarget(posTgt, velTgt);
 			//force = ComputeAnisotropicPIDForce(objPtr, directions, gainBB);
-			Eigen::Vector3f force_feedback = odcs.ocs.ComputePIDForce(objPtr);
-			Eigen::VectorXf duty_feedback = odcs.ocs.FindDutyQP(force_feedback, posObserved);
+			Eigen::Vector3f force_feedback = odcs.ocsPtr->ComputePIDForce(objPtr);
+			Eigen::VectorXf duty_feedback = odcs.ocsPtr->FindDutyQP(force_feedback, posObserved);
 			Eigen::VectorXf duty_limit = 0.6*(Eigen::VectorXf::Ones(duty_feedback.size()) - duty_feedback);
 			Eigen::MatrixXf constraint(3, 2); constraint << Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY();
 			float force_forward_norm;
-			Eigen::VectorXf duty_forward = odcs.ocs.FindDutyMaximizeForce(Eigen::Vector3f::UnitZ()
+			Eigen::VectorXf duty_forward = odcs.ocsPtr->FindDutyMaximizeForce(Eigen::Vector3f::UnitZ()
 				, constraint
 				, posObserved
 				, duty_limit
@@ -141,8 +140,8 @@ int main()
 			//Find Control parameters
 			Eigen::VectorXf duties = duty_forward + duty_feedback;
 			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
-			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
-			Eigen::VectorXf force_forward = odcs.ocs.arfModelPtr->arf(posObserved.replicate(1, odcs.ocs.centersAUTD.cols()) - odcs.ocs.centersAUTD, odcs.ocs.eulerAnglesAUTD) * duty_forward;
+			odcs.ocsPtr->CreateFocusOnCenter(objPtr, amplitudes);
+			Eigen::VectorXf force_forward = odcs.ocsPtr->arfModelPtr->arf(posObserved.replicate(1, odcs.ocsPtr->centersAUTD.cols()) - odcs.ocsPtr->centersAUTD, odcs.ocsPtr->eulerAnglesAUTD) * duty_forward;
 			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 				<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", " << velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z()
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ", " 

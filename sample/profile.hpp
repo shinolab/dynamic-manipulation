@@ -115,6 +115,7 @@ public:
 	Eigen::Vector3f posTgt(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f velTgt(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f posInit();
 };
 
 #endif

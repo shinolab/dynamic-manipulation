@@ -54,22 +54,22 @@ int main()
 		
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		bool succeeded = odcs.ods.GetPositionByDepth(objPtr, posObserved, true);
+		bool succeeded = odcs.odsPtr->GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
 		Eigen::Vector3f force; // for log
-		if (succeeded && odcs.ods.isInsideWorkSpace(posObserved))
+		if (succeeded && odcs.odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->isTracked = true;
 			//PIDController
-			force = odcs.ocs.ComputePIDForce(objPtr);
+			force = odcs.ocsPtr->ComputePIDForce(objPtr);
 			//Find Control parameters
-			Eigen::VectorXf duties = odcs.ocs.FindDutyQP(force, objPtr->getPosition());
+			Eigen::VectorXf duties = odcs.ocsPtr->FindDutyQP(force, objPtr->getPosition());
 			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 			//odcs.ocs.DirectSemiPlaneWave(objPtr, amplitudes);
-			odcs.ocs.CreateFocusOnCenter(objPtr, amplitudes);
+			odcs.ocsPtr->CreateFocusOnCenter(objPtr, amplitudes);
 			objPtr->setLatestInput(duties);
 		}
 		else if (observationTime - objPtr->lastDeterminationTime > 1000)

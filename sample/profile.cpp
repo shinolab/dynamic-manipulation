@@ -125,3 +125,7 @@ Eigen::Vector3f profileMaxAccel::accelTgt(float const &t)
 {
 	return Eigen::Vector3f::Zero();
 }
+
+Eigen::Vector3f profileMaxAccel::posInit() {
+	return *pathPos.rbegin();
+}

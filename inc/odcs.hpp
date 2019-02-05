@@ -178,8 +178,8 @@ public:
 	void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 	void Close();
 	void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD determinationTime);
-	ods ods;
-	ocs ocs;
+	std::shared_ptr<ods> odsPtr;
+	std::shared_ptr<ocs> ocsPtr;
 	std::thread thread_control;
 private:
 	std::vector<FloatingObjectPtr> objPtrs;

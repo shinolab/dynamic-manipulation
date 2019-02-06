@@ -107,7 +107,7 @@ void profileMaxAccel::sys::operator()(state_type const &x, state_type &dxdt, flo
 	constDirections << constDirection1, constDirection2;
 	float force;
 	Eigen::VectorXf duty = ocsPtr->FindDutyMaximizeForce(direction, constDirections, x[0], dutyLimit, force);
-	std::cout << (ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) * duty).transpose() << std::endl;
+	//std::cout << (ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) * duty).transpose() << std::endl;
 	dxdt[1] = (ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) * duty - 0.1e-3 * Eigen::Vector3f(0.f, 0.f, 9.80665e3f)) / 5.5e-3f ;
 }
 
@@ -116,13 +116,13 @@ Eigen::Vector3f profileMaxAccel::posTgt(float const &t)
 	if (t > *pathTime.begin()){
 		return *pathPos.begin();
 	}
-	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) {timeStamp < t; });
+	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) { return timeStamp < t; });
 	if (itrTime == pathTime.end()){
 		return *pathPos.rbegin();
 	}
 	else{
 		int index = std::distance(pathTime.begin(), itrTime);
-		return ((t - pathTime[index - 1]) * pathPos[index] + (pathTime[index] - t) * pathPos[index - 1]) / (pathTime[index - 1] - pathTime[index]);
+		return ((pathTime[index - 1]- t) * pathPos[index] + (t - pathTime[index]) * pathPos[index - 1]) / (pathTime[index - 1] - pathTime[index]);
 	}
 }
 
@@ -131,13 +131,13 @@ Eigen::Vector3f profileMaxAccel::velTgt(float const &t)
 	if (t > *pathTime.begin()) {
 		return *pathVel.begin();
 	}
-	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) {timeStamp < t; });
+	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) {return timeStamp < t; });
 	if (itrTime == pathTime.end()) {
 		return *pathVel.rbegin();
 	}
 	else {
 		int index = std::distance(pathTime.begin(), itrTime);
-		return ((t - pathTime[index - 1]) * pathVel[index] + (pathTime[index] - t) * pathVel[index - 1]) / (pathTime[index - 1] - pathTime[index]);
+		return ((pathTime[index - 1] - t) * pathVel[index] + (t - pathTime[index]) * pathVel[index - 1]) / (pathTime[index - 1] - pathTime[index]);
 	}
 }
 

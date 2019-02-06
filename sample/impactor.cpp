@@ -34,15 +34,16 @@ float deriveRestingPosition(float const &hf, float const &vf, float const &addit
 int main()
 {
 	/*condition*/
-	Eigen::Vector3f positionTerminal(0.f, 0.f, 1200.f);
+	Eigen::Vector3f positionTerminal(0.f, 0.f, 1400.f);
 	Eigen::Vector3f velocityTerminal(0.f, 0.f, 300.f);
-	float gainP = -1.6f, gainD = -4.0f, gainI = -0.2f;
+	float gainP = -1.6f, gainD = -4.0f, gainI = -0.05f;
 	float additionalMass = 1e-4f;
-	Eigen::VectorXf duty_limit(5); duty_limit << 1.f, 1.f, 1.f, 1.f, 1.f;
+	Eigen::VectorXf duty_limit(5); duty_limit.setConstant(0.6f);
 	//==========phase 0: Compute restingPosition==========
 
 	
-	std::ofstream ofs("20190130_maximum_accel.csv");
+	
+	std::ofstream ofs("20190206_maximum_accel_fb3.csv");
 
 	//phase I: move to stand-by point
 	ofs << "time, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, u0, u1, u2, u3, u4, Fxf, Fyf, Fzf, Fxb, Fyb, Fzb" << std::endl;
@@ -54,10 +55,12 @@ int main()
 	float tolPos = 50.0f;
 	float tolVel = 1.0f;
 	profileMaxAccel profile(positionTerminal, velocityTerminal, duty_limit, odcs.ocsPtr, objPtr, 0.05f);
+
 	objPtr->updateStatesTarget(profile.posInit(), Eigen::Vector3f(0.f, 0.f, 0.f));
+	
 	//use wait_until
 	std::vector<float> distBuffer;
-	int loopPeriod = 30;
+	int loopPeriod = 33;
 	while (1)
 	{
 		int loopInitTime = timeGetTime();
@@ -97,14 +100,16 @@ int main()
 	float tolVelTgt = 10.0f;
 	//Phase II: follow profile
 	std::cout << "Phase II started" << std::endl;
-	odcs.ocsPtr->SetGain(Eigen::Vector3f(gainP, gainP, 0.f), Eigen::Vector3f(gainD, gainD, 0.f), Eigen::Vector3f(gainI, gainI, 0.f));
+	//odcs.ocsPtr->SetGain(Eigen::Vector3f(gainP, gainP, 0.f), Eigen::Vector3f(gainD, gainD, 0.f), Eigen::Vector3f(gainI, gainI, 0.f));
 	//profileBangBang profile(timeTrans, timeGetTime() / 1000.0f, pos0, pos1);
 	//profileMaxVerticalVelocity profile(duty_limit);
 	//Eigen::Matrix3f directions; directions.setIdentity();
 	distBuffer.resize(0);
+	int t0 = timeGetTime();
 	while (1)
 	{
 		int loopInitTime = timeGetTime();
+		
 		Eigen::Vector3f posObserved(0, 0, 0);
 		bool succeeded = odcs.odsPtr->GetPositionByDepth(objPtr, posObserved, true);
 		DWORD observationTime = timeGetTime();
@@ -115,9 +120,13 @@ int main()
 			objPtr->isTracked = true;
 			//PIDController
 	
-			Eigen::Vector3f posTgt = objPtr->getPosition();// = profile.posTgt(posObserved.z());
-			Eigen::Vector3f velTgt = objPtr->getVelocity();// = profile.velTgt(posObserved.z());
-			objPtr->updateStatesTarget(posTgt, velTgt);// to apply I control in z direction
+			//Eigen::Vector3f posTgt = objPtr->getPosition();// = profile.posTgt(posObserved.z());
+			//Eigen::Vector3f velTgt = objPtr->getVelocity();// = profile.velTgt(posObserved.z());
+			float currentTime = (timeGetTime() - t0) / 1000.f + *profile.pathTime.rbegin();
+
+			objPtr->updateStatesTarget(profile.posTgt(currentTime), profile.velTgt(currentTime));// to apply I control in z direction
+			Eigen::Vector3f posTgt = objPtr->getPositionTarget();
+			Eigen::Vector3f velTgt = objPtr->getVelocityTarget();
 			//force = ComputeAnisotropicPIDForce(objPtr, directions, gainBB);
 			Eigen::Vector3f direction = (positionTerminal - posObserved).normalized();
 			Eigen::Vector3f constDirection1 = direction.cross(Eigen::Vector3f::UnitX());
@@ -145,8 +154,7 @@ int main()
 			Eigen::VectorXf duties = odcs.ocsPtr->FindDutyQP(force_feedback + force_forward, posObserved);
 			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 			odcs.ocsPtr->CreateFocusOnCenter(objPtr, amplitudes);
-			Eigen::VectorXf force_forward = odcs.ocsPtr->arfModelPtr->arf(posObserved.replicate(1, odcs.ocsPtr->centersAUTD.cols()) - odcs.ocsPtr->centersAUTD, odcs.ocsPtr->eulerAnglesAUTD) * duty_forward;
-			ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
+			ofs <<currentTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 				<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", " << velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z()
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ", " 
 				<< force_forward.x() << ", " << force_forward.y() << ", " << force_forward.z() << ", " << force_feedback.x() << ", " << force_feedback.y() << ", " << force_feedback.z() << std::endl;

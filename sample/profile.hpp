@@ -89,11 +89,11 @@ public:
 	typedef std::vector<Eigen::Vector3f> state_type;
 private:
 	class sys{
-	private:
-		Eigen::Vector3f const &direction;
-		Eigen::VectorXf const &dutyLimit;
+	public:
 		FloatingObjectPtr objPtr;
 		std::shared_ptr<ocs> ocsPtr;
+		Eigen::Vector3f const &direction;
+		Eigen::VectorXf const &dutyLimit;
 	public:
 		sys(Eigen::Vector3f const &direction, Eigen::VectorXf const &dutyLimit, FloatingObjectPtr objPtr, std::shared_ptr<ocs> ocsPtr) : direction(direction), objPtr(objPtr), dutyLimit(dutyLimit), ocsPtr(ocsPtr) {};
 		void operator()(state_type const &x, state_type &dxdt, float const t);

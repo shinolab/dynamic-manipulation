@@ -113,17 +113,43 @@ void profileMaxAccel::sys::operator()(state_type const &x, state_type &dxdt, flo
 
 Eigen::Vector3f profileMaxAccel::posTgt(float const &t)
 {
-	return Eigen::Vector3f::Zero();
+	if (t > *pathTime.begin()){
+		return *pathPos.begin();
+	}
+	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) {timeStamp < t; });
+	if (itrTime == pathTime.end()){
+		return *pathPos.rbegin();
+	}
+	else{
+		int index = std::distance(pathTime.begin(), itrTime);
+		return ((t - pathTime[index - 1]) * pathPos[index] + (pathTime[index] - t) * pathPos[index - 1]) / (pathTime[index - 1] - pathTime[index]);
+	}
 }
 
 Eigen::Vector3f profileMaxAccel::velTgt(float const &t)
 {
-	return Eigen::Vector3f::Zero();
+	if (t > *pathTime.begin()) {
+		return *pathVel.begin();
+	}
+	auto itrTime = std::find_if(pathTime.begin(), pathTime.end(), [&t](float timeStamp) {timeStamp < t; });
+	if (itrTime == pathTime.end()) {
+		return *pathVel.rbegin();
+	}
+	else {
+		int index = std::distance(pathTime.begin(), itrTime);
+		return ((t - pathTime[index - 1]) * pathVel[index] + (pathTime[index] - t) * pathVel[index - 1]) / (pathTime[index - 1] - pathTime[index]);
+	}
 }
 
 Eigen::Vector3f profileMaxAccel::accelTgt(float const &t)
 {
-	return Eigen::Vector3f::Zero();
+	Eigen::Vector3f pt = posTgt(t);
+	Eigen::Vector3f vt = velTgt(t);
+	Eigen::MatrixXf posRel = pt.replicate(1, sys.ocsPtr->centersAUTD.cols()) - sys.ocsPtr->centersAUTD;
+	float force;
+	return sys.ocsPtr->arfModelPtr->arf(posRel, sys.ocsPtr->eulerAnglesAUTD)
+		*sys.ocsPtr->FindDutyMaximizeForce(vt.normalized(), sys.direction, pt, sys.dutyLimit, force )
+		/sys.objPtr->totalMass();
 }
 
 Eigen::Vector3f profileMaxAccel::posInit() {

@@ -10,6 +10,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <string>
 #include <iostream>
+#include <mutex>
 
 projector::projector(std::string _projectorName
 	, const int _posX
@@ -93,8 +94,19 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::imshow(name, dst);
 }
 
+
+void projector::projectImageOnObject(Eigen::Vector3f position, cv::Size2f sizeReal, cv::Scalar backgroundColor, float distanceOffset) {
+	projectImageOnObject(position, this->image, sizeReal, backgroundColor, distanceOffset);
+}
+
+
 void projector::projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints)
 {
 	cv::projectPoints(objectPoints, rvec, tvec, internalParam, distCoeffs, imagePoints);
+}
+
+void projector::setImage(cv::Mat image) {
+	std::lock_guard<std::mutex> lock(mtxImage);
+	this->image = image;
 }
 

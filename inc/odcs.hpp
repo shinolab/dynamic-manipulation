@@ -29,6 +29,7 @@ public:
 	Eigen::Vector3f getIntegral();
 	Eigen::Vector3f getPositionTarget();
 	Eigen::Vector3f getVelocityTarget();
+	Eigen::Vector3f getAccelTarget();
 	Eigen::VectorXf getLatestInput();
 	void setLatestInput(Eigen::VectorXf input);
 	Eigen::VectorXf inputLatest;
@@ -52,6 +53,7 @@ private:
 	Eigen::Vector3f integral;
 	Eigen::Vector3f positionTarget;
 	Eigen::Vector3f velocityTarget;
+	Eigen::Vector3f accelTarget;
 	std::mutex mtxState;
 	std::mutex mtxStateTarget;
 
@@ -68,7 +70,7 @@ public:
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocitynew);
 
-	void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget);
+	void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
 
 	bool isStable();
 

@@ -82,8 +82,8 @@ Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 	Eigen::Vector3f dv = objPtr->getVelocity() - objPtr->getVelocityTarget();
-	Eigen::Vector3f accerelation = gainP.asDiagonal() * dr + gainD.asDiagonal() * dv + gainI.asDiagonal() * objPtr->getIntegral();
-	Eigen::Vector3f force = objPtr->totalMass() * accerelation - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.80665e3f);
+	Eigen::Vector3f acceleration = gainP.asDiagonal() * dr + gainD.asDiagonal() * dv + gainI.asDiagonal() * objPtr->getIntegral() + objPtr->getAccelTarget();
+	Eigen::Vector3f force = objPtr->totalMass() * acceleration - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.80665e3f);
 	return force;
 }
 

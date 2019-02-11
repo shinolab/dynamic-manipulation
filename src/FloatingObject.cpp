@@ -78,6 +78,12 @@ Eigen::Vector3f FloatingObject::getVelocityTarget()
 	return velocityTarget;
 }
 
+Eigen::Vector3f FloatingObject::getAccelTarget()
+{
+	std::lock_guard<std::mutex> lock(mtxStateTarget);
+	return accelTarget;
+}
+
 void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew)
 {
 	std::lock_guard<std::mutex> lock(mtxState);
@@ -112,11 +118,12 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	velocityBuffer.pop_front();
 }
 
-void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget)
+void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
 	std::lock_guard<std::mutex> lock(mtxStateTarget);
 	positionTarget = _positionTarget;
 	velocityTarget = _velocityTarget;
+	accelTarget = _accelTarget;
 }
 
 Eigen::Vector3f FloatingObject::averageVelocity()

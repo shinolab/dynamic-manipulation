@@ -12,7 +12,7 @@ using namespace boost::numeric::odeint;
 
 Eigen::Vector3f profileUniAccel::posTgt(float const &time)
 {
-	DWORD dt = time - timeInit;
+	float dt = time - timeInit;
 	return  posInit + 0.5 * dt * dt * accel;
 }
 

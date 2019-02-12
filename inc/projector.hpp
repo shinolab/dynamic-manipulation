@@ -21,13 +21,15 @@ private:
 	cv::Mat distCoeffs;
 	cv::Mat rvec;
 	cv::Mat tvec;
-	cv::Mat image;
+
 	std::mutex mtxImage;
 
 	int posX, posY, width, height;
-	std::string name;
+
 
 public:
+	std::string name;
+	cv::Mat image;
 	projector(std::string _projectorName 
 		, const int _posX = GetSystemMetrics(SM_CXSCREEN) 
 		, const int _posY = 0//window position Y (default value: 0)

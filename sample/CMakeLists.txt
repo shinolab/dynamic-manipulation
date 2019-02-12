@@ -15,7 +15,10 @@ add_executable(pipeline pipeline.cpp)
 include_directories(../inc)
 target_link_libraries(pipeline DynamicLevitation)
 
-add_executable(projection projection.cpp)
+add_executable(projection projection.cpp
+	profile.hpp
+	profile.cpp
+)
 include_directories(../inc)
 target_link_libraries(projection DynamicLevitation Projector)
 

@@ -32,7 +32,7 @@ projector::projector(std::string _projectorName
 	this->width = _width;
 	this->height = _height;
 	this->name = _projectorName;
-	CreateScreen();
+	//CreateScreen();
 }
 
 projector::~projector()

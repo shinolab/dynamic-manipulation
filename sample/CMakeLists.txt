@@ -7,7 +7,10 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)
 find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 
-add_executable(simple simple.cpp)
+add_executable(simple simple.cpp
+	profile.hpp
+	profile.cpp
+)
 include_directories(../inc)
 target_link_libraries(simple DynamicLevitation)
 

@@ -42,7 +42,7 @@ public:
 	std::deque<Eigen::Vector3f> velocityBuffer;
 	std::deque<float> dTBuffer;
 	const int velocityBufferSize = 3;
-	float radius = 100.0; // [mm]
+	float radius = 90.0; // [mm]
 	//const float mass = 5.4e-3; //[Kg]
 	float speedLimit = 400; // [mm/s]
 	float additionalMass = 0.1e-3;

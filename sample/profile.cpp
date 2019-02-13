@@ -47,6 +47,32 @@ Eigen::Vector3f profileBangBang::accelTgt(float const &time)
 	return 	2.0f * (time - timeInit) < timeTotal ? 4.0f * (posEnd - posInit) / timeTotal / timeTotal :  4.0f * (posInit - posEnd) / timeTotal / timeTotal;
 }
 
+Eigen::Vector3f profileBang::posTgt(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return posInit;
+	float dt = time - timeInit;
+	if (dt < timeToGo){
+		return 0.5f * dt * dt * accelTgt(time) + posInit;
+	}
+	else {
+		return posInit + 0.5f * accelTgt(time) * (2.f * timeToGo - dt) * (2.f * timeToGo - dt);
+	}
+}
+
+Eigen::Vector3f profileBang::velTgt(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return dt < timeToGo ? accelTgt(time) * dt : accelTgt(time) * (2*timeToGo - dt);
+}
+
+Eigen::Vector3f profileBang::accelTgt(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return 	dt < timeToGo ? 2.0f * (posEnd - posInit) / timeToGo / timeToGo :  2.0f * (posInit - posEnd) / timeToGo / timeToGo;
+}
+
 profileMaxVerticalVelocity::profileMaxVerticalVelocity(float const &duty_limit)
 {
 	this->duty_limit = duty_limit;
@@ -154,4 +180,19 @@ Eigen::Vector3f profileMaxAccel::accelTgt(float const &t)
 
 Eigen::Vector3f profileMaxAccel::posInit() {
 	return *pathPos.rbegin();
+}
+
+Eigen::Vector3f profileCircle::posTgt(float const &t) {
+	float phase = phaseInit + (t - timeInit) * omega;
+	return center + radius * Eigen::Vector3f(cosf(phase), sinf(phase), 0.f);
+}
+
+Eigen::Vector3f profileCircle::velTgt(float const &t) {
+	float phase = phaseInit + (t - timeInit) * omega;
+	return radius * omega * Eigen::Vector3f(-sinf(phase), cosf(phase), 0.f);
+}
+
+Eigen::Vector3f profileCircle::accelTgt(float const &t) {
+	float phase = phaseInit + (t - timeInit) * omega;
+	return radius * omega * omega * Eigen::Vector3f(-cosf(phase), -sinf(phase), 0.f);
 }

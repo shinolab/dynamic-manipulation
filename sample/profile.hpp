@@ -8,6 +8,8 @@
 #include <Windows.h>
 #include <vector>
 #include <memory>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #pragma comment(lib, "winmm")
 
@@ -73,6 +75,28 @@ public:
 
 };
 
+class profileBang : public profile {
+private:
+	float timeToGo;
+	float timeInit;
+	Eigen::Vector3f posInit;
+	Eigen::Vector3f posEnd;
+public:
+	profileBang(float const &timeToGo,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd)
+	{
+		this->timeToGo = timeToGo;
+		this->timeInit = timeInit;
+		this->posInit = posInit;
+		this->posEnd = posEnd;
+	}
+	Eigen::Vector3f posTgt(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f velTgt(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.0f) override;
+};
+
 class profileMaxVerticalVelocity : public profile
 {
 public:
@@ -116,6 +140,19 @@ public:
 	Eigen::Vector3f velTgt(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f posInit();
+};
+
+class profileCircle : public profile {
+	float radius;
+	float omega;
+	float timeInit;
+	float phaseInit;
+	Eigen::Vector3f center;
+public:
+	profileCircle(Eigen::Vector3f &center, float radius, float period, float timeInit, float phaseInit = 0.f) :radius(radius), omega( 2 * M_PI/period), phaseInit(phaseInit), timeInit(timeInit), center(center) {}
+	Eigen::Vector3f posTgt(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f velTgt(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f accelTgt(float const &time = timeGetTime() / 1000.f) override;
 };
 
 #endif

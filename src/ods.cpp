@@ -292,7 +292,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
 				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
-			cv::circle(mask, p, 120 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
+			cv::circle(mask, p, 105 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
 		}
 		else
 		{

@@ -17,6 +17,7 @@
 
 int main()
 {
+	std::string logname = "20190212_profiles_p2";
 	//initialization
 	odcs odcs;
 	odcs.Initialize();
@@ -25,7 +26,7 @@ int main()
 	Eigen::Affine3f affineKinect2Global = odcs.odsPtr->getAffineKinect2Global();
 	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
 	Eigen::Matrix3f dcmGlobal2Kinect = odcs.odsPtr->getDcmGlobal2Kinect();
-	odcs.AddObject(Eigen::Vector3f(0, 0, 1300));
+	odcs.AddObject(Eigen::Vector3f(0, 0, 1200));
 	//start control thread.
 	odcs.StartControl();
 	std::string projectorName = "projector1";
@@ -44,23 +45,26 @@ int main()
 	//log thread
 	do {
 	}while (odcs.GetFloatingObject(0)->isTracked);
-	std::thread threadLog([&odcs]() {
-		std::ofstream ofs("20190211_log2.csv");
-		ofs << "t, x, y, z, xTgt, yTgt, zTgt" << std::endl;
+	std::thread threadLog([&odcs, &logname]() {
+		std::ofstream ofs(logname + "_pos.csv");
+		ofs << "t, x, y, z, vx,vy, vz, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt" << std::endl;
 		while (1)
 		{
 			Eigen::Vector3f pos = odcs.GetFloatingObject(0)->getPosition();
-			//Eigen::Vector3f vel = odcs.GetFloatingObject(0)->getVelocity();
+			Eigen::Vector3f vel = odcs.GetFloatingObject(0)->getVelocity();
 			Eigen::Vector3f posTgt = odcs.GetFloatingObject(0)->getPositionTarget();
-			//Eigen::Vector3f velTgt = odcs.GetFloatingObject(0)->getVelocityTarget();
-			ofs << timeGetTime()/1000.f << ", " << pos.x() << ", " << pos.y() << ", " << pos.z() << ", " << posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << std::endl;
+			Eigen::Vector3f velTgt = odcs.GetFloatingObject(0)->getVelocityTarget();
+			ofs << timeGetTime()/1000.f << ", " << pos.x() << ", " << pos.y() << ", " << pos.z() << ", " 
+				<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
+				<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", "
+				<< velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z() << std::endl;
 			Sleep(30);
 		}
 	});
 
 	//start projection thread.
 	std::thread threadProjection([&](){
-		int num_average = 3;
+		int num_average = 1;
 		Eigen::MatrixXf posBuffer(3, num_average);
 		proj.CreateScreen();
 		unsigned int colcount = 0;
@@ -69,23 +73,23 @@ int main()
 			DWORD initTimeLoop = timeGetTime();
 			if (odcs.GetFloatingObject(0)->isTracked)
 			{
-				Eigen::Vector3f pos = affineGlobal2Kinect * (odcs.GetFloatingObject(0)->getPosition());
+				Eigen::Vector3f pos = affineGlobal2Kinect * (odcs.GetFloatingObject(0)->getPosition()+Eigen::Vector3f(-5, 0, 10));
 				posBuffer.col(colcount%num_average) << pos;
 				//Eigen::Vector3f vel = dcmGlobal2Kinect * odcs.GetFloatingObject(0)->getVelocity();
 				colcount++;
 			
 				//projectImageOnObject("FULL", pos + vel * (timeGetTime() - odcs.GetFloatingObject(0)->lastDeterminationTime)/1000, image);
-				proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, cv::Size(180, 180), cv::Scalar::all(255)); // for VR LOGO
+				proj.projectImageOnObject(posBuffer.rowwise().sum() / num_average, cv::Size(180,180), cv::Scalar::all(255)); // for VR LOGO
 
 				
 				auto key = cv::waitKey(1);
 				if (key == 'q') { break; }
 				int loopTime = (timeGetTime() - initTimeLoop);
-				if (loopTime < 30) { Sleep(30 - loopTime); }
+				if (loopTime < 10) { Sleep(10 - loopTime); }
 			}
 		}
 	});
-	Sleep(15000);
+	Sleep(10000);
 	std::cout << "CALLING..." << std::endl;
 	int phase = 0;
 	DWORD switchedTime = timeGetTime();
@@ -116,10 +120,11 @@ int main()
 			std::cout << "phase: " << phase << std::endl;
 		}
 	} while (odcs.GetFloatingObject(0)->getPosition().x() > -100);
-	std::cout << "SET FACE" << std::endl;
+	
+
 	proj.setImage(face);
 
-	Sleep(10000); // wait for hand to come in
+	Sleep(3000); // wait for hand to come in
 	KinectApp app;
 	app.initialize();
 	bool tracking_succeeded = false;
@@ -137,7 +142,7 @@ int main()
 					std::vector<Joint> joints(JointType::JointType_Count);
 					HRESULT hrJoints = (*itr)->GetJoints(JointType::JointType_Count, &joints[0]);
 					if (SUCCEEDED(hrJoints)) {
-						CameraSpacePoint cspHandLeft = joints[JointType::JointType_HandTipLeft].Position;
+						CameraSpacePoint cspHandLeft = joints[JointType::JointType_HandLeft].Position;
 						posHand = affineKinect2Global* Eigen::Vector3f(1000 * cspHandLeft.X, 1000 * cspHandLeft.Y, 1000 * cspHandLeft.Z);
 						if (odcs.odsPtr->isInsideWorkSpace(posHand)){
 							tracking_succeeded = true;
@@ -149,39 +154,85 @@ int main()
 		Sleep(10);
 	} while (!tracking_succeeded);
 	std::cout << "User Found" << std::endl;
+
+	std::thread bodyTrackingThread([&app, &logname, &affineKinect2Global]() {
+		std::ofstream ofsBody(logname + "_body.csv");
+		ofsBody << "t, x_hand, y_hand, z_hand" << std::endl;
+		while (1) {
+			HRESULT hr = app.getBodies();
+			if (SUCCEEDED(hr)) {
+				for (auto itr = app.pBodies.begin(); itr != app.pBodies.end(); itr++)
+				{
+					BOOLEAN isTracked = false;
+					HRESULT hrTrack = (*itr)->get_IsTracked(&isTracked);
+					if (isTracked && SUCCEEDED(hrTrack))
+					{
+						std::vector<Joint> joints(JointType::JointType_Count);
+						HRESULT hrJoints = (*itr)->GetJoints(JointType::JointType_Count, &joints[0]);
+						if (SUCCEEDED(hrJoints)) {
+							CameraSpacePoint cspHandLeft = joints[JointType::JointType_HandLeft].Position;
+							Eigen::Vector3f posHandvec = affineKinect2Global * Eigen::Vector3f(1000 * cspHandLeft.X, 1000 * cspHandLeft.Y, 1000 * cspHandLeft.Z);
+							ofsBody << timeGetTime() / 1000.f << ", " << posHandvec.x() << ", " << posHandvec.y() << ", " << posHandvec.z() << std::endl;
+						}
+					}
+				}
+			}
+			Sleep(30);
+		}		
+	});
 	proj.setImage(smile);
 	profileBangBang profileGentleF(5.0f, timeGetTime() / 1000.f, odcs.GetFloatingObject(0)->getPositionTarget(), posHand);
 	DWORD gentleInit = timeGetTime();
 	do {
 		odcs.GetFloatingObject(0)->updateStatesTarget(profileGentleF.posTgt(), profileGentleF.velTgt(), profileGentleF.accelTgt());
 		Sleep(10);
-	} while (timeGetTime() - gentleInit < 10000);
+	} while (timeGetTime() - gentleInit < 5000);
 	proj.setImage(face);
 
-	profileBangBang profileGentleB(5.0f, timeGetTime() / 1000.f, posHand, Eigen::Vector3f(0, 0, 1300));
+	profileBangBang profileGentleB(5.0f, timeGetTime() / 1000.f, posHand, Eigen::Vector3f(0, 0, 1200));
 	DWORD gentleInitB = timeGetTime();
 	do {
 		odcs.GetFloatingObject(0)->updateStatesTarget(profileGentleB.posTgt(), profileGentleB.velTgt(), profileGentleB.accelTgt());
 		Sleep(10);
-	} while (timeGetTime() - gentleInitB < 10000);
-	Sleep(10000);
-	proj.setImage(angry);
+	} while (timeGetTime() - gentleInitB < 6000);
+	Sleep(2000);
 
-	profileBangBang profileAngryF(5.0f, timeGetTime() / 1000.f, odcs.GetFloatingObject(0)->getPositionTarget(), 2.0f * (posHand - odcs.GetFloatingObject(0)->getPositionTarget()) + odcs.GetFloatingObject(0)->getPositionTarget());
+	tracking_succeeded = false;
+	do
+	{
+		HRESULT hr = app.getBodies();
+		if (SUCCEEDED(hr)) {
+			for (auto itr = app.pBodies.begin(); itr != app.pBodies.end(); itr++)
+			{
+				BOOLEAN isTracked = false;
+				HRESULT hrTrack = (*itr)->get_IsTracked(&isTracked);
+				if (isTracked && SUCCEEDED(hrTrack))
+				{
+					std::vector<Joint> joints(JointType::JointType_Count);
+					HRESULT hrJoints = (*itr)->GetJoints(JointType::JointType_Count, &joints[0]);
+					if (SUCCEEDED(hrJoints)) {
+						CameraSpacePoint cspHandLeft = joints[JointType::JointType_HandLeft].Position;
+						posHand = affineKinect2Global * Eigen::Vector3f(1000 * cspHandLeft.X, 1000 * cspHandLeft.Y, 1000 * cspHandLeft.Z);
+						if (odcs.odsPtr->isInsideWorkSpace(posHand)) {
+							tracking_succeeded = true;
+						}
+					}
+				}
+			}
+		}
+		Sleep(10);
+	} while (!tracking_succeeded);
+	proj.setImage(angry);
+	std::cout << "User Found" << std::endl;
+
+	profileBang profileAngryF(1.0f, timeGetTime() / 1000.f, odcs.GetFloatingObject(0)->getPositionTarget(), posHand);
 	DWORD angryInit = timeGetTime();
 	do {
 		odcs.GetFloatingObject(0)->updateStatesTarget(profileAngryF.posTgt(), profileAngryF.velTgt(), profileAngryF.accelTgt());
 		Sleep(10);
-	} while (timeGetTime() - angryInit < 5000);
+	} while (timeGetTime() - angryInit < 2000);
 	proj.setImage(face);
 
-	profileBangBang profileAngryB(2.0f, timeGetTime() / 1000.f, posHand, Eigen::Vector3f(0, 0, 1300));
-	DWORD angryInitB = timeGetTime();
-	do {
-		odcs.GetFloatingObject(0)->updateStatesTarget(profileAngryB.posTgt(), profileAngryB.velTgt(), profileAngryB.accelTgt());
-		Sleep(10);
-	} while (timeGetTime() - angryInitB < 5000);
-	proj.setImage(face);
 
 	/*
 	std::ofstream ofs("20181129_xy1300retry2.csv");
@@ -212,8 +263,6 @@ int main()
 	odcs.GetFloatingObject(0)->updateStatesTarget(Eigen::Vector3f(offsetX, offsetY, offsetZ-100), Eigen::Vector3f(0, 0, 0));
 
 	*/
-		std::cout << "transition to interaction mode." << std::endl;
-	
 	//start interaction thread.
 	//interaction sequence
 	/*

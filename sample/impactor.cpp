@@ -40,8 +40,6 @@ int main()
 	float additionalMass = 1e-4f;
 	Eigen::VectorXf duty_limit(5); duty_limit.setConstant(0.6f);
 	//==========phase 0: Compute restingPosition==========
-
-	
 	
 	std::ofstream ofs("20190206_maximum_accel_multitrial.csv");
 
@@ -56,7 +54,6 @@ int main()
 	float tolVel = 1.0f;
 	profileMaxAccel profile(positionTerminal, velocityTerminal, duty_limit, odcs.ocsPtr, objPtr, 0.05f);
 
-	
 	//use wait_until
 	std::vector<float> distBuffer;
 	int loopPeriod = 33;
@@ -91,7 +88,6 @@ int main()
 				ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", " << profile.posInit().x() << ", " << profile.posInit().y() << ", " << profile.posInit().z() << ",0,0,0"
 				<< ", " << amplitudes[0] << ", " << amplitudes[1] << ", " << amplitudes[2] << ", " << amplitudes[3] << ", " << amplitudes[4] << ",0,0,0, " << force.x() << ", " << force.y() << ", " << force.z() << std::endl;
 				std::cout << *std::max_element(distBuffer.begin(), distBuffer.end()) << " size: " << distBuffer.size() << std::endl;
-
 				*/
 			}
 			else if (observationTime - objPtr->lastDeterminationTime > 1000)

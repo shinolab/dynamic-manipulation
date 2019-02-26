@@ -49,6 +49,7 @@ add_library(DynamicLevitation STATIC
  inc/kalmanFilter.hpp
  src/kalmanFilter.cpp
  inc/QPSolver.h
+ src/Trajectory.cpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)

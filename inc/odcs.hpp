@@ -5,12 +5,14 @@
 #include "KinectApp.hpp"
 #include <opencv2/core.hpp>
 #include "arfModel.hpp"
+#include "Trajectory.hpp"
 //#include "engine.h"
 #include <queue>
 #include <vector>
 #include <memory>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <Eigen/Dense>
 #define NOMINMAX
 #include <Windows.h>
@@ -21,6 +23,7 @@ class FloatingObject;
 typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
 class ods;
 class ocs;
+class Trajectory;
 
 class FloatingObject {
 public:
@@ -51,12 +54,9 @@ private:
 	Eigen::Vector3f position;
 	Eigen::Vector3f velocity;
 	Eigen::Vector3f integral;
-	Eigen::Vector3f positionTarget;
-	Eigen::Vector3f velocityTarget;
-	Eigen::Vector3f accelTarget;
 	std::mutex mtxState;
-	std::mutex mtxStateTarget;
-
+	std::shared_mutex mtxTrajectory;
+	std::shared_ptr<Trajectory> trajectoryPtr;
 public:
 	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3);
 
@@ -69,6 +69,8 @@ public:
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew);
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocitynew);
+
+	void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
 
 	void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
 
@@ -187,5 +189,103 @@ public:
 private:
 	std::vector<FloatingObjectPtr> objPtrs;
 };
+
+class Trajectory
+{
+public:
+	virtual ~Trajectory(){};
+	virtual Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) = 0;
+	virtual Eigen::Vector3f vel(float const & time = timeGetTime() / 1000.f) = 0;
+	virtual Eigen::Vector3f accel(float const & time = timeGetTime() / 1000.f) = 0;
+};
+
+class TrajectoryConstantState : public Trajectory
+{
+private:
+	Eigen::Vector3f posTgt;
+	Eigen::Vector3f velTgt;
+	Eigen::Vector3f accelTgt;
+public:
+	TrajectoryConstantState(Eigen::Vector3f const &positionTarget,
+		Eigen::Vector3f const &velocityTarget = Eigen::Vector3f::Constant(0.f),
+		Eigen::Vector3f const &accelTarget = Eigen::Vector3f::Constant(0.f));
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+};
+
+class TrajectoryBangBang : public Trajectory
+{
+private:
+	float timeTotal;
+	float timeInit;
+	Eigen::Vector3f posInit;
+	Eigen::Vector3f posEnd;
+	Eigen::Vector3f velInit;
+	Eigen::Vector3f velEnd;
+
+public:
+	TrajectoryBangBang(float const &timeTotal,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd)
+	{
+		this->timeInit = timeInit;
+		this->timeTotal = timeTotal;
+		this->posInit = posInit;
+		this->posEnd = posEnd;
+	}
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+};
+
+class TrajectoryMaxAccel : public Trajectory {
+public:
+	typedef std::vector<Eigen::Vector3f> state_type;
+private:
+	class sys {
+	public:
+		FloatingObjectPtr objPtr;
+		std::shared_ptr<ocs> ocsPtr;
+		Eigen::Vector3f const &direction;
+		Eigen::VectorXf const &dutyLimit;
+	public:
+		sys(Eigen::Vector3f const &direction, Eigen::VectorXf const &dutyLimit, FloatingObjectPtr objPtr, std::shared_ptr<ocs> ocsPtr) : direction(direction), objPtr(objPtr), dutyLimit(dutyLimit), ocsPtr(ocsPtr) {};
+		void operator()(state_type const &x, state_type &dxdt, float const t);
+	};
+	sys sys;
+public:
+	std::vector<float> pathTime;
+	std::vector<Eigen::Vector3f> pathPos;
+	std::vector<Eigen::Vector3f> pathVel;
+	std::vector<Eigen::Vector3f> pathAccel;
+
+public:
+	TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
+		Eigen::Vector3f const &velocityTerminal,
+		Eigen::VectorXf const &duty_limit,
+		std::shared_ptr<ocs> ocsPtr,
+		FloatingObjectPtr objPtr,
+		float dt = 0.1f);
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f posInit();
+};
+
+class TrajectoryCircle : public Trajectory {
+	float radius;
+	float omega;
+	float timeInit;
+	float phaseInit;
+	Eigen::Vector3f center;
+public:
+	TrajectoryCircle(Eigen::Vector3f &center, float radius, float period, float timeInit, float phaseInit = 0.f) :radius(radius), omega(2 * M_PI / period), phaseInit(phaseInit), timeInit(timeInit), center(center) {}
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+};
+
 
 #endif

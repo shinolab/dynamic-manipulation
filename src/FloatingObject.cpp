@@ -4,6 +4,8 @@
 #include <deque>
 #include <atlbase.h>
 #include <Windows.h>
+#include <mutex>
+#include <shared_mutex>
 #include <Eigen\Geometry>
 
 #define _USE_MATH_DEFINES
@@ -14,8 +16,7 @@ FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _ad
 	position << _positionTarget;
 	velocity << 0, 0, 0;
 	integral << 0, 0, 0;
-	positionTarget = _positionTarget;
-	velocityTarget << 0, 0, 0;
+	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget)));
 	additionalMass = _additionalMass;
 	lastDeterminationTime = 0;
 	isTracked = false;
@@ -68,20 +69,20 @@ Eigen::Vector3f FloatingObject::getIntegral()
 
 Eigen::Vector3f FloatingObject::getPositionTarget()
 {
-	std::lock_guard<std::mutex> lock(mtxStateTarget);
-	return positionTarget;
+	std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
+	return trajectoryPtr->pos();
 }
 
 Eigen::Vector3f FloatingObject::getVelocityTarget()
 {
-	std::lock_guard<std::mutex> lock(mtxStateTarget);
-	return velocityTarget;
+	std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
+	return trajectoryPtr->vel();
 }
 
 Eigen::Vector3f FloatingObject::getAccelTarget()
 {
-	std::lock_guard<std::mutex> lock(mtxStateTarget);
-	return accelTarget;
+	std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
+	return trajectoryPtr->accel();
 }
 
 void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew)
@@ -95,7 +96,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	velocityBuffer.pop_front();
 	if (isTracked)
 	{
-		integral += (0.5 * (positionNew + position) - positionTarget) * dt;
+		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
 	}
 	position = positionNew;
 	lastDeterminationTime = determinationTime;
@@ -107,7 +108,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
 	if (isTracked)
 	{
-		integral += (0.5 * (positionNew + position) - positionTarget) * dt;
+		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
 	}
 	velocity = velocityNew;
 	position = positionNew;
@@ -120,10 +121,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 
 void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
-	std::lock_guard<std::mutex> lock(mtxStateTarget);
-	positionTarget = _positionTarget;
-	velocityTarget = _velocityTarget;
-	accelTarget = _accelTarget;
+	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget, _velocityTarget, _accelTarget)));
 }
 
 Eigen::Vector3f FloatingObject::averageVelocity()
@@ -162,4 +160,10 @@ bool FloatingObject::isStable()
 bool FloatingObject::isConverged(float tolPos, float tolVel)
 {
 	return ((getPosition() - getPositionTarget()).norm() < tolPos) && ((this->getVelocity() - this->getVelocityTarget()).norm() < tolVel);
+}
+
+void FloatingObject::SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr)
+{
+	std::lock_guard<std::shared_mutex> lock(mtxTrajectory);
+	trajectoryPtr = newTrajectoryPtr;
 }

@@ -51,6 +51,12 @@ add_library(DynamicLevitation STATIC
  inc/QPSolver.h
 )
 
+if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
+  # You must acknowledge that you understand MSVC resolved a byte alignment issue in this compiler
+  # We get this due to using Eigen objects and allocating those objects with make_shared
+  target_compile_definitions( DynamicLevitation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
+endif()
+
 add_library(Projector STATIC
 	inc/projector.hpp
 	src/projector.cpp

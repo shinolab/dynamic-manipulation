@@ -157,7 +157,8 @@ public:
 		Eigen::MatrixXf const &constrainedDirections, 
 		Eigen::Vector3f const &position,
 		Eigen::VectorXf const &duty_limit,
-		float &force);
+		float &force,
+		Eigen::Vector3f const &force_offset = Eigen::Vector3f(0.f, 0.f, 0.f));
 	
 	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
 	

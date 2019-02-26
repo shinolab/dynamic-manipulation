@@ -174,7 +174,7 @@ Eigen::Vector3f profileMaxAccel::accelTgt(float const &t)
 	Eigen::MatrixXf posRel = pt.replicate(1, sys.ocsPtr->centersAUTD.cols()) - sys.ocsPtr->centersAUTD;
 	float force;
 	return sys.ocsPtr->arfModelPtr->arf(posRel, sys.ocsPtr->eulerAnglesAUTD)
-		*sys.ocsPtr->FindDutyMaximizeForce(vt.normalized(), sys.direction, pt, sys.dutyLimit, force )
+		*sys.ocsPtr->FindDutyMaximizeForce(vt.normalized(), sys.direction, pt, sys.dutyLimit, force)
 		/sys.objPtr->totalMass();
 }
 

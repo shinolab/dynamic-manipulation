@@ -87,6 +87,20 @@ Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
 	return force;
 }
 
+autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
+{
+	Eigen::Vector3f accel
+		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
+		+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
+		+ gainI.asDiagonal() * objPtr->getIntegral()
+		+ objPtr->getAccelTarget();
+	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665f);
+	Eigen::VectorXf duties = FindDutyQP(forceToApply, objPtr->getPosition());
+	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
+	Eigen::MatrixXf focus = centersAUTD + (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
+	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
+}
+
 void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes)
 {
 	float outpor = 100;

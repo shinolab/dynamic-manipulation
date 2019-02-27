@@ -5,7 +5,6 @@
 #include "KinectApp.hpp"
 #include <opencv2/core.hpp>
 #include "arfModel.hpp"
-#include "Trajectory.hpp"
 //#include "engine.h"
 #include <queue>
 #include <vector>
@@ -16,6 +15,9 @@
 #include <Eigen/Dense>
 #define NOMINMAX
 #include <Windows.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #pragma comment (lib, "winmm")
 
@@ -63,6 +65,8 @@ public:
 	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
+
+	float AdditionalMass();
 
 	float totalMass(); 
 
@@ -165,6 +169,8 @@ public:
 	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
 	
 	void CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
+
+	autd::GainPtr CreateGain(FloatingObjectPtr objPtr);
 
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);

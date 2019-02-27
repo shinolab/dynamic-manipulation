@@ -178,14 +178,11 @@ int main()
 		}		
 	});
 	proj.setImage(smile);
-	TrajectoryBangBang profileGentleF(5.0f, timeGetTime() / 1000.f, odcs.GetFloatingObject(0)->getPositionTarget(), posHand);
-	DWORD gentleInit = timeGetTime();
-	odcs.GetFloatingObject(0)->SetTrajectory(std::make_shared<Trajectory>(profileGentleF));
+	odcs.GetFloatingObject(0)->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, odcs.GetFloatingObject(0)->getPositionTarget(), posHand)));
 	std::this_thread::sleep_for(std::chrono::seconds(5));
 	proj.setImage(face);
 
-	TrajectoryBangBang profileGentleB(5.0f, timeGetTime() / 1000.f, posHand, Eigen::Vector3f(0, 0, 1200));
-	odcs.GetFloatingObject(0)->SetTrajectory(std::make_shared<Trajectory>(profileGentleF));
+	odcs.GetFloatingObject(0)->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posHand, Eigen::Vector3f(0, 0, 1200))));
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 
 	std::cout << "Closing..." << std::endl;

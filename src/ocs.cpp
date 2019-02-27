@@ -78,15 +78,6 @@ void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, 
 	this->gainI = _gainI;
 }
 
-Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
-{
-	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
-	Eigen::Vector3f dv = objPtr->getVelocity() - objPtr->getVelocityTarget();
-	Eigen::Vector3f acceleration = gainP.asDiagonal() * dr + gainD.asDiagonal() * dv + gainI.asDiagonal() * objPtr->getIntegral() + objPtr->getAccelTarget();
-	Eigen::Vector3f force = objPtr->totalMass() * acceleration - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.80665e3f);
-	return force;
-}
-
 autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f accel
@@ -99,21 +90,6 @@ autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = centersAUTD + (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
-}
-
-void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes)
-{
-	float outpor = 100;
-	Eigen::MatrixXf farPoints = centersAUTD + outpor * (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
-	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(farPoints, amplitudes));
-	autd.AppendModulation(autd::Modulation::Create(255));
-}
-
-void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes)
-{
-	Eigen::MatrixXf focus = centersAUTD + (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
-	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
-	autd.AppendModulation(autd::Modulation::Create(255));
 }
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)

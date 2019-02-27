@@ -47,6 +47,7 @@ Eigen::Vector3f TrajectoryBangBang::accel(float const &time)
 
 TrajectoryMaxAccel::TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
 	Eigen::Vector3f const &velocityTerminal,
+	float terminalTime,
 	Eigen::VectorXf const &dutyLimit,
 	std::shared_ptr<ocs> const ocsPtr,
 	FloatingObjectPtr objPtr,
@@ -57,7 +58,7 @@ TrajectoryMaxAccel::TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
 	const int step_max = 100;
 	for (int i_step = 0; i_step < step_max; i_step++)
 	{
-		float t = -dt * i_step;
+		float t = -dt * i_step + terminalTime;
 		pathTime.push_back(t);
 		pathPos.push_back(state[0]);
 		pathVel.push_back(state[1]);

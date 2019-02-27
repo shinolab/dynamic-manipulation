@@ -57,20 +57,19 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			//----------Determination----------
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
-			(*itr)->isTracked = true;
+			(*itr)->SetTrackingStatus(true);
 			ocsPtr->autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
-			(*itr)->isTracked = false;
+			(*itr)->SetTrackingStatus(false);
 		}
 		/*
 		ods.DeterminePositionByDepth(*itr, true);
 		Eigen::VectorXf amplitudes = ocs.FindDutyQP((*itr)) * objPtrs.size();
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), duties);
-		*/
-			
+		*/	
 	}
 	int waitTime = loopPeriod - (timeGetTime() - timeInit);
 	Sleep(std::max(waitTime, 0));

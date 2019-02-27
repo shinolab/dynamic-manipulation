@@ -77,7 +77,7 @@ void ods::DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Sc
 	{
 		DWORD currentTime = timeGetTime();
 		objPtr->updateStates(currentTime, currentPosition);
-		objPtr->isTracked = true;
+		objPtr->SetTrackingStatus(true);
 	}
 }
 
@@ -91,11 +91,11 @@ void ods::DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Sc
 		{
 			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
-			objPtr->isTracked = true;
+			objPtr->SetTrackingStatus(true);
 		}
 		else
 		{
-			objPtr->isTracked = false;
+			objPtr->SetTrackingStatus(false);
 		}
 	}
 }
@@ -110,7 +110,7 @@ void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI)
 		{
 			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
-			objPtr->isTracked = true;
+			objPtr->SetTrackingStatus(true);
 		}
 	}
 }
@@ -180,11 +180,11 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 				if (isInsideWorkSpace(currentPosition))
 				{
 					(*itrOP)->updateStates(currentTime, currentPosition);
-					(*itrOP)->isTracked = true;
+					(*itrOP)->SetTrackingStatus(true);
 				}
 				else
 				{
-					(*itrOP)->isTracked = false;
+					(*itrOP)->SetTrackingStatus(false);
 				}
 			}			
 		}
@@ -287,7 +287,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
 		//=====truncate region around the object=====
-		if (objPtr->isTracked && useROI)
+		if (objPtr->IsTracked() && useROI)
 		{
 			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()

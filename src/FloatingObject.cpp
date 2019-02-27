@@ -99,7 +99,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	dTBuffer.pop_front();
 	velocityBuffer.push_back(velocity);
 	velocityBuffer.pop_front();
-	if (isTracked)
+	if (IsTracked())
 	{
 		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
 	}
@@ -111,7 +111,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 {
 	std::lock_guard<std::mutex> lock(mtxState);
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
-	if (isTracked)
+	if (IsTracked())
 	{
 		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
 	}
@@ -127,6 +127,16 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
 	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget, _velocityTarget, _accelTarget)));
+}
+
+bool FloatingObject::IsTracked() {
+	std::lock_guard<std::mutex> lock(mtxTrack);
+	return isTracked;
+}
+
+void FloatingObject::SetTrackingStatus(bool _isTracked){
+	std::lock_guard<std::mutex> lock(mtxTrack);
+	this->isTracked = _isTracked;
 }
 
 Eigen::Vector3f FloatingObject::averageVelocity()

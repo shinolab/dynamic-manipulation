@@ -41,7 +41,6 @@ public:
 
 	Eigen::MatrixXf covError;
 	DWORD lastDeterminationTime;
-	bool isTracked;
 	bool _isStable;
 	bool isControlled;
 	std::deque<Eigen::Vector3f> velocityBuffer;
@@ -56,7 +55,9 @@ private:
 	Eigen::Vector3f position;
 	Eigen::Vector3f velocity;
 	Eigen::Vector3f integral;
+	bool isTracked;
 	std::mutex mtxState;
+	std::mutex mtxTrack;
 	std::shared_mutex mtxTrajectory;
 	std::shared_ptr<Trajectory> trajectoryPtr;
 public:
@@ -81,6 +82,10 @@ public:
 	bool isStable();
 
 	bool isConverged(float tolPos, float tolVel);
+
+	bool IsTracked();
+	
+	void SetTrackingStatus(bool _isTracked);
 
 	Eigen::Vector3f averageVelocity();
 };
@@ -151,8 +156,6 @@ public:
 
 	void SetGain(Eigen::Vector3f const &gainP, Eigen::Vector3f const &gainD, Eigen::Vector3f const &gainI);
 
-	Eigen::Vector3f ComputePIDForce(FloatingObjectPtr objPtr);
-
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward);
@@ -166,10 +169,6 @@ public:
 		float &force,
 		Eigen::Vector3f const &force_offset = Eigen::Vector3f(0.f, 0.f, 0.f));
 	
-	void DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
-	
-	void CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi const &amplitudes);
-
 	autd::GainPtr CreateGain(FloatingObjectPtr objPtr);
 
 	//Legacy Module
@@ -270,6 +269,7 @@ public:
 public:
 	TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
 		Eigen::Vector3f const &velocityTerminal,
+		float terminalTime,
 		Eigen::VectorXf const &duty_limit,
 		std::shared_ptr<ocs> ocsPtr,
 		FloatingObjectPtr objPtr,

@@ -58,14 +58,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->isTracked = true;
-			//PIDController
-			Eigen::VectorXf force = ocsPtr->ComputePIDForce((*itr));
-			//Find Control parameters
-			Eigen::VectorXf duties = ocsPtr->FindDutyQP(force, (*itr)->getPosition());
-			Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
-			//ocsPtr->DirectSemiPlaneWave((*itr), amplitudes);
-			ocsPtr->CreateFocusOnCenter((*itr), amplitudes);
-			(*itr)->setLatestInput(duties);
+			ocsPtr->autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{

@@ -20,9 +20,8 @@ int main()
 	Eigen::Vector3f posDefault(50.f, 0.f, 1300.f);
 	FloatingObjectPtr objPtr(new FloatingObject(posDefault));
 	odcs.RegisterObject(objPtr); // add object
-	odcs.ocsPtr->SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-4.0f), Eigen::Vector3f::Constant(-0.1f));
-	odcs.StartControl();
-	
+	odcs.ocsPtr->SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-4.0f), Eigen::Vector3f::Constant(-0.05f));
+	odcs.StartControl();	
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	odcs.Close();

@@ -2,6 +2,7 @@
 #include "autd3.hpp"
 #include "arfModel.hpp"
 #include "additionalGain.hpp"
+#include "QPSolver.h"
 #include <Eigen\Geometry>
 #include <dlib\matrix.h>
 #include <dlib\optimization.h>
@@ -49,6 +50,7 @@ int ocs::Initialize()
 	}
 	//arfModelPtr.reset(new arfModelTheoreticalTable());
 	arfModelPtr.reset(new arfModelFocusOnSphereExperimental());
+	std::cout << "centersAUTD\n" << centersAUTD << std::endl;
 	return 0;
 }
 
@@ -69,35 +71,25 @@ void ocs::SetArfModel(std::unique_ptr<arfModelLinearBase> _arfModelPtr)
 	this->arfModelPtr = std::move(_arfModelPtr);
 }
 
-void ocs::SetGain(Eigen::Vector3f _gainP, Eigen::Vector3f _gainD, Eigen::Vector3f _gainI)
+void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, Eigen::Vector3f const &_gainI)
 {
 	this->gainP = _gainP;
 	this->gainD = _gainD;
 	this->gainI = _gainI;
 }
 
-Eigen::Vector3f ocs::ComputePIDForce(FloatingObjectPtr objPtr)
+autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 {
-	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
-	Eigen::Vector3f dv = objPtr->getVelocity() - objPtr->getVelocityTarget();
-	Eigen::Vector3f acceleration = gainP.asDiagonal() * dr + gainD.asDiagonal() * dv + gainI.asDiagonal() * objPtr->getIntegral();
-	Eigen::Vector3f force = (objPtr->totalMass()) * acceleration - objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.806e3);
-	return force;
-}
-
-void ocs::DirectSemiPlaneWave(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
-{
-	float outpor = 100;
-	Eigen::MatrixXf farPoints = centersAUTD + outpor * (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
-	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(farPoints, amplitudes));
-	autd.AppendModulation(autd::Modulation::Create(255));
-}
-
-void ocs::CreateFocusOnCenter(FloatingObjectPtr objPtr, Eigen::VectorXi amplitudes)
-{
+	Eigen::Vector3f accel
+		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
+		+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
+		+ gainI.asDiagonal() * objPtr->getIntegral()
+		+ objPtr->getAccelTarget();
+	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665f);
+	Eigen::VectorXf duties = FindDutyQP(forceToApply, objPtr->getPosition());
+	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = centersAUTD + (objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD);
-	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
-	autd.AppendModulation(autd::Modulation::Create(255));
+	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
 }
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)
@@ -139,33 +131,6 @@ Eigen::VectorXf ocs::FindDutyQPEq(FloatingObjectPtr objPtr)
 	return duty;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(FloatingObjectPtr objPtr)
-{
-	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
-	Eigen::Vector3f dv = objPtr->averageVelocity() - objPtr->getVelocityTarget();
-	Eigen::Vector3f dutiesOffset(0, 0, 0);
-	Eigen::Vector3f gainPQp(-9e-3, -9e-3, -9e-3);
-	Eigen::Vector3f gainDQp(-22e-3, -22e-3, -22e-3);
-	Eigen::Vector3f gainIQp(-2e-4, -2e-4, -2e-4);
-	Eigen::Vector3f force = gainPQp.asDiagonal() * dr + gainDQp.asDiagonal() * dv + gainIQp.asDiagonal() * objPtr->getIntegral();
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, centersAUTD.cols()) - centersAUTD;
-	Eigen::MatrixXf F = this->arfModelPtr->arf(posRel, eulerAnglesAUTD);
-	Eigen::MatrixXf Q = F.transpose() * F;
-	Eigen::VectorXf b = -F.transpose() * force;
-	Eigen::VectorXf duty(NUM_AUTDS);
-	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
-	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
-	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::ones_matrix<float>(centersAUTD.cols(), 1);
-	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(centersAUTD.cols(), 1);
-	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
-	for (int index = 0; index < NUM_AUTDS; index++)
-	{
-		duty[index] = u(index, 0);
-	}
-	return duty;
-}
-
 Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
@@ -183,24 +148,49 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 	return duties;
 }
 
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f force, Eigen::Vector3f position)
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward)
 {
 	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
 	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 	Eigen::MatrixXf Q = F.transpose() * F;
 	Eigen::VectorXf b = -F.transpose() * force;
-	Eigen::VectorXf duty(NUM_AUTDS);
+	Eigen::VectorXf duty_reserved = Eigen::VectorXf::Ones(duty_forward.size()) - duty_forward;
+	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::mat(duty_reserved);
 	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
 	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
 	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::ones_matrix<float>(centersAUTD.cols(), 1);
 	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(centersAUTD.cols(), 1);
 	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
+	Eigen::VectorXf duty(centersAUTD.cols());
 	for (int index = 0; index < NUM_AUTDS; index++)
 	{
 		duty[index] = u(index, 0);
 	}
 	return duty;
+}
 
-	
+Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position)
+{
+	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
+}
+
+Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
+	Eigen::MatrixXf const &constrainedDirections,
+	Eigen::Vector3f const &position,
+	Eigen::VectorXf const &duty_limit,
+	float &force,
+	Eigen::Vector3f const &force_offset)
+{
+	int const scale = 10000000; // variables are scaled for CGAL LP solver accepts only integer numbers
+	Eigen::VectorXf result;
+	Eigen::MatrixXf posRel = position.replicate(1, centersAUTD.cols()) - centersAUTD;
+	force = EigenLinearProgrammingSolver(result,
+		scale*constrainedDirections.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD),
+		-scale*constrainedDirections.transpose() * force_offset, //right hand side of constraints.
+		-scale * direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
+		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
+		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
+		scale * duty_limit,
+		scale); //upper bound
+	return result / scale;
 }

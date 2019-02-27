@@ -1,5 +1,6 @@
 #include "odcs.hpp"
 #include "kalmanFilter.hpp"
+#include "profile.hpp"
 #include <Eigen\Geometry>
 #include <iostream>
 #include <fstream>
@@ -12,17 +13,15 @@
 
 int main()
 {
-	
 	odcs odcs;
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs.Initialize();
-	FloatingObjectPtr objPtr(new FloatingObject(Eigen::Vector3f(0, 0, 1350)));
+	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
+	Eigen::Vector3f posDefault(50.f, 0.f, 1300.f);
+	FloatingObjectPtr objPtr(new FloatingObject(posDefault));
 	odcs.RegisterObject(objPtr); // add object
-	odcs.StartControl();
-	//Sleep(10000);
-	//objPtr->updateStatesTarget(Eigen::Vector3f(20, 25, 1140), Eigen::Vector3f(0, 0, 0));
-	//Sleep(20000);
-	//objPtr->updateStatesTarget(Eigen::Vector3f(43, 1, 1000), Eigen::Vector3f(0, 0, 0));
+	odcs.ocsPtr->SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-4.0f), Eigen::Vector3f::Constant(-0.05f));
+	odcs.StartControl();	
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	odcs.Close();

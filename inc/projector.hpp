@@ -9,9 +9,11 @@
 #include <opencv2/core.hpp>
 #include <Eigen/Geometry>
 #include <Windows.h>
+#include <vector>
+#include <string>
+#include <mutex>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <string>
 
 class projector {
 private:
@@ -20,10 +22,14 @@ private:
 	cv::Mat rvec;
 	cv::Mat tvec;
 
+	std::mutex mtxImage;
+
 	int posX, posY, width, height;
-	std::string name;
+
 
 public:
+	std::string name;
+	cv::Mat image;
 	projector(std::string _projectorName 
 		, const int _posX = GetSystemMetrics(SM_CXSCREEN) 
 		, const int _posY = 0//window position Y (default value: 0)
@@ -39,9 +45,13 @@ public:
 
 	Eigen::Affine3f affineReference2Projector();
 
-	void projectImageOnObject(Eigen::Vector3f position, cv::Mat image, cv::Size2f sizeReal, cv::Scalar backGroundColor = cv::Scalar(255, 255, 255), float distanceOffset = 0);
+	void projectImageOnObject(Eigen::Vector3f position, cv::Mat image, cv::Size2f sizeReal, cv::Scalar backGroundColor = cv::Scalar(255, 255, 255), float distanceOffset = 0.f);
+
+	void projectImageOnObject(Eigen::Vector3f position, cv::Size2f sizeReal, cv::Scalar backgroundColor = cv::Scalar::all(255), float distanceOffset = 0.f);
 
 	void projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints);
+
+	void setImage(cv::Mat mat);
 };
 
 #endif _PROJECTOR_HPP_

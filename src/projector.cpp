@@ -10,6 +10,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <string>
 #include <iostream>
+#include <mutex>
 
 projector::projector(std::string _projectorName
 	, const int _posX
@@ -18,20 +19,20 @@ projector::projector(std::string _projectorName
 	, const int _height)
 {
 	internalParam = (cv::Mat_<float>(3, 3) <<
-		5752.482513627768, 0, 2108.730456578023,
-		0, 5683.544422424523, 2380.697983083306,
+		6050.011853032812, 0, 1364.179614053009,
+		0, 6061.463220410974, 2460.911899405387,
 		0, 0, 1);
 	distCoeffs = (cv::Mat_<float>(1, 5) <<
-		-0.1980807182777715, 0.3086291425475489, -0.008436505514143884, 0.008727957374133679, 0);
+		-0.1217952657759399, -0.02487984167672523, -0.01480246476853928, 0.005774785274951844, 0);
 	//kinect cooradinate system is temporally used as a reference of the external parameters. 
-	rvec = (cv::Mat_<float>(3, 1) << -0.4877771880016805, 0.009152296925027666, -3.090781468236619);
-	tvec = (cv::Mat_<float>(3, 1) << -544.2122015242982, -380.5129628128426, 1070.945634793596);
+	rvec = (cv::Mat_<float>(3, 1) << -0.8302656350056087, 0.001398823155030815, -2.997690210765307);
+	tvec = (cv::Mat_<float>(3, 1) << -405.2779099557551, -423.284888849359, 1379.117789824073);
 	this->posX = _posX;
 	this->posY = _posY;
 	this->width = _width;
 	this->height = _height;
 	this->name = _projectorName;
-	CreateScreen();
+	//CreateScreen();
 }
 
 projector::~projector()
@@ -93,8 +94,19 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::imshow(name, dst);
 }
 
+
+void projector::projectImageOnObject(Eigen::Vector3f position, cv::Size2f sizeReal, cv::Scalar backgroundColor, float distanceOffset) {
+	projectImageOnObject(position, this->image, sizeReal, backgroundColor, distanceOffset);
+}
+
+
 void projector::projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints)
 {
 	cv::projectPoints(objectPoints, rvec, tvec, internalParam, distCoeffs, imagePoints);
+}
+
+void projector::setImage(cv::Mat image) {
+	std::lock_guard<std::mutex> lock(mtxImage);
+	this->image = image;
 }
 

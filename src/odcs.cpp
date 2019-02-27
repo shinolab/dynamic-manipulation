@@ -11,14 +11,21 @@
 #define _USE_MATH_DEFINES
 #include<math.h>
 
-
 void odcs::Initialize()
 {
-	ods.Initialize();
-	ocs.Initialize();
+	if (odsPtr == nullptr)
+	{
+		odsPtr = std::make_shared<ods>();
+		odsPtr->Initialize();
+	}
+	if (ocsPtr == nullptr)
+	{
+		ocsPtr = std::make_shared<ocs>();
+		ocsPtr->Initialize();
+	}
 }
 
-int odcs::AddObject(Eigen::Vector3f targetPosition)
+int odcs::AddObject(Eigen::Vector3f const &targetPosition)
 {
 	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
 	return objPtrs.size();
@@ -27,7 +34,7 @@ int odcs::AddObject(Eigen::Vector3f targetPosition)
 void odcs::RegisterObject(FloatingObjectPtr objPtr)
 {
 	objPtrs.push_back(objPtr);
-	ocs.RegisterObject(objPtr);
+	ocsPtr->RegisterObject(objPtr);
 }
 
 const FloatingObjectPtr odcs::GetFloatingObject(int i)
@@ -43,33 +50,26 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 	{
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		bool succeeded = ods.GetPositionByDepth((*itr), posObserved, true);
+		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
 		DWORD observationTime = timeGetTime();
-		if (succeeded && ods.isInsideWorkSpace(posObserved))
+		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
-			(*itr)->isTracked = true;
-			//PIDController
-			Eigen::VectorXf force = ocs.ComputePIDForce((*itr));
-			//Find Control parameters
-			Eigen::VectorXf duties = ocs.FindDutyQP(force, (*itr)->getPosition());
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-			ocs.DirectSemiPlaneWave((*itr), amplitudes);
-			(*itr)->setLatestInput(duties);
+			(*itr)->SetTrackingStatus(true);
+			ocsPtr->autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
-			(*itr)->isTracked = false;
+			(*itr)->SetTrackingStatus(false);
 		}
 		/*
 		ods.DeterminePositionByDepth(*itr, true);
 		Eigen::VectorXf amplitudes = ocs.FindDutyQP((*itr)) * objPtrs.size();
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), duties);
-		*/
-			
+		*/	
 	}
 	int waitTime = loopPeriod - (timeGetTime() - timeInit);
 	Sleep(std::max(waitTime, 0));
@@ -95,25 +95,24 @@ void odcs::StartControl()
 
 void odcs::Close()
 {
-	
 	if (thread_control.joinable())
 	{
 	thread_control.join();
 	}
-	ocs.Close();
+	ocsPtr->Close();
 }
 
-void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD observationTime)
+void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD observationTime)
 {
 	float dt = (observationTime - objPtr->lastDeterminationTime) / 1000.0;
 	//-----Construct System Matrix
 	Eigen::MatrixXf A(6, 6);
 	A << Eigen::Matrix3f::Identity(), dt * Eigen::Matrix3f::Identity(),
 		Eigen::Matrix3f::Zero(), dt * Eigen::Matrix3f::Identity();
-	Eigen::MatrixXf B(6, ocs.positionsAUTD.cols());
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionsAUTD.cols()) - ocs.centersAUTD;
-	B << Eigen::MatrixXf::Zero(3, ocs.positionsAUTD.cols()),
-		ocs.arfModelPtr->arf(posRel, ocs.eulerAnglesAUTD) / objPtr->totalMass() * dt;
+	Eigen::MatrixXf B(6, ocsPtr->positionsAUTD.cols());
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocsPtr->positionsAUTD.cols()) - ocsPtr->centersAUTD;
+	B << Eigen::MatrixXf::Zero(3, ocsPtr->positionsAUTD.cols()),
+		ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) / objPtr->totalMass() * dt;
 	Eigen::VectorXf g(6); g << Eigen::Vector3f::Zero(), dt * objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.801e3) / objPtr->totalMass() * dt;
 	Eigen::MatrixXf C(3, 6); C << Eigen::Matrix3f::Identity(), Eigen::Matrix3f::Zero();
 	Eigen::MatrixXf D(6, 6); D.setIdentity();

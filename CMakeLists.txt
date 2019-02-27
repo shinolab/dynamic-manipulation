@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)
 
 find_package( Boost REQUIRED )
 find_package( Eigen3 REQUIRED )
+find_package( CGAL REQUIRED )
 
 include_directories(inc/ deps/autd3-software/client/include ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
 
@@ -47,13 +48,25 @@ add_library(DynamicLevitation STATIC
  src/arfModel.cpp
  inc/kalmanFilter.hpp
  src/kalmanFilter.cpp
+ inc/QPSolver.h
+ src/Trajectory.cpp
 )
+
+if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
+  target_compile_definitions( DynamicLevitation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
+endif()
 
 add_library(Projector STATIC
 	inc/projector.hpp
 	src/projector.cpp
 )
 
-target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} )
+add_library(QPSolver
+	inc/QPSolver.h
+	src/QPSolver.cpp
+)
+target_link_libraries(QPSolver CGAL::CGAL)
+target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} QPSolver)
 
 add_subdirectory(sample)
+add_subdirectory(test)

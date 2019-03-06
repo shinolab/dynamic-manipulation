@@ -69,6 +69,8 @@ public:
 
 	float AdditionalMass();
 
+	float Radius();
+
 	float totalMass(); 
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew);
@@ -103,6 +105,10 @@ private:
 
 public:
 	int Initialize();
+
+	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
+
+	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
 
 	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
 

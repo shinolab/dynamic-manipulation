@@ -44,6 +44,10 @@ float FloatingObject::sphereMass()
 	return 1.293 * 4.0 * M_PI * pow(radius/1000, 3) / 3.0;
 }
 
+float FloatingObject::Radius() {
+	return radius;
+}
+
 float FloatingObject::AdditionalMass()
 {
 	return additionalMass;

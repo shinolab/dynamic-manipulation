@@ -47,6 +47,21 @@ int ods::Initialize()
 	return 0;
 }
 
+void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle) {
+	positionKinect = position;
+	dcmGlobal2Kinect = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
+		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
+		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
+	dcmKinect2Global = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
+		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
+		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
+	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+}
+
+void ods::SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2) {
+	workspace << corner1, corner2;
+}
+
 //==================== ODS Module ====================
 
 bool ods::isInsideWorkSpace(const Eigen::Vector3f &pos)

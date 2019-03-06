@@ -41,7 +41,7 @@ autd::GainPtr autd::GaussianBeamGain::Create(Eigen::Vector3f const &point, Eigen
 {
 	std::shared_ptr<GaussianBeamGain> ptr = std::shared_ptr<GaussianBeamGain>(new GaussianBeamGain());
 	ptr->_point = point;
-	ptr->_direction = direction;
+	ptr->_direction = direction.normalized();
 	ptr->_amplitude = amplitude;
 	ptr->_cosBeamAngle = cos(beamAngle);
 	ptr->_geometry = autd::GeometryPtr(nullptr);
@@ -50,6 +50,7 @@ autd::GainPtr autd::GaussianBeamGain::Create(Eigen::Vector3f const &point, Eigen
 
 void autd::GaussianBeamGain::build() 
 {
+	int count = 0;
 	if (this->built()) return;
 	if (this->geometry() == nullptr) BOOST_ASSERT_MSG(false, "Geometry is required to build Gain.");
 	this->_data.clear();
@@ -60,9 +61,10 @@ void autd::GaussianBeamGain::build()
 	const int nTrans = this->geometry()->numTransducers();
 	for (int i = 0; i < nTrans; i++){
 		Eigen::Vector3f trp = this->geometry()->position(i);
-		Eigen::Vector3f dr = trp - this->_point;
-		float cosAngle = acos(this->_direction.dot(dr.normalized()));
-		if (_cosBeamAngle < cosAngle){
+		Eigen::Vector3f dr = this->_point - trp;
+		float cosAngle =this->_direction.dot(dr.normalized());
+		if (_cosBeamAngle <= cosAngle){
+			count++;
 			float dist = dr.norm();
 			float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH;
 			uint8_t amp = _amplitude;

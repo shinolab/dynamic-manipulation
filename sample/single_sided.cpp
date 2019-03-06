@@ -15,12 +15,19 @@ int main() {
 	autd.Open(autd::LinkType::ETHERCAT);
 	if (!autd.isOpen()) return ENXIO;
 	
-	const int nDevice = 12;
-	for (int i = 0; i < nDevice; i++){
+	
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());
+	Eigen::Vector3f focus(10.18f * 8.5f, 10.18f * 6.5f, 100.f);
+	autd.AppendGainSync(autd::GaussianBeamGain::Create(focus, Eigen::Vector3f::UnitZ(), 255, M_PI / 9));
+	getchar();
+	autd.Close();
+	return 0;
+
+	const int nDevice = 1;
+	for (int i = 0; i < nDevice; i++) {
 		Eigen::Vector3f posAUTD((i % 2) * 200, (i / 2) * 150, 0);
 		autd.geometry()->AddDevice(posAUTD, Eigen::Vector3f::Zero());
 	}
-
 	//control parameters
 	Eigen::Vector3f gainP = Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = Eigen::Vector3f::Constant(-4.0f);

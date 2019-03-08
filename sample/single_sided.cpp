@@ -3,6 +3,7 @@
 #include "autd3.hpp"
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 #include <chrono>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -11,39 +12,45 @@ using namespace std::chrono;
 
 int main() {
 	
+	//std::ofstream ofs("20190307_single_sided2.csv");
+	//ofs << "t, x, y, z, focus_x, focus_y, focus_z " << std::endl;
+	const float xDevice = 192.f;
+	const float yDevice = 151.4f;
+	const int rowDevice = 3;
+	const int colDevice = 3;
+
 	autd::Controller autd;
 	autd.Open(autd::LinkType::ETHERCAT);
 	if (!autd.isOpen()) return ENXIO;
-	
-	
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());
-	Eigen::Vector3f focus(10.18f * 8.5f, 10.18f * 6.5f, 100.f);
-	autd.AppendGainSync(autd::GaussianBeamGain::Create(focus, Eigen::Vector3f::UnitZ(), 255, M_PI / 9));
-	getchar();
-	autd.Close();
-	return 0;
 
-	const int nDevice = 1;
+	const int nDevice = rowDevice * colDevice;
 	for (int i = 0; i < nDevice; i++) {
-		Eigen::Vector3f posAUTD((i % 2) * 200, (i / 2) * 150, 0);
+		Eigen::Vector3f posAUTD((i % colDevice) * xDevice, (i / colDevice) * yDevice, 0);
 		autd.geometry()->AddDevice(posAUTD, Eigen::Vector3f::Zero());
+		std::cout << i << ": " << posAUTD.transpose() << std::endl;
 	}
+	
+	ods sensor;
+	Eigen::Vector3f posSensor(xDevice * colDevice / 2.0f, -472.f, 376.f);
+	sensor.SetWorkSpace(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(xDevice * colDevice, yDevice * rowDevice, 1000.f));
+	sensor.Initialize();
+	sensor.SetSensorGeometry(Eigen::Vector3f(xDevice * colDevice / 2.f, -472.f, 356.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
+
 	//control parameters
 	Eigen::Vector3f gainP = Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = Eigen::Vector3f::Constant(-4.0f);
 	Eigen::Vector3f gainI = Eigen::Vector3f::Constant(-0.05f);
-	float z0 = 200.f, F0 = 0.1f;
-	ods sensor;
-	sensor.Initialize();
-	sensor.SetSensorGeometry(Eigen::Vector3f(0, 0, 200), Eigen::Vector3f(M_PI_2, -M_PI_2, -M_PI_2));
+	float z0 = 150.f, F0 = 3.9f;
 	//SetSensor
-	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(0, 0, 400));
+	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(273, 151.2 * 1.5, 300), 0.1);
 	while (1) {
 		system_clock::time_point beginLoop = system_clock::now();
 		Eigen::Vector3f position;
-		HRESULT hr = sensor.GetPositionByDepth(objPtr, position, true);
-		if (SUCCEEDED(hr)) {
-			objPtr->updateStates(timeGetTime(), position);
+		DWORD observationTime = timeGetTime();
+		bool succeeded = sensor.GetPositionByDepth(objPtr, position, false);
+		if (succeeded) {
+			objPtr->updateStates(observationTime, position);
+			Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
 			Eigen::Vector3f accel
 				= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
 				+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
@@ -51,15 +58,19 @@ int main() {
 				+ objPtr->getAccelTarget();
 			Eigen::Vector3f force = objPtr->totalMass() * accel + objPtr->AdditionalMass()*Eigen::Vector3f(0.f, 0.f, 9.80665f);
 			Eigen::Vector3f focus = objPtr->getPosition() - objPtr->Radius() * force.normalized();
+			Eigen::Vector3f shift = focus - position;
 			float cosPhi = force.normalized().dot(Eigen::Vector3f::UnitZ());
 			float denom = (objPtr->getPosition().z() - objPtr->Radius() * cosPhi);
 			float duty = force.norm() / F0 * z0 * z0 / cosPhi / denom / denom;
 			int amplitude = static_cast<int>(510.f / M_PI * asin(sqrt(std::min(std::max(0.f, duty), 1.f))));
-			autd.AppendGainSync(autd::GaussianBeamGain::Create(focus, Eigen::Vector3f::UnitZ(), amplitude, M_PI / 3));
-			while(duration_cast<milliseconds>(system_clock::now() - beginLoop).count() < 33){
-				//busy_wait
-			}
+			autd.AppendGainSync(autd::GaussianBeamGain::Create(focus, force, 255, M_PI / 6));
+			//std::cout << "DETECTED: " << position.transpose() << ", amplitude: " << amplitude << std::endl;
+			//ofs << observationTime << ", " << dr.x() << ", " << dr.y() << ", " << dr.z() << ", " << shift.x() << ", " << shift.y() << ", " << shift.z() << std::endl;
 		}
+		while (duration_cast<milliseconds>(system_clock::now() - beginLoop).count() < 33) {
+			//busy_wait
+		}
+
 		//Determine
 		//if(isTracked) AppendGain
 	}

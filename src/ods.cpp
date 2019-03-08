@@ -49,12 +49,10 @@ int ods::Initialize()
 
 void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle) {
 	positionKinect = position;
-	dcmGlobal2Kinect = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
-		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
-		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
 	dcmKinect2Global = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
 		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
+	dcmGlobal2Kinect = dcmKinect2Global.inverse();;
 	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 }
 
@@ -139,9 +137,9 @@ void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
 	depthImage.convertTo(objectImage, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
 	cv::Mat maskedImage;
 	cv::Mat depthMask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
-	cv::rectangle(depthMask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+	cv::rectangle(depthMask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.75f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 	objectImage.copyTo(maskedImage, depthMask); //Masking
-	cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
+	cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(60), maskedImage);
 	cv::imshow("depth", maskedImage);
 
 	//clip
@@ -311,12 +309,14 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		else
 		{
-			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);		
+			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);		
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
-		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 		cv::imshow("ROI-masked", maskedImage);
+		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(56), maskedImage);
+		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
+		cv::imshow("In-range", maskedImage);
+		cv::waitKey(1);
 		//cv::imshow("In-range", maskedImage);
 		
 		//detect position of the object

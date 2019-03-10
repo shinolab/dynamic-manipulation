@@ -13,3 +13,6 @@ add_executable(ProfileTest
 )
 
 target_link_libraries(ProfileTest DynamicLevitation)
+
+add_executable(WorkSpaceTest workSpaceTest.cpp)
+target_link_libraries(WorkSpaceTest DynamicLevitation)

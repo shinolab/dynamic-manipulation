@@ -94,7 +94,10 @@ public:
 
 class ods
 {
+
+public:
 private:
+	typedef Eigen::Matrix<float, 3, 8> Matrix38f;
 	KinectApp kinectApp;
 	Eigen::Vector3f positionKinect;
 	Eigen::Matrix3f dcmGlobal2Kinect;
@@ -105,34 +108,26 @@ private:
 
 public:
 	int Initialize();
-
 	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
-
 	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
-
+	void CornersWorkspaceAll(Matrix38f &corners);
+	void MaskWorkspace(cv::Mat &mask);
+	float RangeWorkspace();
 	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
-
 	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
-
+	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-
 	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-
 	void DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI);
-
 	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
 
 	bool GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-
 	bool GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-
-	//This function only observes a position of the object and do NOT update its position.
 	bool GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI);
 
 	HRESULT updateBackgroundDepth();
-
 	bool findSphere(const cv::Mat src, cv::Point &center, float &radius);
 };
 

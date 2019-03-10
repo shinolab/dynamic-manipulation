@@ -5,23 +5,23 @@
 #include <vector>
 #include <deque>
 #include <atlbase.h>
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <opencv2\shape.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/shape.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <Windows.h>
-#include <Eigen\Geometry>
+#include <Eigen/Geometry>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 int ods::Initialize()
 {
-	//set workspace
-	Eigen::Vector3f wsCorner1(-1000, -1000, 800);
-	Eigen::Vector3f wsCorner2(1000, 1000, 2000);
-	workspace << wsCorner1, wsCorner2;
-	// ========== Initialize Kinect ==========
 	kinectApp.initialize();
+	//set workspace
+	SetWorkSpace(Eigen::Vector3f(-1000, -1000, 800), Eigen::Vector3f(1000, 1000, 2000));
+	// ========== Initialize Kinect ==========
 	positionKinect = Eigen::Vector3f(41.7, -1006, 1313);
 
 	dcmGlobal2Kinect = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
@@ -42,8 +42,7 @@ int ods::Initialize()
 		}
 		Sleep(10);
 	}
-	*/
-	
+	*/	
 	return 0;
 }
 
@@ -58,6 +57,44 @@ void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f con
 
 void ods::SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2) {
 	workspace << corner1, corner2;
+}
+
+void ods::CornersWorkspaceAll(Matrix38f &corners) {
+	int index[3];
+	for (int i = 0; i < 8; i++) {
+		int res = i;
+		for (int j = 0; j < 8; j++) {
+			index[j] = res % 2;
+			res /= 2;
+		}
+		corners.col(i) << Eigen::Vector3f(workspace(0, index[0]), workspace(1, index[1]), workspace(2, index[2]));
+	}
+}
+
+float ods::RangeWorkspace() {
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(getDcmKinect2Global() * Eigen::Vector3f::UnitZ())).maxCoeff();
+}
+
+void ods::MaskWorkspace(cv::Mat &mask) {
+	std::vector<cv::Point2i> cornerPixels;
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	for (int i = 0; i < corners.cols(); i++)
+	{
+		CameraSpacePoint cspCorner;
+		cspCorner.X = (affineKinect2Global.inverse() * corners.col(i)).x() / 1000.f;
+		cspCorner.Y = (affineKinect2Global.inverse() * corners.col(i)).y() / 1000.f;
+		cspCorner.Z = (affineKinect2Global.inverse() * corners.col(i)).z() / 1000.f;
+		DepthSpacePoint dspCorner;
+		kinectApp.coordinateMapper->MapCameraPointToDepthSpace(cspCorner, &dspCorner);
+		cornerPixels.push_back(cv::Point2i(static_cast<int>(dspCorner.X), static_cast<int>(dspCorner.Y)));
+	}
+	std::vector<cv::Point> hull;
+	cv::convexHull(cornerPixels, hull);
+	mask = cv::Scalar::all(0);
+	cv::fillConvexPoly(mask, hull, cv::Scalar::all(255));
 }
 
 //==================== ODS Module ====================
@@ -299,6 +336,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
+		;
 		//=====truncate region around the object=====
 		if (objPtr->IsTracked() && useROI)
 		{
@@ -309,11 +347,13 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		else
 		{
-			cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);		
+			MaskWorkspace(mask);
+			cv::imshow("rectmask", mask);
+			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::imshow("ROI-masked", maskedImage);
-		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(56), maskedImage);
+		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 		cv::imshow("In-range", maskedImage);
 		cv::waitKey(1);

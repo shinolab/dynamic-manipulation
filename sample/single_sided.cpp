@@ -1,6 +1,7 @@
 #include "odcs.hpp"
 #include "additionalGain.hpp"
 #include "autd3.hpp"
+#include <opencv2/highgui.hpp>
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -18,6 +19,20 @@ int main() {
 	const float yDevice = 151.4f;
 	const int rowDevice = 3;
 	const int colDevice = 3;
+	
+	ods sensor;
+	sensor.Initialize();
+	sensor.SetWorkSpace(Eigen::Vector3f(xDevice, 0, 445.f), Eigen::Vector3f(xDevice * colDevice, yDevice * rowDevice, 1000.f));
+	sensor.SetSensorGeometry(Eigen::Vector3f(xDevice * colDevice / 2.f, -472.f, 445.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
+	cv::Mat mask;
+	sensor.MaskWorkspace(mask);
+
+	while (1) {
+		sensor.GetPositionByDepth(FloatingObject::Create(Eigen::Vector3f(0, 0, 1500)), Eigen::Vector3f(), false);
+		auto key = cv::waitKey(1);
+		if (key == '27') { break; }
+	}
+	return 0;
 
 	autd::Controller autd;
 	autd.Open(autd::LinkType::ETHERCAT);
@@ -29,12 +44,6 @@ int main() {
 		autd.geometry()->AddDevice(posAUTD, Eigen::Vector3f::Zero());
 		std::cout << i << ": " << posAUTD.transpose() << std::endl;
 	}
-	
-	ods sensor;
-	Eigen::Vector3f posSensor(xDevice * colDevice / 2.0f, -472.f, 376.f);
-	sensor.SetWorkSpace(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(xDevice * colDevice, yDevice * rowDevice, 1000.f));
-	sensor.Initialize();
-	sensor.SetSensorGeometry(Eigen::Vector3f(xDevice * colDevice / 2.f, -472.f, 356.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
 
 	//control parameters
 	Eigen::Vector3f gainP = Eigen::Vector3f::Constant(-1.6f);

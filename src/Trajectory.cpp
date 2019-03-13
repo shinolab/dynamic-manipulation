@@ -72,7 +72,7 @@ TrajectoryMaxAccel::TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
 void TrajectoryMaxAccel::sys::operator()(state_type const &x, state_type &dxdt, float const)
 {
 	dxdt[0] = x[1];
-	Eigen::MatrixXf posRel = x[0].replicate(1, ocsPtr->centersAUTD.cols()) - ocsPtr->centersAUTD;
+	Eigen::MatrixXf posRel = x[0].replicate(1, ocsPtr->CentersAUTD().cols()) - ocsPtr->CentersAUTD();
 	Eigen::Vector3f constDirection1 = direction.cross(Eigen::Vector3f::UnitX());
 	if (constDirection1.norm() < 1.0e-6) // in case that velocity direction is parallel to x-axis
 	{
@@ -122,7 +122,7 @@ Eigen::Vector3f TrajectoryMaxAccel::accel(float const &t)
 {
 	Eigen::Vector3f pt = pos(t);
 	Eigen::Vector3f vt = vel(t);
-	Eigen::MatrixXf posRel = pt.replicate(1, sys.ocsPtr->centersAUTD.cols()) - sys.ocsPtr->centersAUTD;
+	Eigen::MatrixXf posRel = pt.replicate(1, sys.ocsPtr->CentersAUTD().cols()) - sys.ocsPtr->CentersAUTD();
 	float force;
 	return sys.ocsPtr->arfModelPtr->arf(posRel, sys.ocsPtr->eulerAnglesAUTD)
 		*sys.ocsPtr->FindDutyMaximizeForce(vt.normalized(), sys.direction, pt, sys.dutyLimit, force)

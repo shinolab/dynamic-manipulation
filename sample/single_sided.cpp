@@ -13,6 +13,13 @@ using namespace std::chrono;
 
 int main() {
 	
+	ocs c;
+	c.AddDevice(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(0, 0, 0));
+	c.AddDevice(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(0, M_PI, 0));
+
+	std::cout << c.DirectionsAUTD() << std::endl;;
+	return 0;
+
 	//std::ofstream ofs("20190307_single_sided2.csv");
 	//ofs << "t, x, y, z, focus_x, focus_y, focus_z " << std::endl;
 	const float xDevice = 192.f;

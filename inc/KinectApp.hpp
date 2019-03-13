@@ -30,15 +30,10 @@ public:
 private:
 
 	CComPtr<IKinectSensor> kinect;
-
 	CComPtr<IColorFrameReader> colorFrameReader;
-
 	CComPtr<IDepthFrameReader> depthFrameReader;
-
 	CComPtr<IInfraredFrameReader> infraredFrameReader;
-
 	CComPtr<IBodyIndexFrameReader> bodyIndexFrameReader = nullptr;
-
 	CComPtr<IBodyFrameReader> bodyFrameReader = nullptr;
 
 	int colorWidth;
@@ -56,45 +51,25 @@ private:
 public:
 	
 	void initialize();
-
 	HRESULT getColorBuffer();
-	
 	int getColorWidth();
-
 	int getColorHeight();
-
 	HRESULT getDepthBuffer();
-
 	int getDepthWidth();
-
 	int getDepthHeight();
-
 	HRESULT getInfraredBuffer();
-
 	int getInfraredWidth();
-
 	int getInfraredHeight();
-
 	HRESULT getBodyIndexBuffer();
-
 	UINT16 getDepthAtColorPixel(int x, int y);
-
 	UINT16 getDepthAtDepthPixel(int x, int y);
-
 	CameraSpacePoint getPositionAtColorPixel(int x, int y);
-
 	CameraSpacePoint getPositionAtDepthPixel(int x, int y);
-
 	DepthSpacePoint convertPositionToDepthPixel(CameraSpacePoint csp);
-
 	bool isReliableDepth(int depth);
-
 	bool isReliablePosition(CameraSpacePoint pos);
-
 	bool isInsideColorView(int x, int y);
-
 	bool isInsideDepthView(int x, int y);
-
 	HRESULT getBodies();
 };
 

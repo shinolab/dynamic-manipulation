@@ -27,3 +27,5 @@ add_executable(impactor impactor.cpp
 	../inc/rootFindingPoly.hpp)
 target_link_libraries(impactor DynamicLevitation)
 
+add_executable(single_sided single_sided.cpp)
+target_link_libraries(single_sided DynamicLevitation)

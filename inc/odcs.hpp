@@ -62,37 +62,31 @@ private:
 	std::shared_ptr<Trajectory> trajectoryPtr;
 public:
 	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3);
-
 	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
-
 	float AdditionalMass();
-
+	float Radius();
 	float totalMass(); 
 
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew);
-
 	void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocitynew);
 
 	void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
-
 	void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
 
 	bool isStable();
-
 	bool isConverged(float tolPos, float tolVel);
-
 	bool IsTracked();
-	
 	void SetTrackingStatus(bool _isTracked);
-
 	Eigen::Vector3f averageVelocity();
 };
 
 class ods
 {
+public:
 private:
+	typedef Eigen::Matrix<float, 3, 8> Matrix38f;
 	KinectApp kinectApp;
 	Eigen::Vector3f positionKinect;
 	Eigen::Matrix3f dcmGlobal2Kinect;
@@ -103,41 +97,34 @@ private:
 
 public:
 	int Initialize();
-
+	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
+	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
+	void CornersWorkspaceAll(Matrix38f &corners);
+	void MaskWorkspace(cv::Mat &mask);
+	float RangeWorkspace();
 	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
-
 	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
-
+	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-
 	void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-
 	void DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI);
-
-	void DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs);
-
+	
 	bool GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-
 	bool GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-
-	//This function only observes a position of the object and do NOT update its position.
 	bool GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI);
 
 	HRESULT updateBackgroundDepth();
-
 	bool findSphere(const cv::Mat src, cv::Point &center, float &radius);
 };
 
 class ocs
 {
 public:
-	autd::Controller autd;
+	autd::Controller _autd;
 	Eigen::MatrixXf positionsAUTD;
-	Eigen::MatrixXf directionsAUTD;
 	Eigen::MatrixXf eulerAnglesAUTD;
-	Eigen::MatrixXf centersAUTD;
 	std::unique_ptr<arfModelLinearBase> arfModelPtr;
 	void RegisterObject(FloatingObjectPtr objPtr);
 
@@ -151,6 +138,12 @@ public:
 	int Initialize();
 
 	void Close();
+
+	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
+
+	Eigen::MatrixXf CentersAUTD();
+
+	Eigen::MatrixXf DirectionsAUTD();
 
 	void SetArfModel(std::unique_ptr<arfModelLinearBase> arfModelPtr);
 
@@ -182,6 +175,7 @@ class odcs
 public:
 	void Initialize();
 	int AddObject(Eigen::Vector3f const &positionTarget);
+	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 	void RegisterObject(FloatingObjectPtr objPtr);
 	const FloatingObjectPtr GetFloatingObject(int i);
 	void StartControl();

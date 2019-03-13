@@ -58,7 +58,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->SetTrackingStatus(true);
-			ocsPtr->autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
+			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
@@ -102,6 +102,10 @@ void odcs::Close()
 	ocsPtr->Close();
 }
 
+int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles) {
+	return ocsPtr->AddDevice(position, eulerAngles);
+}
+
 void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD observationTime)
 {
 	float dt = (observationTime - objPtr->lastDeterminationTime) / 1000.0;
@@ -110,7 +114,7 @@ void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &obs
 	A << Eigen::Matrix3f::Identity(), dt * Eigen::Matrix3f::Identity(),
 		Eigen::Matrix3f::Zero(), dt * Eigen::Matrix3f::Identity();
 	Eigen::MatrixXf B(6, ocsPtr->positionsAUTD.cols());
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocsPtr->positionsAUTD.cols()) - ocsPtr->centersAUTD;
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocsPtr->positionsAUTD.cols()) - ocsPtr->CentersAUTD();
 	B << Eigen::MatrixXf::Zero(3, ocsPtr->positionsAUTD.cols()),
 		ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) / objPtr->totalMass() * dt;
 	Eigen::VectorXf g(6); g << Eigen::Vector3f::Zero(), dt * objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.801e3) / objPtr->totalMass() * dt;

@@ -29,3 +29,6 @@ target_link_libraries(impactor DynamicLevitation)
 
 add_executable(single_sided single_sided.cpp)
 target_link_libraries(single_sided DynamicLevitation)
+
+add_executable(ss_trajectory single_sided_with_trajectory.cpp)
+target_link_libraries(ss_trajectory DynamicLevitation)

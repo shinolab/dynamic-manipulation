@@ -16,6 +16,8 @@ int main()
 	odcs odcs;
 	std::cout << "ODCS Initializing..." << std::endl;
 	odcs.Initialize();
+	odcs.Close();
+	return 0;
 	Eigen::Vector3f positionAUTD0(-85, -65, 0); Eigen::Vector3f eulerAngleAUTD0(0, 0, 0);
 	Eigen::Vector3f positionAUTD1(-998, 65, 1038); Eigen::Vector3f eulerAngleAUTD1(M_PI, -M_PI_2, 0);
 	Eigen::Vector3f positionAUTD2(998, -65, 1038); Eigen::Vector3f eulerAngleAUTD2(0, -M_PI_2, 0);
@@ -35,6 +37,5 @@ int main()
 	odcs.StartControl();	
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
-	odcs.Close();
-	return 0;
+
 }

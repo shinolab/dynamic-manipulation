@@ -21,7 +21,6 @@ int ocs::Initialize()
 
 	//arfModelPtr.reset(new arfModelTheoreticalTable());
 	arfModelPtr.reset(new arfModelFocusOnSphereExperimental());
-	std::cout << "centersAUTD\n" << CentersAUTD() << std::endl;
 	return 0;
 }
 

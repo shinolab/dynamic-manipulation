@@ -272,7 +272,6 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		else
 		{
 			MaskWorkspace(mask);
-			cv::imshow("rectmask", mask);
 			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 		}
 		depthImageUc8.copyTo(maskedImage, mask);

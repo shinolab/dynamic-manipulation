@@ -29,17 +29,22 @@ int main() {
 	
 	ods sensor;
 	sensor.Initialize();
-	sensor.SetWorkSpace(Eigen::Vector3f(xDevice, 0, 445.f), Eigen::Vector3f(xDevice * colDevice, yDevice * rowDevice, 1000.f));
-	sensor.SetSensorGeometry(Eigen::Vector3f(xDevice * colDevice / 2.f, -472.f, 445.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
+	sensor.SetWorkSpace(Eigen::Vector3f(-1000, 0, 445.f), Eigen::Vector3f(1000.f, 2233.f, 2000.f));
+	sensor.SetSensorGeometry(Eigen::Vector3f(105.f, -1031.f, 573.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
 	cv::Mat mask;
 	sensor.MaskWorkspace(mask);
 
-	while (1) {
-		sensor.GetPositionByDepth(FloatingObject::Create(Eigen::Vector3f(0, 0, 1500)), Eigen::Vector3f(), false);
-		auto key = cv::waitKey(1);
-		if (key == '27') { break; }
-	}
-	return 0;
+	ocs controller;
+	controller.Initialize();
+	controller.AddDevice(Eigen::Vector3f(-520.f, 450.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(-260.f, 225.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(-260.f, 675.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(0.f, 0.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(0.f, 450.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(0.f, 900.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(260.f, 225.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(260.f, 675.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(520.f, 450.f, 0.f), Eigen::Vector3f::Zero());
 
 	autd::Controller autd;
 	autd.Open(autd::LinkType::ETHERCAT);

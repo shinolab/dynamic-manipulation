@@ -63,7 +63,7 @@ int main()
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			objPtr->updateStates(observationTime, posObserved);
 			objPtr->SetTrackingStatus(true);
-			odcs.ocsPtr->autd.AppendGainSync(odcs.ocsPtr->CreateGain(objPtr));
+			odcs.ocsPtr->_autd.AppendGainSync(odcs.ocsPtr->CreateGain(objPtr));
 		}
 		else if (observationTime - objPtr->lastDeterminationTime > 1000)
 		{

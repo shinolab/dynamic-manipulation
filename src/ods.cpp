@@ -293,9 +293,9 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			DWORD currentTime = timeGetTime();
 			if (kinectApp.isReliablePosition(detectPosition))
 			{
-				float detectX = detectPosition.X * 1000;
-				float detectY = detectPosition.Y * 1000;
-				float detectZ = detectPosition.Z * 1000;
+				float detectX = detectPosition.X * 1000.f;
+				float detectY = detectPosition.Y * 1000.f;
+				float detectZ = detectPosition.Z * 1000.f;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
 				pos << outpor * detectX, outpor * detectY, outpor * detectZ;
@@ -310,7 +310,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 {
 	cv::Mat mask(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1, cv::Scalar::all(0));
-	cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+	cv::rectangle(mask, cv::Point(0.05f * kinectApp.getDepthWidth(), 0.f * kinectApp.getDepthHeight()), cv::Point(0.95f * kinectApp.getDepthWidth(), 1.0f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 	cv::Mat maskDepth; cv::inRange(depthMap, cv::Scalar(5), cv::Scalar(102), maskDepth);
 	cv::bitwise_and(mask, maskDepth, mask);
 	depthMap.copyTo(depthMap, mask);
@@ -318,8 +318,8 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 	//cv::imshow("depthMask", maskDepth);
 	cv::Mat depthMapDenoised;
 	cv::morphologyEx(depthMap, depthMapDenoised, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
-	const float threshold1 = 100;
-	const float threshold2 = 200;
+	const float threshold1 = 100.f;
+	const float threshold2 = 200.f;
 	cv::Mat edges;
 	cv::Canny(depthMapDenoised, edges, threshold1, threshold2);
 	CameraIntrinsics depthIntrinsics;

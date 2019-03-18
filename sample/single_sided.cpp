@@ -13,7 +13,7 @@ using namespace std::chrono;
 
 int main() {
 	
-	std::ofstream ofs("20190314_single_sided10.csv");
+	std::ofstream ofs("20190314_single_sided11withROI.csv");
 	ofs << "t, x, y, z, x_tgt, y_tgt, z_tgt, Fx, Fy, Fz, Fx_tgt, Fy_tgt, Fz_tgt,";
 	for (int i = 0; i < 9; i++) {
 		ofs << "amp" << i << ",";
@@ -30,15 +30,18 @@ int main() {
 
 	ocs controller;
 	controller.Initialize();
-	controller.AddDevice(Eigen::Vector3f(-900.f, 520.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(-450.f, 260.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(-450.f, 780.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(0.f, 0.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(0.f, 520.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(0.f, 1040.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(450.f, 260.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(450.f, 780.f, 0.f), Eigen::Vector3f::Zero());
-	controller.AddDevice(Eigen::Vector3f(900.f, 520.f, 0.f), Eigen::Vector3f::Zero());
+	controller.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(542.5f, 10.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(542.5f, 530.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(542.5f, 1050.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(92.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(92.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(-357.5f, 10.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(-357.5f, 530.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(-357.5f, 1050.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(-807.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	controller.AddDevice(Eigen::Vector3f(-807.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 
 	//control parameters
 	Eigen::Vector3f gainP = Eigen::Vector3f::Constant(-1.6f);
@@ -49,7 +52,7 @@ int main() {
 	while (1) {
 		DWORD observationTime = timeGetTime();
 		Eigen::Vector3f posObserved;
-		bool succeeded = sensor.GetPositionByDepth(objPtr, posObserved, false);
+		bool succeeded = sensor.GetPositionByDepth(objPtr, posObserved, true);
 		if (succeeded && sensor.isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------

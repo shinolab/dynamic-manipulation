@@ -12,7 +12,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define NUM_AUTDS 9
+#define NUM_AUTDS 12
 
 int ocs::Initialize()
 {

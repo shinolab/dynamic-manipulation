@@ -244,7 +244,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		cv::imshow("Raw", depthImageUc8);
+		//cv::imshow("Raw", depthImageUc8);
 
 		//Background Subtraction
 		if (!backgroundDepth.empty())
@@ -256,7 +256,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			cv::inRange(imgBackground - depthImageRaw, cv::Scalar(10), cv::Scalar(kinectApp.depthMaxReliableDistance), maskBackground);
 			depthImageRaw.copyTo(subtracted, maskBackground + invalidPixels);
 			subtracted.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance);
-			cv::imshow("Subtracted", depthImageUc8);
+			//cv::imshow("Subtracted", depthImageUc8);
 		}
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
@@ -267,7 +267,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
 				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
-			cv::circle(mask, p, 105 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
+			cv::circle(mask, p, 150 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
 		}
 		else
 		{
@@ -280,7 +280,6 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 		cv::imshow("In-range", maskedImage);
 		cv::waitKey(1);
-		//cv::imshow("In-range", maskedImage);
 		
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);

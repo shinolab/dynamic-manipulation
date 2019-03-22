@@ -187,6 +187,11 @@ public:
 	std::thread thread_control;
 private:
 	std::vector<FloatingObjectPtr> objPtrs;
+	std::shared_mutex mtxRunning;
+	bool flagRunning = false;
+
+public:
+	bool isRunning();
 };
 
 class Trajectory

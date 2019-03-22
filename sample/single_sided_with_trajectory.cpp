@@ -20,7 +20,7 @@ int main() {
 	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1500.f));
 	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(40.f, -1221.f, 1080.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
 	
-	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(540.f, 580.f, 1360.f), -0.0001f);
+	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(540.f, 580.f, 1360.f), -0.001f);
 
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));

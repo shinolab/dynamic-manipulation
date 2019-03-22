@@ -28,6 +28,13 @@ int main()
 	odcs.AddDevice(positionAUTD2, eulerAngleAUTD2);
 	odcs.AddDevice(positionAUTD3, eulerAngleAUTD3);
 	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
+	odcs.AddDevice(positionAUTD4, eulerAngleAUTD4);
 
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	Eigen::Vector3f posDefault(50.f, 0.f, 1300.f);

@@ -75,8 +75,17 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 	Sleep(std::max(waitTime, 0));
 }
 
+bool odcs::isRunning() {
+	std::shared_lock<std::shared_mutex> lk(mtxRunning);
+	return flagRunning;
+}
+
 void odcs::StartControl()
 {
+	{
+		std::lock_guard<std::shared_mutex> lock(mtxRunning);
+		flagRunning = true;
+	}
 	thread_control = std::thread([this](){
 		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
 		Sleep(5);

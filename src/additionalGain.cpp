@@ -4,7 +4,7 @@
 #include "additionalGain.hpp"
 #include <iostream>
 
-autd::GainPtr autd::DeviceSpecificFocalPointGain::Create(Eigen::MatrixXf points, Eigen::VectorXi amplitudes)
+autd::GainPtr autd::DeviceSpecificFocalPointGain::Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes)
 {
 	std::shared_ptr<DeviceSpecificFocalPointGain> ptr = std::shared_ptr<DeviceSpecificFocalPointGain>(new DeviceSpecificFocalPointGain());
 	ptr->_points = points;

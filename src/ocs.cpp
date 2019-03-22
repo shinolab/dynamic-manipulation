@@ -92,7 +92,7 @@ autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 		+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
 		+ gainI.asDiagonal() * objPtr->getIntegral()
 		+ objPtr->getAccelTarget();
-	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665f);
+	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 	Eigen::VectorXf duties = FindDutyQP(forceToApply, objPtr->getPosition());
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());

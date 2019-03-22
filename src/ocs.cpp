@@ -181,6 +181,12 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }
 
+Eigen::VectorXf ocs::FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position) {
+	Eigen::MatrixXf result;
+	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
+	return result;
+}
+
 Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	Eigen::MatrixXf const &constrainedDirections,
 	Eigen::Vector3f const &position,

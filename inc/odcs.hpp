@@ -156,6 +156,8 @@ public:
 
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
 
+	Eigen::VectorXf FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
+
 	Eigen::VectorXf FindDutyMaximizeForce(Eigen::Vector3f const &direction, 
 		Eigen::MatrixXf const &constrainedDirections, 
 		Eigen::Vector3f const &position,

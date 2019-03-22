@@ -102,6 +102,7 @@ public:
 	void CornersWorkspaceAll(Matrix38f &corners);
 	void MaskWorkspace(cv::Mat &mask);
 	float RangeWorkspace();
+	float RangeWorkspaceMin();
 	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
 	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
 	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }

@@ -77,6 +77,12 @@ float ods::RangeWorkspace() {
 	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(getDcmKinect2Global() * Eigen::Vector3f::UnitZ())).maxCoeff();
 }
 
+float ods::RangeWorkspaceMin() {
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(getDcmKinect2Global() * Eigen::Vector3f::UnitZ())).minCoeff();
+}
+
 void ods::MaskWorkspace(cv::Mat &mask) {
 	std::vector<cv::Point2i> cornerPixels;
 	Matrix38f corners;
@@ -276,7 +282,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
 		cv::imshow("ROI-masked", maskedImage);
-		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
+		cv::inRange(maskedImage, cv::Scalar(255 * RangeWorkspaceMin()/kinectApp.depthMaxReliableDistance), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
 		cv::imshow("In-range", maskedImage);
 		cv::waitKey(1);

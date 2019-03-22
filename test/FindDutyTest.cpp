@@ -51,17 +51,21 @@ int main() {
 		//======OK======
 		Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 		Eigen::VectorXf duties = controller.FindDutyQP(forceToApply, objPtr->getPosition());
+		Eigen::VectorXf dutiesCgal = controller.FindDutyQPCGAL(forceToApply, objPtr->getPosition());
 		Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
+		Eigen::VectorXi amplitudesCgal = (510.f / M_PI * dutiesCgal.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 		Eigen::MatrixXf focus = objPtr->getPosition().replicate(1, controller.CentersAUTD().cols());
 		//controller._autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
 		Eigen::Vector3f force_result = controller.arfModelPtr->arf(posObserved.replicate(1, controller._autd.geometry()->numDevices()) - controller.CentersAUTD(), controller.eulerAnglesAUTD) * duties;
+		Eigen::Vector3f force_result_Cgal = controller.arfModelPtr->arf(posObserved.replicate(1, controller._autd.geometry()->numDevices()) - controller.CentersAUTD(), controller.eulerAnglesAUTD) * dutiesCgal;
 		Eigen::Vector3f posTgt = objPtr->getPositionTarget();
 		std::cout << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 			<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", "
 			<< accel.x() << ", " << accel.y() << ", " << accel.z() << ", "
 			<< forceToApply.x() << ", " << forceToApply.y() << ", " << forceToApply.z() << ","
-			<< force_result.x() << ", " << force_result.y() << ", " << force_result.z() << ", ";
-		
+			<< force_result.x() << ", " << force_result.y() << ", " << force_result.z() << ", "
+			<< force_result_Cgal.x() << ", " << force_result_Cgal.y() << ", " << force_result_Cgal.z() << ", ";
+
 		for (int i = 0; i < controller._autd.geometry()->numDevices(); i++) {
 			std::cout << amplitudes[i] << ", ";
 		}

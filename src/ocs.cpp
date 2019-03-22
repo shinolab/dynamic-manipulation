@@ -182,9 +182,19 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 }
 
 Eigen::VectorXf ocs::FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position) {
-	Eigen::MatrixXf result;
+	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
-	return result;
+	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
+	EigenCgalQpSolver(result,
+		Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		F.transpose() * F,
+		-F.transpose() * force,
+		Eigen::VectorXi::Ones(_autd.geometry()->numDevices()),
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		Eigen::VectorXf::Ones(_autd.geometry()->numDevices())
+	);
+	return std::move(result);
 }
 
 Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,

@@ -129,7 +129,6 @@ float EigenCgalQpSolver(
 	delete flb;
 	delete r;
 	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy;
-
 }
 
 //define QP

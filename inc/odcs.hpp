@@ -137,27 +137,20 @@ private:
 
 public:
 	int Initialize();
-
 	void Close();
-
 	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
-
+	
 	Eigen::MatrixXf CentersAUTD();
-
 	Eigen::MatrixXf DirectionsAUTD();
 
 	void SetArfModel(std::unique_ptr<arfModelLinearBase> arfModelPtr);
-
 	void SetGain(Eigen::Vector3f const &gainP, Eigen::Vector3f const &gainD, Eigen::Vector3f const &gainI);
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
-
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward);
-
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
-
 	Eigen::VectorXf FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
-
+	Eigen::VectorXf FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold = 0.7071f);
 	Eigen::VectorXf FindDutyMaximizeForce(Eigen::Vector3f const &direction, 
 		Eigen::MatrixXf const &constrainedDirections, 
 		Eigen::Vector3f const &position,
@@ -169,7 +162,6 @@ public:
 
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
-
 	Eigen::VectorXf FindDutyQPEq(FloatingObjectPtr objPtr);
 };
 

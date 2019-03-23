@@ -17,10 +17,15 @@
 int main() {
 	odcs dynaman;
 	dynaman.Initialize();
-	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1500.f));
-	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(40.f, -1221.f, 1080.f), Eigen::Vector3f(M_PI_2, M_PI_2, M_PI_2));
+	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1570.f));
+	Eigen::Matrix3f rotationKinect2Global;
+	rotationKinect2Global <<
+		-0.999986, -0.000739038, 0.00521048,
+		0.00518096, 0.0355078, 0.999356,
+		-0.000923425, 0.999369, -0.0355035;
+	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(35.1867f, -1242.32f, 1085.62f), rotationKinect2Global);
 	
-	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(540.f, 580.f, 1360.f), -0.001f);
+	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(-357.5f - 10.16 * 8.5, 530.f + 10.16f*6.5f, 1331.f), -0.0001f);
 
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
@@ -43,7 +48,7 @@ int main() {
 	dynaman.RegisterObject(objPtr);
 	dynaman.StartControl();
 	std::thread th_log([&objPtr]() {
-		std::ofstream ofs_log("0190318_trajectory_log.csv");
+		std::ofstream ofs_log("0190323_trajectory_log8_aveVel.csv");
 		ofs_log << "t, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, axTgt, ayTgt, azTgt" << std::endl;
 		DWORD timeLogInit = timeGetTime();
 		while (timeGetTime() - timeLogInit < 50000) {
@@ -55,7 +60,7 @@ int main() {
 		}
 	});
 
-	//objPtr->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(5.0f, timeGetTime() / 1000.f + 20.f, objPtr->getPositionTarget(), Eigen::Vector3f(86, 580, 600))));
+	objPtr->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(15.0f, timeGetTime() / 1000.f + 20.f, objPtr->getPositionTarget(), Eigen::Vector3f(542.5f - 10.16 * 8.5, 530.f + 10.16f*6.5f, 1331))));
 	std::cout << "Translation set." << std::endl;
 	th_log.join();
 	dynaman.Close();

@@ -89,11 +89,11 @@ autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f accel
 		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
-		+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
+		+ gainD.asDiagonal() * (objPtr->averageVelocity() - objPtr->getVelocityTarget())
 		+ gainI.asDiagonal() * objPtr->getIntegral()
 		+ objPtr->getAccelTarget();
 	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-	Eigen::VectorXf duties = FindDutyQP(forceToApply, objPtr->getPosition());
+	Eigen::VectorXf duties = FindDutySelectiveQP(forceToApply, objPtr->getPosition(), 0.5);
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
@@ -201,7 +201,7 @@ Eigen::VectorXf ocs::FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Ve
 	Eigen::MatrixXf posRel = (position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD());
 	//Choose effective autds based on their radiation angle to avoid modelling errors and undesirable reflections.
 	Eigen::ArrayXf innerProducts = (posRel.colwise().normalized().array() * DirectionsAUTD().array()).colwise().sum();
-	Eigen::Array<bool, 1, Eigen::Dynamic> isEffective = innerProducts >= threshold;
+	Eigen::Array<bool, 1, Eigen::Dynamic> isEffective = (innerProducts >= threshold) && (innerProducts < 0.97);
 	Eigen::MatrixXf selector = Eigen::MatrixXf::Zero(isEffective.size(), isEffective.count());
 	for (int iRow = 0, iCol = 0; iCol < selector.cols() && iRow < selector.rows();) {
 		if (isEffective(iRow)) {

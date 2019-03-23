@@ -87,26 +87,21 @@ void odcs::StartControl()
 		flagRunning = true;
 	}
 	thread_control = std::thread([this](){
-		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
-		Sleep(5);
-		while (1)
+		while (isRunning())
 		{
 			this->ControlLoop(objPtrs);
-			auto key = cv::waitKey(1);
-			if (key == 'q')
-			{
-				cv::destroyAllWindows();
-				break;
-			}
 		}
 	});
 }
 
 void odcs::Close()
 {
-	if (thread_control.joinable())
 	{
-	thread_control.join();
+		std::lock_guard<std::shared_mutex> lk(mtxRunning);
+		flagRunning = false;
+	}
+	if (thread_control.joinable()){
+		thread_control.join();
 	}
 	ocsPtr->Close();
 }

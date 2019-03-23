@@ -213,13 +213,13 @@ Eigen::VectorXf ocs::FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Ve
 	Eigen::MatrixXf F = arfModelPtr->arf(posRel * selector, eulerAnglesAUTD * selector);
 	Eigen::VectorXf result_reduced;
 	EigenCgalQpSolver(result_reduced,
-		Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
-		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		Eigen::MatrixXf::Identity(isEffective.count(), isEffective.count()),
+		Eigen::VectorXf::Zero(isEffective.count()),
 		F.transpose() * F,
 		-F.transpose() * force,
-		Eigen::VectorXi::Ones(_autd.geometry()->numDevices()),
-		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
-		Eigen::VectorXf::Ones(_autd.geometry()->numDevices())
+		Eigen::VectorXi::Ones(isEffective.count()),
+		Eigen::VectorXf::Zero(isEffective.count()),
+		Eigen::VectorXf::Ones(isEffective.count())
 	);
 	return selector * result_reduced;	//expanded to specify which autd to use.
 

@@ -30,7 +30,7 @@ int main() {
 	Eigen::Vector3f gainI = Eigen::Vector3f::Constant(-0.05f);
 	controller.SetGain(gainP, gainD, gainI);
 
-	Eigen::Vector3f posTgt = controller.CentersAUTD().col(3) + Eigen::Vector3f(0, 0, -1000);//just below AUTD #4
+	Eigen::Vector3f posTgt = controller.CentersAUTD().col(5) + Eigen::Vector3f(0, 0, -1000);//just below AUTD #4
 	FloatingObjectPtr objPtr = FloatingObject::Create(posTgt, -0.1e-3f);
 	//Control Loop
 	DWORD observationTime = timeGetTime();
@@ -52,20 +52,27 @@ int main() {
 		Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 		Eigen::VectorXf duties = controller.FindDutyQP(forceToApply, objPtr->getPosition());
 		Eigen::VectorXf dutiesCgal = controller.FindDutyQPCGAL(forceToApply, objPtr->getPosition());
+		Eigen::VectorXf dutiesSel = controller.FindDutySelectiveQP(forceToApply, objPtr->getPosition());
 		Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 		Eigen::VectorXi amplitudesCgal = (510.f / M_PI * dutiesCgal.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 		Eigen::MatrixXf focus = objPtr->getPosition().replicate(1, controller.CentersAUTD().cols());
 		//controller._autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes));
 		Eigen::Vector3f force_result = controller.arfModelPtr->arf(posObserved.replicate(1, controller._autd.geometry()->numDevices()) - controller.CentersAUTD(), controller.eulerAnglesAUTD) * duties;
 		Eigen::Vector3f force_result_Cgal = controller.arfModelPtr->arf(posObserved.replicate(1, controller._autd.geometry()->numDevices()) - controller.CentersAUTD(), controller.eulerAnglesAUTD) * dutiesCgal;
+		Eigen::Vector3f force_result_Sel = controller.arfModelPtr->arf(posObserved.replicate(1, controller._autd.geometry()->numDevices()) - controller.CentersAUTD(), controller.eulerAnglesAUTD) * dutiesSel;
 		Eigen::Vector3f posTgt = objPtr->getPositionTarget();
+		std::cout << dutiesSel.transpose() << std::endl;
+		/*
 		std::cout << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 			<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", "
 			<< accel.x() << ", " << accel.y() << ", " << accel.z() << ", "
 			<< forceToApply.x() << ", " << forceToApply.y() << ", " << forceToApply.z() << ","
 			<< force_result.x() << ", " << force_result.y() << ", " << force_result.z() << ", "
 			<< force_result_Cgal.x() << ", " << force_result_Cgal.y() << ", " << force_result_Cgal.z() << ", ";
+			<< force_result_Sel.x() << ", " << force_result_Sel.y() << ", " << force_result_Sel.z() << ", ";
 
+		*/
+		
 		for (int i = 0; i < controller._autd.geometry()->numDevices(); i++) {
 			std::cout << amplitudes[i] << ", ";
 		}

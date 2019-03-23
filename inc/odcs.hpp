@@ -98,12 +98,14 @@ private:
 public:
 	int Initialize();
 	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
+	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global);
 	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
 	void CornersWorkspaceAll(Matrix38f &corners);
 	void MaskWorkspace(cv::Mat &mask);
 	float RangeWorkspace();
 	float RangeWorkspaceMin();
-	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
+	Eigen::Affine3f AffineKinect2Global() { Eigen::Translation3f(positionKinect)*dcmKinect2Global; }
+	Eigen::Affine3f AffineGlobal2Kinect() { AffineKinect2Global().inverse(); }
 	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
 	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);

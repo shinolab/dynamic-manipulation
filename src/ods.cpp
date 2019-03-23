@@ -51,7 +51,14 @@ void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f con
 	dcmKinect2Global = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
 		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
-	dcmGlobal2Kinect = dcmKinect2Global.inverse();;
+	dcmGlobal2Kinect = dcmKinect2Global.transpose();
+	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+}
+
+void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global) {
+	positionKinect = position;
+	dcmKinect2Global = rotKinect2Global;
+	dcmGlobal2Kinect = dcmKinect2Global.transpose();
 	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 }
 

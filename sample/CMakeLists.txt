@@ -32,3 +32,6 @@ target_link_libraries(single_sided DynamicLevitation)
 
 add_executable(ss_trajectory single_sided_with_trajectory.cpp)
 target_link_libraries(ss_trajectory DynamicLevitation)
+
+add_executable(demo_proactive demo_proactive.cpp)
+target_link_libraries(demo_proactive DynamicLevitation)

@@ -89,9 +89,9 @@ private:
 	typedef Eigen::Matrix<float, 3, 8> Matrix38f;
 	KinectApp kinectApp;
 	Eigen::Vector3f positionKinect;
-	Eigen::Matrix3f dcmGlobal2Kinect;
-	Eigen::Matrix3f dcmKinect2Global; // x_kinect = attitudeKinect * x_global
-	Eigen::Affine3f affineKinect2Global;
+	//Eigen::Matrix3f dcmGlobal2Kinect;
+	Eigen::Matrix3f dcmKinect2Global;
+	//Eigen::Affine3f affineKinect2Global;
 	Eigen::Matrix<float, 3, 2> workspace;
 	std::vector<UINT16> backgroundDepth;
 
@@ -104,10 +104,10 @@ public:
 	void MaskWorkspace(cv::Mat &mask);
 	float RangeWorkspace();
 	float RangeWorkspaceMin();
-	Eigen::Affine3f AffineKinect2Global() { Eigen::Translation3f(positionKinect)*dcmKinect2Global; }
-	Eigen::Affine3f AffineGlobal2Kinect() { AffineKinect2Global().inverse(); }
-	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
-	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }
+	Eigen::Affine3f AffineKinect2Global() { return Eigen::Translation3f(positionKinect)*dcmKinect2Global; }
+	Eigen::Affine3f AffineGlobal2Kinect() { return AffineKinect2Global().inverse(); }
+	Eigen::Matrix3f DcmGlobal2Kinect() { return dcmKinect2Global.transpose(); }
+	Eigen::Matrix3f DcmKinect2Global() { return dcmKinect2Global; }
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);

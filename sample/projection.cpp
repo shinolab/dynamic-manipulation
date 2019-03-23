@@ -22,9 +22,9 @@ int main()
 	odcs.Initialize();
 	odcs.ocsPtr->SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-4.0f), Eigen::Vector3f::Constant(-0.05f));
 
-	Eigen::Affine3f affineKinect2Global = odcs.odsPtr->getAffineKinect2Global();
-	Eigen::Affine3f affineGlobal2Kinect = affineKinect2Global.inverse();
-	Eigen::Matrix3f dcmGlobal2Kinect = odcs.odsPtr->getDcmGlobal2Kinect();
+	Eigen::Affine3f affineKinect2Global = odcs.odsPtr->AffineKinect2Global();
+	Eigen::Affine3f affineGlobal2Kinect = odcs.odsPtr->AffineGlobal2Kinect();
+	Eigen::Matrix3f dcmGlobal2Kinect = odcs.odsPtr->DcmGlobal2Kinect();
 	odcs.AddObject(Eigen::Vector3f(0, 0, 1200));
 	//start control thread.
 	odcs.StartControl();

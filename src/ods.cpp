@@ -23,15 +23,17 @@ int ods::Initialize()
 	SetWorkSpace(Eigen::Vector3f(-1000, -1000, 800), Eigen::Vector3f(1000, 1000, 2000));
 	// ========== Initialize Kinect ==========
 	positionKinect = Eigen::Vector3f(41.7, -1006, 1313);
-
+	/*
 	dcmGlobal2Kinect = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
+
+	*/
 	dcmKinect2Global = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
 
-	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 	/*
 	while (1)
 	{
@@ -51,15 +53,15 @@ void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f con
 	dcmKinect2Global = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
 		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
-	dcmGlobal2Kinect = dcmKinect2Global.transpose();
-	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	//dcmGlobal2Kinect = dcmKinect2Global.transpose();
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 }
 
 void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global) {
 	positionKinect = position;
 	dcmKinect2Global = rotKinect2Global;
-	dcmGlobal2Kinect = dcmKinect2Global.transpose();
-	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	//dcmGlobal2Kinect = dcmKinect2Global.transpose();
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 }
 
 void ods::SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2) {
@@ -81,13 +83,13 @@ void ods::CornersWorkspaceAll(Matrix38f &corners) {
 float ods::RangeWorkspace() {
 	Matrix38f corners;
 	CornersWorkspaceAll(corners);
-	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(getDcmKinect2Global() * Eigen::Vector3f::UnitZ())).maxCoeff();
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(DcmKinect2Global() * Eigen::Vector3f::UnitZ())).maxCoeff();
 }
 
 float ods::RangeWorkspaceMin() {
 	Matrix38f corners;
 	CornersWorkspaceAll(corners);
-	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(getDcmKinect2Global() * Eigen::Vector3f::UnitZ())).minCoeff();
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(DcmKinect2Global() * Eigen::Vector3f::UnitZ())).minCoeff();
 }
 
 void ods::MaskWorkspace(cv::Mat &mask) {
@@ -97,9 +99,9 @@ void ods::MaskWorkspace(cv::Mat &mask) {
 	for (int i = 0; i < corners.cols(); i++)
 	{
 		CameraSpacePoint cspCorner;
-		cspCorner.X = (affineKinect2Global.inverse() * corners.col(i)).x() / 1000.f;
-		cspCorner.Y = (affineKinect2Global.inverse() * corners.col(i)).y() / 1000.f;
-		cspCorner.Z = (affineKinect2Global.inverse() * corners.col(i)).z() / 1000.f;
+		cspCorner.X = (AffineGlobal2Kinect() * corners.col(i)).x() / 1000.f;
+		cspCorner.Y = (AffineGlobal2Kinect() * corners.col(i)).y() / 1000.f;
+		cspCorner.Z = (AffineGlobal2Kinect() * corners.col(i)).z() / 1000.f;
 		DepthSpacePoint dspCorner;
 		kinectApp.coordinateMapper->MapCameraPointToDepthSpace(cspCorner, &dspCorner);
 		cornerPixels.push_back(cv::Point2i(static_cast<int>(dspCorner.X), static_cast<int>(dspCorner.Y)));
@@ -204,7 +206,7 @@ bool ods::GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}
 		}
@@ -239,7 +241,7 @@ bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}
 		}
@@ -277,7 +279,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		//=====truncate region around the object=====
 		if (objPtr->IsTracked() && useROI)
 		{
-			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
+			Eigen::Vector3f pos = AffineGlobal2Kinect() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
 				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
 			cv::circle(mask, p, 150 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
@@ -310,7 +312,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
 				pos << outpor * detectX, outpor * detectY, outpor * detectZ;
-				pos = affineKinect2Global * pos;
+				pos = AffineKinect2Global() * pos;
 				isValid = true;
 			}
 		}

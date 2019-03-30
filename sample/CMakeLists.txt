@@ -33,5 +33,17 @@ target_link_libraries(single_sided DynamicLevitation)
 add_executable(ss_trajectory single_sided_with_trajectory.cpp)
 target_link_libraries(ss_trajectory DynamicLevitation)
 
-add_executable(demo_proactive demo_proactive.cpp)
-target_link_libraries(demo_proactive DynamicLevitation)
+#add_executable(demo_proactive demo_proactive.cpp)
+#target_link_libraries(demo_proactive DynamicLevitation)
+
+add_executable(demo_guidance demo_guidance.cpp)
+target_link_libraries(demo_guidance DynamicLevitation Projector)
+
+add_executable(demo_notification demo_notification.cpp)
+target_link_libraries(demo_notification DynamicLevitation Projector)
+
+add_executable(demo_avatar demo_avatar.cpp)
+target_link_libraries(demo_avatar DynamicLevitation Projector)
+
+add_executable(demo_volleyball demo_volleyball.cpp)
+target_link_libraries(demo_volleyball DynamicLevitation Projector)

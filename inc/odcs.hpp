@@ -102,6 +102,7 @@ public:
 	int Initialize();
 	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
 	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global);
+	KinectApp* kinect();
 	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
 	void CornersWorkspaceAll(Matrix38f &corners);
 	void MaskWorkspace(cv::Mat &mask);
@@ -174,6 +175,8 @@ class odcs
 {
 public:
 	void Initialize();
+	std::shared_ptr<ods> Sensor();
+	std::shared_ptr<ocs> Controller();
 	int AddObject(Eigen::Vector3f const &positionTarget);
 	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 	void RegisterObject(FloatingObjectPtr objPtr);
@@ -236,6 +239,29 @@ public:
 	{
 		this->timeInit = timeInit;
 		this->timeTotal = timeTotal;
+		this->posInit = posInit;
+		this->posEnd = posEnd;
+	}
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+};
+
+class TrajectoryBang : public Trajectory {
+private:
+private:
+	float timeToGo;
+	float timeInit;
+	Eigen::Vector3f posInit;
+	Eigen::Vector3f posEnd;
+public:
+	TrajectoryBang(float const &timeToGo,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd)
+	{
+		this->timeToGo = timeToGo;
+		this->timeInit = timeInit;
 		this->posInit = posInit;
 		this->posEnd = posEnd;
 	}

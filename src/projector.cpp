@@ -107,6 +107,6 @@ void projector::projectPoints(const std::vector<cv::Point3f> &objectPoints, std:
 
 void projector::setImage(cv::Mat image) {
 	std::lock_guard<std::mutex> lock(mtxImage);
-	this->image = image;
+	this->image = image.clone();
 }
 

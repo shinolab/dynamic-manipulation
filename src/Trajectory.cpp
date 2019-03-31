@@ -69,6 +69,32 @@ TrajectoryMaxAccel::TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,
 	}
 }
 
+Eigen::Vector3f TrajectoryBang::pos(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return posInit;
+	float dt = time - timeInit;
+	if (dt < timeToGo) {
+		return 0.5f * dt * dt * accel(time) + posInit;
+	}
+	else {
+		return posInit + 0.5f * accel(time) * (2.f * timeToGo - dt) * (2.f * timeToGo - dt);
+	}
+}
+
+Eigen::Vector3f TrajectoryBang::vel(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return dt < timeToGo ? accel(time) * dt : accel(time) * (2 * timeToGo - dt);
+}
+
+Eigen::Vector3f TrajectoryBang::accel(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return 	dt < timeToGo ? 2.0f * (posEnd - posInit) / timeToGo / timeToGo : 2.0f * (posInit - posEnd) / timeToGo / timeToGo;
+}
+
 void TrajectoryMaxAccel::sys::operator()(state_type const &x, state_type &dxdt, float const)
 {
 	dxdt[0] = x[1];

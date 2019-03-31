@@ -25,6 +25,14 @@ void odcs::Initialize()
 	}
 }
 
+std::shared_ptr<ods> odcs::Sensor() {
+	return odsPtr;
+}
+
+std::shared_ptr<ocs> odcs::Controller() {
+	return ocsPtr;
+}
+
 int odcs::AddObject(Eigen::Vector3f const &targetPosition)
 {
 	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));

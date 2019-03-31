@@ -23,9 +23,8 @@ private:
 	cv::Mat tvec;
 
 	std::mutex mtxImage;
-
 	int posX, posY, width, height;
-
+	std::thread th_projection;
 
 public:
 	std::string name;
@@ -52,6 +51,10 @@ public:
 	void projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints);
 
 	void setImage(cv::Mat mat);
+
+	void Run();
+
+	void Stop();
 };
 
 #endif _PROJECTOR_HPP_

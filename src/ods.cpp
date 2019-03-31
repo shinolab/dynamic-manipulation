@@ -64,6 +64,10 @@ void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f con
 	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 }
 
+KinectApp* ods::kinect() {
+	return &kinectApp;
+}
+
 void ods::SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2) {
 	workspace << corner1, corner2;
 }

@@ -43,6 +43,7 @@ public:
 	DWORD lastDeterminationTime;
 	bool _isStable;
 	bool isControlled;
+	std::deque<Eigen::Vector3f> positionBuffer;
 	std::deque<Eigen::Vector3f> velocityBuffer;
 	std::deque<float> dTBuffer;
 	const int velocityBufferSize = 3;
@@ -80,6 +81,8 @@ public:
 	bool IsTracked();
 	void SetTrackingStatus(bool _isTracked);
 	Eigen::Vector3f averageVelocity();
+	Eigen::Vector3f AveragePosition();
+	Eigen::Vector3f AveragePosition(int sumpleNum);
 };
 
 class ods

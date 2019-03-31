@@ -21,11 +21,16 @@ FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _ad
 	lastDeterminationTime = 0;
 	isTracked = false;
 	isControlled = true;
+	positionBuffer.resize(velocityBufferSize);
 	velocityBuffer.resize(velocityBufferSize);
 	dTBuffer.resize(velocityBufferSize);
 	for (auto itr = velocityBuffer.begin(); itr != velocityBuffer.end(); itr++)
 	{
 		itr->setZero();
+	}
+	for (auto itr = positionBuffer.begin(); itr != positionBuffer.end(); itr++)
+	{
+		*itr << _positionTarget;
 	}
 	for (auto itr = dTBuffer.begin(); itr != dTBuffer.end(); itr++)
 	{
@@ -101,6 +106,8 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	velocity = (positionNew - position) / dt;
 	dTBuffer.push_back(dt);
 	dTBuffer.pop_front();
+	positionBuffer.push_back(positionNew);
+	positionBuffer.pop_front();
 	velocityBuffer.push_back(velocity);
 	velocityBuffer.pop_front();
 	if (IsTracked())
@@ -159,6 +166,13 @@ Eigen::Vector3f FloatingObject::averageVelocity()
 	}
 	averageVelocity /= period;
 	return averageVelocity;
+}
+
+Eigen::Vector3f FloatingObject::AveragePosition() {
+	Eigen::Vector3f posAverage(0, 0, 0);
+	std::lock_guard<std::mutex> lock(mtxState);
+	std::for_each(positionBuffer.begin(), positionBuffer.end(), [&posAverage](Eigen::Vector3f &pos) {posAverage += pos; });
+	return posAverage;
 }
 
 Eigen::VectorXf FloatingObject::getLatestInput()

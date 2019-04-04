@@ -28,8 +28,9 @@ int main() {
 		{
 			if (objPtr->IsTracked())
 			{
-				Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->AveragePosition();
-				proj.projectImageOnObject(pos, img, cv::Size(180, 180), cv::Scalar::all(0)); // for VR LOGO
+				Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->getPosition();
+				std::cout << pos.x() << ", " << pos.y() << ", " << pos.z() << std::endl;
+				proj.projectImageOnObject(pos, img, cv::Size(160, 160), cv::Scalar::all(0)); // for VR LOGO
 
 				auto key = cv::waitKey(1);
 				if (key == 'q') { break; }

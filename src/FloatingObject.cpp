@@ -131,6 +131,8 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	lastDeterminationTime = determinationTime;
 	dTBuffer.push_back(dt);
 	dTBuffer.pop_front();
+	positionBuffer.push_back(positionNew);
+	positionBuffer.pop_front();
 	velocityBuffer.push_back(velocity);
 	velocityBuffer.pop_front();
 }
@@ -171,8 +173,10 @@ Eigen::Vector3f FloatingObject::averageVelocity()
 Eigen::Vector3f FloatingObject::AveragePosition() {
 	Eigen::Vector3f posAverage(0, 0, 0);
 	std::lock_guard<std::mutex> lock(mtxState);
-	std::for_each(positionBuffer.begin(), positionBuffer.end(), [&posAverage](Eigen::Vector3f &pos) {posAverage += pos; });
-	return posAverage;
+	for (auto itr = positionBuffer.begin(); itr != positionBuffer.end(); itr++) {
+		posAverage += *itr;
+	}
+	return posAverage / 3.f;
 }
 
 Eigen::VectorXf FloatingObject::getLatestInput()

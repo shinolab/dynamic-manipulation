@@ -1,7 +1,9 @@
 #include "init_uist.hpp"
 #include "odcs.hpp"
 #include "projector.hpp"
+#include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include <chrono>
 #include <thread>
 #include <iostream>
@@ -13,7 +15,7 @@
 int main() {
 
 	float translationTime = 1.0f;
-	float transDist = 50.f;
+	float transDist = 100.f;
 
 	std::string projectorName = "projector1";
 	projector proj(projectorName);
@@ -24,32 +26,25 @@ int main() {
 		return -1;
 	}
 
-	while (1) {
-		cv::Mat face;
-		cap.read(face);
-		cv::imshow("cam", face);
-		if (cv::waitKey(1) == 'q') {
-			break;
-		}
-	}
-
-	return 0;
-
 	odcs dynaman;
 	initialize_uist_setup(dynaman);
 
-	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(456.14, 596.04, 1331.f), -0.0001f);
+	FloatingObjectPtr objPtr = FloatingObject::Create(Eigen::Vector3f(436.14, 596.04, 1331.f), -0.0001f);
 	dynaman.RegisterObject(objPtr);
 	dynaman.StartControl();
 
 	while (1) {
-		if (objPtr->IsTracked())
+		if (true)
 		{
 			cv::Mat face;
 			cap.read(face);
-			Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->AveragePosition();
-			proj.projectImageOnObject(pos, face, cv::Size(180, 180), cv::Scalar::all(0)); // for VR LOGO
-
+			cv::Mat mask = cv::Mat::zeros(face.rows, face.cols, CV_8UC1);
+			cv::circle(mask, cv::Point(face.cols / 2, face.rows / 2), face.cols / 4, cv::Scalar::all(255), -1);
+			cv::Mat face_masked;
+			face.copyTo(face_masked, mask);
+			Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->getPosition();
+			proj.projectImageOnObject(pos, face_masked, cv::Size(300, 300), cv::Scalar::all(0)); // for VR LOGO
+			std::cout << objPtr->getPositionTarget().transpose() << std::endl;
 			auto key = cv::waitKey(1);
 			if (key == 'q') { break; }
 			switch (key) {

@@ -8,7 +8,7 @@
 
 int main() {
 
-	cv::Mat img1 = cv::imread("img/follow_me.png");
+	cv::Mat img1 = cv::imread("img/weekly_meeting.png");
 	cv::Mat img2 = cv::imread("img/follow_me.png");
 
 	odcs dynaman;
@@ -18,10 +18,9 @@ int main() {
 	dynaman.RegisterObject(objPtr);
 	dynaman.StartControl();
 
-	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(15));
-
 	std::string projectorName = "projector1";
 	projector proj(projectorName);
+	proj.setImage(cv::Mat::zeros(300, 300, CV_8UC3));
 	//start projection thread.
 	std::thread th_proj([&]() {	
 		proj.CreateScreen();
@@ -29,7 +28,7 @@ int main() {
 		{
 			if (objPtr->IsTracked())
 			{
-				Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->AveragePosition();
+				Eigen::Vector3f pos = dynaman.Sensor()->AffineGlobal2Kinect() * objPtr->getPosition();
 				proj.projectImageOnObject(pos, cv::Size(180, 180), cv::Scalar::all(0)); // for VR LOGO
 
 				auto key = cv::waitKey(1);
@@ -38,9 +37,10 @@ int main() {
 		}
 	});
 
+	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(20));
 	proj.setImage(img1);
 	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
-	
+
 	bool tracking_succeeded = false;
 	do
 	{

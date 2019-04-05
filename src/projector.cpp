@@ -94,6 +94,35 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::imshow(name, dst);
 }
 
+void projector::projectImageOnObject(std::vector<Eigen::Vector3f> positions,
+	std::vector<cv::Mat> images,
+	std::vector<cv::Size2f> sizes,
+	cv::Scalar backgroundColor,
+	float distanceOffset) {
+	std::vector<cv::Point3f> imagePoints3d;
+	for (auto itr = positions.begin(); itr != positions.end(); itr++) {
+		imagePoints3d.push_back(cv::Point3f((*itr).x(), (*itr).y(), (*itr).z()));
+	}
+	std::vector<cv::Point2f> imagePoints2d;
+	projectPoints(imagePoints3d, imagePoints2d);
+	//here comes conversion from object position to object points
+
+	cv::Mat dst(height, width, CV_8UC3, backgroundColor);
+	float fx = internalParam.at<float>(0, 0);
+	float fy = internalParam.at<float>(1, 1);
+
+	for (int i = 0; i < positions.size(); i++) {
+		float distance = (affineReference2Projector()*positions[i]).z() + distanceOffset;
+		cv::circle(dst, imagePoints2d[i], 30 * fx / distance, cv::Scalar::all(255), -1);
+		cv::Rect roi(cv::Point(0 * images[i].cols, 0), cv::Point(1.0 * images[i].cols, 1.0 * images[i].rows));
+		cv::Mat affine = (cv::Mat_<float>(2, 3) <<
+			fx * sizes[i].width / distance / images[i].cols, 0, ((int)(imagePoints2d[i].x - sizes[i].width * fx / distance / 2)),
+			0, fy * sizes[i].height / distance / images[i].rows, ((int)(imagePoints2d[i].y - sizes[i].height * fy / distance / 2)));
+		cv::warpAffine(images[i](roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
+
+	}
+	cv::imshow(name, dst);
+}
 
 void projector::projectImageOnObject(Eigen::Vector3f position, cv::Size2f sizeReal, cv::Scalar backgroundColor, float distanceOffset) {
 	projectImageOnObject(position, this->image, sizeReal, backgroundColor, distanceOffset);

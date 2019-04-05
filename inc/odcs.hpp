@@ -164,7 +164,7 @@ public:
 		float &force,
 		Eigen::Vector3f const &force_offset = Eigen::Vector3f(0.f, 0.f, 0.f));
 	
-	autd::GainPtr CreateGain(FloatingObjectPtr objPtr);
+	autd::GainPtr CreateGain(FloatingObjectPtr objPtr, int numObj = 1);
 
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);

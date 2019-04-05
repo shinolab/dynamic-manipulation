@@ -85,7 +85,7 @@ void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, 
 	this->gainI = _gainI;
 }
 
-autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
+autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr, int numObj)
 {
 	Eigen::Vector3f accel
 		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
@@ -93,7 +93,7 @@ autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
 		+ gainI.asDiagonal() * objPtr->getIntegral()
 		+ objPtr->getAccelTarget();
 	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-	Eigen::VectorXf duties = FindDutySelectiveQP(forceToApply, objPtr->getPosition(), 0.5);
+	Eigen::VectorXf duties = numObj * FindDutySelectiveQP(forceToApply, objPtr->getPosition(), 0.5);
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);

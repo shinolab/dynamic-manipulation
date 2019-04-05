@@ -281,7 +281,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
 		;
 		//=====truncate region around the object=====
-		if (objPtr->IsTracked() && useROI)
+		if (true)//objPtr->IsTracked() && useROI)
 		{
 			Eigen::Vector3f pos = AffineGlobal2Kinect() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()

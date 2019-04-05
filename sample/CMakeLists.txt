@@ -45,5 +45,8 @@ target_link_libraries(demo_notification DynamicLevitation Projector)
 add_executable(demo_avatar demo_avatar.cpp init_uist.hpp)
 target_link_libraries(demo_avatar DynamicLevitation Projector)
 
+add_executable(demo_instruction demo_instruction.cpp init_uist.hpp)
+target_link_libraries(demo_avatar DynamicLevitation Projector)
+
 #add_executable(demo_volleyball demo_volleyball.cpp init_uist.hpp)
 #target_link_libraries(demo_volleyball DynamicLevitation Projector)

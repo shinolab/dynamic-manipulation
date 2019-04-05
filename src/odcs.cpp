@@ -1,5 +1,7 @@
 #include <thread>
 #include <vector>
+#include <iostream>
+#include <fstream>
 #include <Eigen\Dense>
 #include <opencv2\core.hpp>
 #include <opencv2\highgui.hpp>
@@ -50,12 +52,12 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 30)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 20)
 {
-	DWORD timeInit = timeGetTime();
 	//int periodPerObject = loopPeriod / objPtrs.size();
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
+		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
 		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
@@ -66,7 +68,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->SetTrackingStatus(true);
-			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
+			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr), objPtrs.size()));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
@@ -78,9 +80,12 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), duties);
 		*/	
+		//std::cout << timeGetTime() - loopInit << std::endl;
+
+		int waitTime = loopPeriod - (timeGetTime() - loopInit);
+		Sleep(std::max(waitTime, 0));
 	}
-	int waitTime = loopPeriod - (timeGetTime() - timeInit);
-	Sleep(std::max(waitTime, 0));
+
 }
 
 bool odcs::isRunning() {

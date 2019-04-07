@@ -263,7 +263,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		//cv::imshow("Raw", depthImageUc8);
+		cv::imshow("Raw", depthImageUc8);
 
 		//Background Subtraction
 		if (!backgroundDepth.empty())

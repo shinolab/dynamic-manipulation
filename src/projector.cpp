@@ -113,7 +113,7 @@ void projector::projectImageOnObject(std::vector<Eigen::Vector3f> positions,
 
 	for (int i = 0; i < positions.size(); i++) {
 		float distance = (affineReference2Projector()*positions[i]).z() + distanceOffset;
-		cv::circle(dst, imagePoints2d[i], 30 * fx / distance, cv::Scalar::all(255), -1);
+		cv::circle(dst, imagePoints2d[i], 0 * fx / distance, cv::Scalar::all(255), -1);
 		cv::Rect roi(cv::Point(0 * images[i].cols, 0), cv::Point(1.0 * images[i].cols, 1.0 * images[i].rows));
 		cv::Mat affine = (cv::Mat_<float>(2, 3) <<
 			fx * sizes[i].width / distance / images[i].cols, 0, ((int)(imagePoints2d[i].x - sizes[i].width * fx / distance / 2)),

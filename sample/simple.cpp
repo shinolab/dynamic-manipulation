@@ -15,6 +15,7 @@
 
 int main()
 {
+	Eigen::Vector3f center(0, 596.04f, 1331.f);
 	Eigen::Vector3f posRight1(426.14f, 596.04f + 160.f, 1231.f);//右に移動した後の位置
 	Eigen::Vector3f posLeft1(-423.86f, 596.04f + 160.f, 1231.f);//左に移動した後の位置
 	Eigen::Vector3f posRight2(426.14f, 596.04f - 160.f, 1431.f);//右に移動した後の位置
@@ -50,13 +51,13 @@ int main()
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
-	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f);
+	FloatingObjectPtr objPtr1 = FloatingObject::Create(center, -0.0001f);
 	FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
 	dynaman.RegisterObject(objPtr1); // add object
-	dynaman.RegisterObject(objPtr2); // add object
+	//dynaman.RegisterObject(objPtr2); // add object
 	dynaman.StartControl();	
 	std::thread th_log([&objPtr1, &objPtr2]() {
-		std::ofstream ofs("20190405_log_multi4.csv");
+		std::ofstream ofs("20190405_log_single.csv");
 		DWORD timeInit = timeGetTime();
 		while (1) {
 			DWORD currentTime = timeGetTime();
@@ -82,9 +83,9 @@ int main()
 			std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(40));
 		}
 	});
-	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(60));
-	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
-	objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
+	//std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(60));
+	//objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	dynaman.Close();

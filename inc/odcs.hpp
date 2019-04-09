@@ -219,6 +219,9 @@ public:
 	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+	static std::shared_ptr<Trajectory> Create(Eigen::Vector3f const &positionTarget,
+		Eigen::Vector3f const &velocityTarget,
+		Eigen::Vector3f const &accelTarget);
 };
 
 class TrajectoryBangBang : public Trajectory
@@ -245,6 +248,10 @@ public:
 	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+	static std::shared_ptr<Trajectory> Create(float const &timeTotal,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd);
 };
 
 class TrajectoryBang : public Trajectory {
@@ -268,6 +275,10 @@ public:
 	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+	static std::shared_ptr<Trajectory> Create(float const &timeToGo,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd);
 };
 
 class TrajectoryMaxAccel : public Trajectory {

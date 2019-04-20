@@ -8,10 +8,21 @@ namespace autd{
 	class DeviceSpecificFocalPointGain : public Gain {
 
 	public:
-		static GainPtr Create(Eigen::MatrixXf points, Eigen::VectorXi amplitudes);
+		static GainPtr Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes);
 		void build();
 	private:
 		Eigen::MatrixXf _points;
 		Eigen::VectorXi _amplitudes;
+	};
+
+	class GaussianBeamGain : public Gain {
+	public:
+		static GainPtr Create(Eigen::Vector3f const &point, Eigen::Vector3f const &direction, int const &amplitude, float const &beamAngle);
+		void build();
+	private:
+		Eigen::Vector3f _point;
+		Eigen::Vector3f _direction;
+		int _amplitude;
+		float _cosBeamAngle;
 	};
 }

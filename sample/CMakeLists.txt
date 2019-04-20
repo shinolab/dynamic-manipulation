@@ -15,10 +15,6 @@ add_executable(pipeline pipeline.cpp)
 include_directories(../inc)
 target_link_libraries(pipeline DynamicLevitation)
 
-add_executable(interaction interaction.cpp)
-include_directories(../inc)
-target_link_libraries(interaction DynamicLevitation)
-
 add_executable(projection projection.cpp)
 include_directories(../inc)
 target_link_libraries(projection DynamicLevitation Projector)
@@ -27,10 +23,30 @@ add_executable(sequential sequential.cpp)
 include_directories(../inc)
 target_link_libraries(sequential DynamicLevitation)
 
-add_executable(acuityTest acuityTest.cpp)
-include_directories(../inc)
-target_link_libraries(acuityTest DynamicLevitation Projector)
+add_executable(impactor impactor.cpp
+	../inc/rootFindingPoly.hpp)
+target_link_libraries(impactor DynamicLevitation)
 
-add_executable(asiaHapticsDemo asiaHapticsDemo.cpp)
-include_directories(../inc)
-target_link_libraries(asiaHapticsDemo DynamicLevitation)
+add_executable(single_sided single_sided.cpp)
+target_link_libraries(single_sided DynamicLevitation)
+
+add_executable(ss_trajectory single_sided_with_trajectory.cpp)
+target_link_libraries(ss_trajectory DynamicLevitation)
+
+add_executable(demo_proactive demo_proactive.cpp)
+target_link_libraries(demo_proactive DynamicLevitation)
+
+add_executable(demo_guidance demo_guidance.cpp init_uist.hpp)
+target_link_libraries(demo_guidance DynamicLevitation Projector)
+
+add_executable(demo_notification demo_notification.cpp init_uist.hpp)
+target_link_libraries(demo_notification DynamicLevitation Projector)
+
+add_executable(demo_avatar demo_avatar.cpp init_uist.hpp)
+target_link_libraries(demo_avatar DynamicLevitation Projector)
+
+add_executable(demo_instruction demo_instruction.cpp init_uist.hpp)
+target_link_libraries(demo_instruction DynamicLevitation Projector)
+
+#add_executable(demo_volleyball demo_volleyball.cpp init_uist.hpp)
+#target_link_libraries(demo_volleyball DynamicLevitation Projector)

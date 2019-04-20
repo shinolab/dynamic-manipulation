@@ -10,6 +10,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <string>
 #include <iostream>
+#include <mutex>
 
 projector::projector(std::string _projectorName
 	, const int _posX
@@ -18,20 +19,20 @@ projector::projector(std::string _projectorName
 	, const int _height)
 {
 	internalParam = (cv::Mat_<float>(3, 3) <<
-		5752.482513627768, 0, 2108.730456578023,
-		0, 5683.544422424523, 2380.697983083306,
+		7343.417365248017, 0, 2264.534940271744,
+		0, 7256.47834261368, 2612.007938973622,
 		0, 0, 1);
 	distCoeffs = (cv::Mat_<float>(1, 5) <<
-		-0.1980807182777715, 0.3086291425475489, -0.008436505514143884, 0.008727957374133679, 0);
+		-0.1641310952939627, -0.01297803317549655, -0.02079662916037387, 0.001324788022886535, 0);
 	//kinect cooradinate system is temporally used as a reference of the external parameters. 
-	rvec = (cv::Mat_<float>(3, 1) << -0.4877771880016805, 0.009152296925027666, -3.090781468236619);
-	tvec = (cv::Mat_<float>(3, 1) << -544.2122015242982, -380.5129628128426, 1070.945634793596);
+	rvec = (cv::Mat_<float>(3, 1) << 0.06808122467273922, 0.1266358335978523, -3.135832415345502);
+	tvec = (cv::Mat_<float>(3, 1) << 22.99366933819967, -119.0508517795997, 1279.453585812458);
 	this->posX = _posX;
 	this->posY = _posY;
 	this->width = _width;
 	this->height = _height;
 	this->name = _projectorName;
-	CreateScreen();
+	//CreateScreen();
 }
 
 projector::~projector()
@@ -93,8 +94,48 @@ void projector::projectImageOnObject(Eigen::Vector3f posRef, cv::Mat image, cv::
 	cv::imshow(name, dst);
 }
 
+void projector::projectImageOnObject(std::vector<Eigen::Vector3f> positions,
+	std::vector<cv::Mat> images,
+	std::vector<cv::Size2f> sizes,
+	cv::Scalar backgroundColor,
+	float distanceOffset) {
+	std::vector<cv::Point3f> imagePoints3d;
+	for (auto itr = positions.begin(); itr != positions.end(); itr++) {
+		imagePoints3d.push_back(cv::Point3f((*itr).x(), (*itr).y(), (*itr).z()));
+	}
+	std::vector<cv::Point2f> imagePoints2d;
+	projectPoints(imagePoints3d, imagePoints2d);
+	//here comes conversion from object position to object points
+
+	cv::Mat dst(height, width, CV_8UC3, backgroundColor);
+	float fx = internalParam.at<float>(0, 0);
+	float fy = internalParam.at<float>(1, 1);
+
+	for (int i = 0; i < positions.size(); i++) {
+		float distance = (affineReference2Projector()*positions[i]).z() + distanceOffset;
+		cv::circle(dst, imagePoints2d[i], 0 * fx / distance, cv::Scalar::all(255), -1);
+		cv::Rect roi(cv::Point(0 * images[i].cols, 0), cv::Point(1.0 * images[i].cols, 1.0 * images[i].rows));
+		cv::Mat affine = (cv::Mat_<float>(2, 3) <<
+			fx * sizes[i].width / distance / images[i].cols, 0, ((int)(imagePoints2d[i].x - sizes[i].width * fx / distance / 2)),
+			0, fy * sizes[i].height / distance / images[i].rows, ((int)(imagePoints2d[i].y - sizes[i].height * fy / distance / 2)));
+		cv::warpAffine(images[i](roi), dst, affine, dst.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
+
+	}
+	cv::imshow(name, dst);
+}
+
+void projector::projectImageOnObject(Eigen::Vector3f position, cv::Size2f sizeReal, cv::Scalar backgroundColor, float distanceOffset) {
+	projectImageOnObject(position, this->image, sizeReal, backgroundColor, distanceOffset);
+}
+
+
 void projector::projectPoints(const std::vector<cv::Point3f> &objectPoints, std::vector<cv::Point2f> &imagePoints)
 {
 	cv::projectPoints(objectPoints, rvec, tvec, internalParam, distCoeffs, imagePoints);
+}
+
+void projector::setImage(cv::Mat image) {
+	std::lock_guard<std::mutex> lock(mtxImage);
+	this->image = image.clone();
 }
 

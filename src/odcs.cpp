@@ -1,5 +1,7 @@
 #include <thread>
 #include <vector>
+#include <iostream>
+#include <fstream>
 #include <Eigen\Dense>
 #include <opencv2\core.hpp>
 #include <opencv2\highgui.hpp>
@@ -11,14 +13,29 @@
 #define _USE_MATH_DEFINES
 #include<math.h>
 
-
 void odcs::Initialize()
 {
-	ods.Initialize();
-	ocs.Initialize();
+	if (odsPtr == nullptr)
+	{
+		odsPtr = std::make_shared<ods>();
+		odsPtr->Initialize();
+	}
+	if (ocsPtr == nullptr)
+	{
+		ocsPtr = std::make_shared<ocs>();
+		ocsPtr->Initialize();
+	}
 }
 
-int odcs::AddObject(Eigen::Vector3f targetPosition)
+std::shared_ptr<ods> odcs::Sensor() {
+	return odsPtr;
+}
+
+std::shared_ptr<ocs> odcs::Controller() {
+	return ocsPtr;
+}
+
+int odcs::AddObject(Eigen::Vector3f const &targetPosition)
 {
 	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
 	return objPtrs.size();
@@ -27,7 +44,7 @@ int odcs::AddObject(Eigen::Vector3f targetPosition)
 void odcs::RegisterObject(FloatingObjectPtr objPtr)
 {
 	objPtrs.push_back(objPtr);
-	ocs.RegisterObject(objPtr);
+	ocsPtr->RegisterObject(objPtr);
 }
 
 const FloatingObjectPtr odcs::GetFloatingObject(int i)
@@ -35,85 +52,88 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 30)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 20)
 {
-	DWORD timeInit = timeGetTime();
 	//int periodPerObject = loopPeriod / objPtrs.size();
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
+		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		bool succeeded = ods.GetPositionByDepth((*itr), posObserved, true);
+		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
 		DWORD observationTime = timeGetTime();
-		if (succeeded && ods.isInsideWorkSpace(posObserved))
+		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
-			(*itr)->isTracked = true;
-			//PIDController
-			Eigen::VectorXf force = ocs.ComputePIDForce((*itr));
-			//Find Control parameters
-			Eigen::VectorXf duties = ocs.FindDutyQP(force, (*itr)->getPosition());
-			Eigen::VectorXi amplitudes = (510 / M_PI * duties.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-			ocs.DirectSemiPlaneWave((*itr), amplitudes);
-			(*itr)->setLatestInput(duties);
+			(*itr)->SetTrackingStatus(true);
+			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr), objPtrs.size()));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
-			(*itr)->isTracked = false;
+			(*itr)->SetTrackingStatus(false);
 		}
 		/*
 		ods.DeterminePositionByDepth(*itr, true);
 		Eigen::VectorXf amplitudes = ocs.FindDutyQP((*itr)) * objPtrs.size();
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), duties);
-		*/
-			
+		*/	
+		//std::cout << timeGetTime() - loopInit << std::endl;
+
+		int waitTime = loopPeriod - (timeGetTime() - loopInit);
+		Sleep(std::max(waitTime, 0));
 	}
-	int waitTime = loopPeriod - (timeGetTime() - timeInit);
-	Sleep(std::max(waitTime, 0));
+
+}
+
+bool odcs::isRunning() {
+	std::shared_lock<std::shared_mutex> lk(mtxRunning);
+	return flagRunning;
 }
 
 void odcs::StartControl()
 {
+	{
+		std::lock_guard<std::shared_mutex> lock(mtxRunning);
+		flagRunning = true;
+	}
 	thread_control = std::thread([this](){
-		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
-		Sleep(5);
-		while (1)
+		while (isRunning())
 		{
 			this->ControlLoop(objPtrs);
-			auto key = cv::waitKey(1);
-			if (key == 'q')
-			{
-				cv::destroyAllWindows();
-				break;
-			}
 		}
 	});
 }
 
 void odcs::Close()
 {
-	
-	if (thread_control.joinable())
 	{
-	thread_control.join();
+		std::lock_guard<std::shared_mutex> lk(mtxRunning);
+		flagRunning = false;
 	}
-	ocs.Close();
+	if (thread_control.joinable()){
+		thread_control.join();
+	}
+	ocsPtr->Close();
 }
 
-void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f observe, const DWORD observationTime)
+int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles) {
+	return ocsPtr->AddDevice(position, eulerAngles);
+}
+
+void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD observationTime)
 {
 	float dt = (observationTime - objPtr->lastDeterminationTime) / 1000.0;
 	//-----Construct System Matrix
 	Eigen::MatrixXf A(6, 6);
 	A << Eigen::Matrix3f::Identity(), dt * Eigen::Matrix3f::Identity(),
 		Eigen::Matrix3f::Zero(), dt * Eigen::Matrix3f::Identity();
-	Eigen::MatrixXf B(6, ocs.positionAUTD.cols());
-	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocs.positionAUTD.cols()) - ocs.centerAUTD;
-	B << Eigen::MatrixXf::Zero(3, ocs.positionAUTD.cols()),
-		ocs.arfModelPtr->arf(posRel, ocs.eulerAnglesAUTD) / objPtr->totalMass() * dt;
+	Eigen::MatrixXf B(6, ocsPtr->positionsAUTD.cols());
+	Eigen::MatrixXf posRel = objPtr->getPosition().replicate(1, ocsPtr->positionsAUTD.cols()) - ocsPtr->CentersAUTD();
+	B << Eigen::MatrixXf::Zero(3, ocsPtr->positionsAUTD.cols()),
+		ocsPtr->arfModelPtr->arf(posRel, ocsPtr->eulerAnglesAUTD) / objPtr->totalMass() * dt;
 	Eigen::VectorXf g(6); g << Eigen::Vector3f::Zero(), dt * objPtr->additionalMass * Eigen::Vector3f(0, 0, -9.801e3) / objPtr->totalMass() * dt;
 	Eigen::MatrixXf C(3, 6); C << Eigen::Matrix3f::Identity(), Eigen::Matrix3f::Zero();
 	Eigen::MatrixXf D(6, 6); D.setIdentity();

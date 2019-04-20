@@ -5,33 +5,35 @@
 #include <vector>
 #include <deque>
 #include <atlbase.h>
-#include <opencv2\core.hpp>
-#include <opencv2\highgui.hpp>
-#include <opencv2\shape.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/shape.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <Windows.h>
-#include <Eigen\Geometry>
+#include <Eigen/Geometry>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 int ods::Initialize()
 {
-	//set workspace
-	Eigen::Vector3f wsCorner1(-1000, -1000, 800);
-	Eigen::Vector3f wsCorner2(1000, 1000, 2000);
-	workspace << wsCorner1, wsCorner2;
-	// ========== Initialize Kinect ==========
 	kinectApp.initialize();
+	//set workspace
+	SetWorkSpace(Eigen::Vector3f(-1000, -1000, 800), Eigen::Vector3f(1000, 1000, 2000));
+	// ========== Initialize Kinect ==========
 	positionKinect = Eigen::Vector3f(41.7, -1006, 1313);
-
+	/*
 	dcmGlobal2Kinect = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
+
+	*/
 	dcmKinect2Global = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())
 		*Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX())
 		*Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
 
-	affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
 	/*
 	while (1)
 	{
@@ -42,9 +44,76 @@ int ods::Initialize()
 		}
 		Sleep(10);
 	}
-	*/
-	
+	*/	
 	return 0;
+}
+
+void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle) {
+	positionKinect = position;
+	dcmKinect2Global = Eigen::AngleAxisf(eulerAngle.x(), Eigen::Vector3f::UnitZ())
+		*Eigen::AngleAxisf(eulerAngle.y(), Eigen::Vector3f::UnitY())
+		*Eigen::AngleAxisf(eulerAngle.z(), Eigen::Vector3f::UnitZ());
+	//dcmGlobal2Kinect = dcmKinect2Global.transpose();
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+}
+
+void ods::SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global) {
+	positionKinect = position;
+	dcmKinect2Global = rotKinect2Global;
+	//dcmGlobal2Kinect = dcmKinect2Global.transpose();
+	//affineKinect2Global = Eigen::Translation3f(positionKinect) * dcmKinect2Global;
+}
+
+KinectApp* ods::kinect() {
+	return &kinectApp;
+}
+
+void ods::SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2) {
+	workspace << corner1, corner2;
+}
+
+void ods::CornersWorkspaceAll(Matrix38f &corners) {
+	int index[3];
+	for (int i = 0; i < 8; i++) {
+		int res = i;
+		for (int j = 0; j < 8; j++) {
+			index[j] = res % 2;
+			res /= 2;
+		}
+		corners.col(i) << Eigen::Vector3f(workspace(0, index[0]), workspace(1, index[1]), workspace(2, index[2]));
+	}
+}
+
+float ods::RangeWorkspace() {
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(DcmKinect2Global() * Eigen::Vector3f::UnitZ())).maxCoeff();
+}
+
+float ods::RangeWorkspaceMin() {
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	return ((corners - positionKinect.replicate(1, corners.cols())).transpose()*(DcmKinect2Global() * Eigen::Vector3f::UnitZ())).minCoeff();
+}
+
+void ods::MaskWorkspace(cv::Mat &mask) {
+	std::vector<cv::Point2i> cornerPixels;
+	Matrix38f corners;
+	CornersWorkspaceAll(corners);
+	for (int i = 0; i < corners.cols(); i++)
+	{
+		CameraSpacePoint cspCorner;
+		cspCorner.X = (AffineGlobal2Kinect() * corners.col(i)).x() / 1000.f;
+		cspCorner.Y = (AffineGlobal2Kinect() * corners.col(i)).y() / 1000.f;
+		cspCorner.Z = (AffineGlobal2Kinect() * corners.col(i)).z() / 1000.f;
+		DepthSpacePoint dspCorner;
+		kinectApp.coordinateMapper->MapCameraPointToDepthSpace(cspCorner, &dspCorner);
+		cornerPixels.push_back(cv::Point2i(static_cast<int>(dspCorner.X), static_cast<int>(dspCorner.Y)));
+	}
+	std::vector<cv::Point> hull;
+	cv::convexHull(cornerPixels, hull);
+	mask = cv::Scalar::all(0);
+	cv::fillConvexPoly(mask, hull, cv::Scalar::all(255));
 }
 
 //==================== ODS Module ====================
@@ -77,7 +146,7 @@ void ods::DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Sc
 	{
 		DWORD currentTime = timeGetTime();
 		objPtr->updateStates(currentTime, currentPosition);
-		objPtr->isTracked = true;
+		objPtr->SetTrackingStatus(true);
 	}
 }
 
@@ -91,11 +160,11 @@ void ods::DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Sc
 		{
 			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
-			objPtr->isTracked = true;
+			objPtr->SetTrackingStatus(true);
 		}
 		else
 		{
-			objPtr->isTracked = false;
+			objPtr->SetTrackingStatus(false);
 		}
 	}
 }
@@ -110,83 +179,7 @@ void ods::DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI)
 		{
 			DWORD currentTime = timeGetTime();
 			objPtr->updateStates(currentTime, currentPosition);
-			objPtr->isTracked = true;
-		}
-	}
-}
-
-void ods::DeterminePositionByDepth(std::vector<FloatingObjectPtr> objPtrs)
-{
-	kinectApp.getDepthBuffer();
-	//Masking
-	cv::Mat depthImage = cv::Mat(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_16UC1, &kinectApp.depthBuffer[0]);
-	cv::Mat objectImage;
-	depthImage.convertTo(objectImage, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-	cv::Mat maskedImage;
-	cv::Mat depthMask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
-	cv::rectangle(depthMask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
-	objectImage.copyTo(maskedImage, depthMask); //Masking
-	cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
-	cv::imshow("depth", maskedImage);
-
-	//clip
-	cv::Mat imgOpened;
-	cv::Mat strElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-	cv::morphologyEx(maskedImage.clone(), imgOpened, CV_MOP_OPEN, strElement, cv::Point(-1, -1), 2, CV_HAL_BORDER_CONSTANT, cv::Scalar(0));
-	std::vector<std::vector<cv::Point>> contours;
-	cv::findContours(imgOpened.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-	if (!contours.empty())
-	{
-		cv::Mat imgBound = cv::Mat::zeros(maskedImage.size(), CV_8UC1);
-		std::vector<CameraSpacePoint> cameraPoints(contours.size());
-		auto itrP = cameraPoints.begin();
-		for (auto itrC = contours.begin(); itrC != contours.end(); itrC++, itrP++)
-		{
-			cv::drawContours(imgBound, contours, std::distance(contours.begin(), itrC), cv::Scalar(255), CV_FILLED);
-			cv::Mat mask2 = cv::Mat::zeros(imgOpened.size(), CV_8UC1);
-			cv::drawContours(mask2, contours, std::distance(contours.begin(), itrC), cv::Scalar(255), CV_FILLED);
-			cv::Mat extract; imgOpened.copyTo(extract, mask2);
-			cv::Moments m = cv::moments(extract, true);
-			*itrP = kinectApp.getPositionAtDepthPixel(m.m10 / m.m00, m.m01 / m.m00);
-		}
-		DWORD currentTime = timeGetTime();
-		for (auto itrOP = objPtrs.begin(); itrOP != objPtrs.end(); itrOP++)
-		{
-			if (cameraPoints.empty())
-			{
-				break;
-			}
-			std::vector<float> dists(cameraPoints.size());
-			auto itrP = cameraPoints.begin();
-			auto itrDist = dists.begin();
-			for (auto itrP = cameraPoints.begin(); itrP != cameraPoints.end(); itrP++, itrDist++)
-			{
-				Eigen::Vector3f posTemp(1000 * (*itrP).X, 1000 * (*itrP).Y, 1000 * (*itrP).Z);
-				float distTemp = ((*itrOP)->getPosition() - dcmKinect2Global * posTemp - positionKinect).squaredNorm();
-				*itrDist = distTemp;
-			}
-			auto i = std::distance(dists.begin(), std::min_element(dists.begin(), dists.end()));
-			CameraSpacePoint detectPosition = cameraPoints[i];
-			cameraPoints.erase(cameraPoints.begin() + i);
-			if (kinectApp.isReliablePosition(detectPosition))
-			{
-				float detectX = detectPosition.X * 1000;
-				float detectY = detectPosition.Y * 1000;
-				float detectZ = detectPosition.Z * 1000;
-				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-				float outpor = (detectR + (*itrOP)->radius) / detectR;
-				Eigen::Vector3f currentPosition; currentPosition << outpor * detectX, outpor * detectY, outpor * detectZ;
-				currentPosition = dcmKinect2Global * currentPosition + positionKinect;
-				if (isInsideWorkSpace(currentPosition))
-				{
-					(*itrOP)->updateStates(currentTime, currentPosition);
-					(*itrOP)->isTracked = true;
-				}
-				else
-				{
-					(*itrOP)->isTracked = false;
-				}
-			}			
+			objPtr->SetTrackingStatus(true);
 		}
 	}
 }
@@ -217,7 +210,7 @@ bool ods::GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}
 		}
@@ -252,7 +245,7 @@ bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
-				pos << affineKinect2Global * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
+				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}
 		}
@@ -270,7 +263,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		cv::imshow("Raw", depthImageUc8);
+		//cv::imshow("Raw", depthImageUc8);
 
 		//Background Subtraction
 		if (!backgroundDepth.empty())
@@ -282,35 +275,30 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			cv::inRange(imgBackground - depthImageRaw, cv::Scalar(10), cv::Scalar(kinectApp.depthMaxReliableDistance), maskBackground);
 			depthImageRaw.copyTo(subtracted, maskBackground + invalidPixels);
 			subtracted.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance);
-			cv::imshow("Subtracted", depthImageUc8);
+			//cv::imshow("Subtracted", depthImageUc8);
 		}
 		cv::Mat maskedImage;
 		cv::Mat mask = cv::Mat::zeros(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1);
+		;
 		//=====truncate region around the object=====
-		if (objPtr->isTracked && useROI)
+		if (true)//objPtr->IsTracked() && useROI)
 		{
-			Eigen::Vector3f pos = affineKinect2Global.inverse() * (objPtr->getPosition());
+			Eigen::Vector3f pos = AffineGlobal2Kinect() * (objPtr->getPosition());
 			cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * kinectApp.getDepthWidth()
 				, -pos.y() * 367.2 / pos.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
 			cv::circle(mask, p, 150 * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
 		}
 		else
 		{
-			//cv::Point center; float radius;
-			//bool isFound = findSphere(depthImageUc8, center, radius);
-			Eigen::Vector3f posTgt = affineKinect2Global.inverse() * (objPtr->getPositionTarget());
-			cv::Point p(posTgt.x() * 365.6 / posTgt.z() + 0.5 * kinectApp.getDepthWidth()
-				, -posTgt.y() * 367.2 / posTgt.z() + 0.5 * kinectApp.getDepthHeight()); //get pixel corresponding to the latest position of the object
-			cv::circle(mask, p, 150 * 365.6 / posTgt.z(), cv::Scalar(255), -1, 8);
-
-			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
-		
+			MaskWorkspace(mask);
+			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
-		cv::inRange(maskedImage, cv::Scalar(1), cv::Scalar(105), maskedImage);
+		//cv::imshow("ROI-masked", maskedImage);
+		cv::inRange(maskedImage, cv::Scalar(255 * RangeWorkspaceMin()/kinectApp.depthMaxReliableDistance), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
-		cv::imshow("ROI-masked", maskedImage);
 		//cv::imshow("In-range", maskedImage);
+		//cv::waitKey(1);
 		
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);
@@ -322,13 +310,13 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			DWORD currentTime = timeGetTime();
 			if (kinectApp.isReliablePosition(detectPosition))
 			{
-				float detectX = detectPosition.X * 1000;
-				float detectY = detectPosition.Y * 1000;
-				float detectZ = detectPosition.Z * 1000;
+				float detectX = detectPosition.X * 1000.f;
+				float detectY = detectPosition.Y * 1000.f;
+				float detectZ = detectPosition.Z * 1000.f;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 				float outpor = (detectR + objPtr->radius) / detectR;
 				pos << outpor * detectX, outpor * detectY, outpor * detectZ;
-				pos = affineKinect2Global * pos;
+				pos = AffineKinect2Global() * pos;
 				isValid = true;
 			}
 		}
@@ -339,7 +327,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 {
 	cv::Mat mask(kinectApp.getDepthHeight(), kinectApp.getDepthWidth(), CV_8UC1, cv::Scalar::all(0));
-	cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0 * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 1.0 * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
+	cv::rectangle(mask, cv::Point(0.05f * kinectApp.getDepthWidth(), 0.f * kinectApp.getDepthHeight()), cv::Point(0.95f * kinectApp.getDepthWidth(), 1.0f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 	cv::Mat maskDepth; cv::inRange(depthMap, cv::Scalar(5), cv::Scalar(102), maskDepth);
 	cv::bitwise_and(mask, maskDepth, mask);
 	depthMap.copyTo(depthMap, mask);
@@ -347,8 +335,8 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 	//cv::imshow("depthMask", maskDepth);
 	cv::Mat depthMapDenoised;
 	cv::morphologyEx(depthMap, depthMapDenoised, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
-	const float threshold1 = 100;
-	const float threshold2 = 200;
+	const float threshold1 = 100.f;
+	const float threshold2 = 200.f;
 	cv::Mat edges;
 	cv::Canny(depthMapDenoised, edges, threshold1, threshold2);
 	CameraIntrinsics depthIntrinsics;
@@ -386,7 +374,7 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 			//std::cout << "similar" << std::endl;
 			return true;
 		}
-		cv::imshow("edge", edges);
+		//cv::imshow("edge", edges);
 
 	}
 	return false;

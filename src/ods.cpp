@@ -263,7 +263,7 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		
 		cv::Mat depthImageUc8;
 		depthImageRaw.convertTo(depthImageUc8, CV_8UC1, 255.0 / (float)kinectApp.depthMaxReliableDistance, 0);
-		cv::imshow("Raw", depthImageUc8);
+		//cv::imshow("Raw", depthImageUc8);
 
 		//Background Subtraction
 		if (!backgroundDepth.empty())
@@ -294,11 +294,11 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 			//cv::rectangle(mask, cv::Point(0.05 * kinectApp.getDepthWidth(), 0.05f * kinectApp.getDepthHeight()), cv::Point(0.95 * kinectApp.getDepthWidth(), 0.7f * kinectApp.getDepthHeight()), cv::Scalar(255), -1, 8);
 		}
 		depthImageUc8.copyTo(maskedImage, mask);
-		cv::imshow("ROI-masked", maskedImage);
+		//cv::imshow("ROI-masked", maskedImage);
 		cv::inRange(maskedImage, cv::Scalar(255 * RangeWorkspaceMin()/kinectApp.depthMaxReliableDistance), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
-		cv::imshow("In-range", maskedImage);
-		cv::waitKey(1);
+		//cv::imshow("In-range", maskedImage);
+		//cv::waitKey(1);
 		
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);
@@ -374,7 +374,7 @@ bool ods::findSphere(const cv::Mat depthMap, cv::Point &center, float &radius)
 			//std::cout << "similar" << std::endl;
 			return true;
 		}
-		cv::imshow("edge", edges);
+		//cv::imshow("edge", edges);
 
 	}
 	return false;

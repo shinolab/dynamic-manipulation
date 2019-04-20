@@ -43,6 +43,7 @@ public:
 	DWORD lastDeterminationTime;
 	bool _isStable;
 	bool isControlled;
+	std::deque<Eigen::Vector3f> positionBuffer;
 	std::deque<Eigen::Vector3f> velocityBuffer;
 	std::deque<float> dTBuffer;
 	const int velocityBufferSize = 3;
@@ -80,6 +81,8 @@ public:
 	bool IsTracked();
 	void SetTrackingStatus(bool _isTracked);
 	Eigen::Vector3f averageVelocity();
+	Eigen::Vector3f AveragePosition();
+	Eigen::Vector3f AveragePosition(int sumpleNum);
 };
 
 class ods
@@ -89,22 +92,26 @@ private:
 	typedef Eigen::Matrix<float, 3, 8> Matrix38f;
 	KinectApp kinectApp;
 	Eigen::Vector3f positionKinect;
-	Eigen::Matrix3f dcmGlobal2Kinect;
-	Eigen::Matrix3f dcmKinect2Global; // x_kinect = attitudeKinect * x_global
-	Eigen::Affine3f affineKinect2Global;
+	//Eigen::Matrix3f dcmGlobal2Kinect;
+	Eigen::Matrix3f dcmKinect2Global;
+	//Eigen::Affine3f affineKinect2Global;
 	Eigen::Matrix<float, 3, 2> workspace;
 	std::vector<UINT16> backgroundDepth;
 
 public:
 	int Initialize();
 	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
+	void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global);
+	KinectApp* kinect();
 	void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
 	void CornersWorkspaceAll(Matrix38f &corners);
 	void MaskWorkspace(cv::Mat &mask);
 	float RangeWorkspace();
-	Eigen::Affine3f getAffineKinect2Global() { return affineKinect2Global; }
-	Eigen::Matrix3f getDcmGlobal2Kinect() { return dcmGlobal2Kinect; }
-	Eigen::Matrix3f getDcmKinect2Global() { return dcmKinect2Global; }
+	float RangeWorkspaceMin();
+	Eigen::Affine3f AffineKinect2Global() { return Eigen::Translation3f(positionKinect)*dcmKinect2Global; }
+	Eigen::Affine3f AffineGlobal2Kinect() { return AffineKinect2Global().inverse(); }
+	Eigen::Matrix3f DcmGlobal2Kinect() { return dcmKinect2Global.transpose(); }
+	Eigen::Matrix3f DcmKinect2Global() { return dcmKinect2Global; }
 	bool isInsideWorkSpace(const Eigen::Vector3f &pos);
 
 	void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
@@ -136,25 +143,20 @@ private:
 
 public:
 	int Initialize();
-
 	void Close();
-
 	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
-
+	
 	Eigen::MatrixXf CentersAUTD();
-
 	Eigen::MatrixXf DirectionsAUTD();
 
 	void SetArfModel(std::unique_ptr<arfModelLinearBase> arfModelPtr);
-
 	void SetGain(Eigen::Vector3f const &gainP, Eigen::Vector3f const &gainD, Eigen::Vector3f const &gainI);
 
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
-
 	Eigen::VectorXf FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward);
-
 	Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
-
+	Eigen::VectorXf FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
+	Eigen::VectorXf FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold = 0.7071f);
 	Eigen::VectorXf FindDutyMaximizeForce(Eigen::Vector3f const &direction, 
 		Eigen::MatrixXf const &constrainedDirections, 
 		Eigen::Vector3f const &position,
@@ -162,11 +164,10 @@ public:
 		float &force,
 		Eigen::Vector3f const &force_offset = Eigen::Vector3f(0.f, 0.f, 0.f));
 	
-	autd::GainPtr CreateGain(FloatingObjectPtr objPtr);
+	autd::GainPtr CreateGain(FloatingObjectPtr objPtr, int numObj = 1);
 
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
-
 	Eigen::VectorXf FindDutyQPEq(FloatingObjectPtr objPtr);
 };
 
@@ -174,6 +175,8 @@ class odcs
 {
 public:
 	void Initialize();
+	std::shared_ptr<ods> Sensor();
+	std::shared_ptr<ocs> Controller();
 	int AddObject(Eigen::Vector3f const &positionTarget);
 	int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 	void RegisterObject(FloatingObjectPtr objPtr);
@@ -187,6 +190,11 @@ public:
 	std::thread thread_control;
 private:
 	std::vector<FloatingObjectPtr> objPtrs;
+	std::shared_mutex mtxRunning;
+	bool flagRunning = false;
+
+public:
+	bool isRunning();
 };
 
 class Trajectory
@@ -211,6 +219,9 @@ public:
 	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
 	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+	static std::shared_ptr<Trajectory> Create(Eigen::Vector3f const &positionTarget,
+		Eigen::Vector3f const &velocityTarget,
+		Eigen::Vector3f const &accelTarget);
 };
 
 class TrajectoryBangBang : public Trajectory
@@ -237,6 +248,37 @@ public:
 	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
 	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+	static std::shared_ptr<Trajectory> Create(float const &timeTotal,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd);
+};
+
+class TrajectoryBang : public Trajectory {
+private:
+private:
+	float timeToGo;
+	float timeInit;
+	Eigen::Vector3f posInit;
+	Eigen::Vector3f posEnd;
+public:
+	TrajectoryBang(float const &timeToGo,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd)
+	{
+		this->timeToGo = timeToGo;
+		this->timeInit = timeInit;
+		this->posInit = posInit;
+		this->posEnd = posEnd;
+	}
+	Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
+	Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+	static std::shared_ptr<Trajectory> Create(float const &timeToGo,
+		float const &timeInit,
+		Eigen::Vector3f const &posInit,
+		Eigen::Vector3f const &posEnd);
 };
 
 class TrajectoryMaxAccel : public Trajectory {

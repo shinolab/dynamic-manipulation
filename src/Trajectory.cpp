@@ -24,6 +24,12 @@ Eigen::Vector3f TrajectoryConstantState::accel(float const &time) {
 	return accelTgt;
 }
 
+std::shared_ptr<Trajectory> TrajectoryConstantState::Create(Eigen::Vector3f const &positionTarget,
+	Eigen::Vector3f const &velocityTarget,
+	Eigen::Vector3f const &accelTarget) {
+	return std::shared_ptr<Trajectory>(new TrajectoryConstantState(positionTarget, velocityTarget, accelTarget));
+}
+
 Eigen::Vector3f TrajectoryBangBang::pos(float const &time)
 {
 	if (time < timeInit) return posInit;
@@ -43,6 +49,46 @@ Eigen::Vector3f TrajectoryBangBang::accel(float const &time)
 {
 	if (time < timeInit || time >(timeInit + timeTotal)) return Eigen::Vector3f::Zero();
 	return 	2.0f * (time - timeInit) < timeTotal ? 4.0f * (posEnd - posInit) / timeTotal / timeTotal : 4.0f * (posInit - posEnd) / timeTotal / timeTotal;
+}
+
+std::shared_ptr<Trajectory> TrajectoryBangBang::Create(float const &timeTotal,
+	float const &timeInit,
+	Eigen::Vector3f const &posInit,
+	Eigen::Vector3f const &posEnd) {
+	return std::shared_ptr<Trajectory>(new TrajectoryBangBang(timeTotal, timeInit, posInit, posEnd));
+}
+
+Eigen::Vector3f TrajectoryBang::pos(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return posInit;
+	float dt = time - timeInit;
+	if (dt < timeToGo) {
+		return 0.5f * dt * dt * accel(time) + posInit;
+	}
+	else {
+		return posInit + 0.5f * accel(time) * (2.f * timeToGo - dt) * (2.f * timeToGo - dt);
+	}
+}
+
+Eigen::Vector3f TrajectoryBang::vel(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return dt < timeToGo ? accel(time) * dt : accel(time) * (2 * timeToGo - dt);
+}
+
+Eigen::Vector3f TrajectoryBang::accel(float const &time)
+{
+	if (time < timeInit || time > timeInit + 2 * timeToGo) return Eigen::Vector3f::Zero();
+	float dt = time - timeInit;
+	return 	dt < timeToGo ? 2.0f * (posEnd - posInit) / timeToGo / timeToGo : 2.0f * (posInit - posEnd) / timeToGo / timeToGo;
+}
+
+std::shared_ptr<Trajectory> TrajectoryBang::Create(float const &timeToGo,
+	float const &timeInit,
+	Eigen::Vector3f const &posInit,
+	Eigen::Vector3f const &posEnd) {
+	return std::shared_ptr<Trajectory>(new TrajectoryBang(timeToGo, timeInit, posInit, posEnd));
 }
 
 TrajectoryMaxAccel::TrajectoryMaxAccel(Eigen::Vector3f const &positionTerminal,

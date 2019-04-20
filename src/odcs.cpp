@@ -1,5 +1,7 @@
 #include <thread>
 #include <vector>
+#include <iostream>
+#include <fstream>
 #include <Eigen\Dense>
 #include <opencv2\core.hpp>
 #include <opencv2\highgui.hpp>
@@ -25,6 +27,14 @@ void odcs::Initialize()
 	}
 }
 
+std::shared_ptr<ods> odcs::Sensor() {
+	return odsPtr;
+}
+
+std::shared_ptr<ocs> odcs::Controller() {
+	return ocsPtr;
+}
+
 int odcs::AddObject(Eigen::Vector3f const &targetPosition)
 {
 	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
@@ -42,12 +52,12 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 30)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 20)
 {
-	DWORD timeInit = timeGetTime();
 	//int periodPerObject = loopPeriod / objPtrs.size();
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
+		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
 		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
@@ -58,7 +68,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->SetTrackingStatus(true);
-			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr)));
+			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr), objPtrs.size()));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
@@ -70,34 +80,41 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
 		ocs.DirectSemiPlaneWave((*itr), duties);
 		*/	
+		//std::cout << timeGetTime() - loopInit << std::endl;
+
+		int waitTime = loopPeriod - (timeGetTime() - loopInit);
+		Sleep(std::max(waitTime, 0));
 	}
-	int waitTime = loopPeriod - (timeGetTime() - timeInit);
-	Sleep(std::max(waitTime, 0));
+
+}
+
+bool odcs::isRunning() {
+	std::shared_lock<std::shared_mutex> lk(mtxRunning);
+	return flagRunning;
 }
 
 void odcs::StartControl()
 {
+	{
+		std::lock_guard<std::shared_mutex> lock(mtxRunning);
+		flagRunning = true;
+	}
 	thread_control = std::thread([this](){
-		cv::imshow("controlwindow", cv::Mat::zeros(500, 500, CV_8UC1));
-		Sleep(5);
-		while (1)
+		while (isRunning())
 		{
 			this->ControlLoop(objPtrs);
-			auto key = cv::waitKey(1);
-			if (key == 'q')
-			{
-				cv::destroyAllWindows();
-				break;
-			}
 		}
 	});
 }
 
 void odcs::Close()
 {
-	if (thread_control.joinable())
 	{
-	thread_control.join();
+		std::lock_guard<std::shared_mutex> lk(mtxRunning);
+		flagRunning = false;
+	}
+	if (thread_control.joinable()){
+		thread_control.join();
 	}
 	ocsPtr->Close();
 }

@@ -2,8 +2,9 @@
 #include <boost\assert.hpp>
 #include "autd3.hpp"
 #include "additionalGain.hpp"
+#include <iostream>
 
-autd::GainPtr autd::DeviceSpecificFocalPointGain::Create(Eigen::MatrixXf points, Eigen::VectorXi amplitudes)
+autd::GainPtr autd::DeviceSpecificFocalPointGain::Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes)
 {
 	std::shared_ptr<DeviceSpecificFocalPointGain> ptr = std::shared_ptr<DeviceSpecificFocalPointGain>(new DeviceSpecificFocalPointGain());
 	ptr->_points = points;
@@ -77,4 +78,5 @@ void autd::GaussianBeamGain::build()
 			this->_data[this->geometry()->deviceIdForTransIdx(i)][i%NUM_TRANS_IN_UNIT] = ((uint16_t)amp << 8) + phase;
 		}
 	}
+	std::cout << count << " transducers operating." << std::endl;
 }

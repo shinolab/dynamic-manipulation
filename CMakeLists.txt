@@ -50,6 +50,7 @@ add_library(DynamicLevitation STATIC
  src/kalmanFilter.cpp
  inc/QPSolver.h
  src/Trajectory.cpp
+ inc/EigenTools.hpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
@@ -61,12 +62,23 @@ add_library(Projector STATIC
 	src/projector.cpp
 )
 
+add_library(winMultiplexer STATIC
+	inc/winMultiplexer.hpp
+	src/winMultiplexer.cpp
+)
+
 add_library(QPSolver
 	inc/QPSolver.h
 	src/QPSolver.cpp
 )
 target_link_libraries(QPSolver CGAL::CGAL)
-target_link_libraries(DynamicLevitation autd3 ${Boost_LIBRARIES} ${OpenCV_LIBS} ${KinectSDK2_LIBRARIES} QPSolver)
+target_link_libraries(DynamicLevitation autd3
+ ${Boost_LIBRARIES}
+ ${OpenCV_LIBS}
+ ${KinectSDK2_LIBRARIES}
+ QPSolver
+ winMultiplexer
+)
 
 add_subdirectory(sample)
 add_subdirectory(test)

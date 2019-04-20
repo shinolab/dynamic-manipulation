@@ -8,7 +8,7 @@ namespace autd{
 	class DeviceSpecificFocalPointGain : public Gain {
 
 	public:
-		static GainPtr Create(Eigen::MatrixXf points, Eigen::VectorXi amplitudes);
+		static GainPtr Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes);
 		void build();
 	private:
 		Eigen::MatrixXf _points;

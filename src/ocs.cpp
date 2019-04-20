@@ -12,33 +12,15 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#define NUM_AUTDS 5
-#define NUM_STATES 6
+#define NUM_AUTDS 12
 
 int ocs::Initialize()
 {
 	_autd.Open(autd::LinkType::ETHERCAT);
 	if (!_autd.isOpen()) return ENXIO;
 
-	Eigen::Vector3f positionAUTD0(-85, -65, 0); Eigen::Vector3f eulerAngleAUTD0(0, 0, 0);
-	Eigen::Vector3f positionAUTD1(-998, 65, 1038); Eigen::Vector3f eulerAngleAUTD1(M_PI, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD2(998, -65, 1038); Eigen::Vector3f eulerAngleAUTD2(0, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD3(-65, -998, 1038); Eigen::Vector3f eulerAngleAUTD3(-M_PI_2, -M_PI_2, 0);
-	Eigen::Vector3f positionAUTD4(65, 998, 1038); Eigen::Vector3f eulerAngleAUTD4(M_PI_2, -M_PI_2, 0);
-
-	_autd.geometry()->AddDevice(positionAUTD0, eulerAngleAUTD0);
-	_autd.geometry()->AddDevice(positionAUTD1, eulerAngleAUTD1);
-	_autd.geometry()->AddDevice(positionAUTD2, eulerAngleAUTD2);
-	_autd.geometry()->AddDevice(positionAUTD3, eulerAngleAUTD3);
-	_autd.geometry()->AddDevice(positionAUTD4, eulerAngleAUTD4);
-	
-	positionsAUTD.resize(3, _autd.geometry()->numDevices());
-	positionsAUTD << positionAUTD0, positionAUTD1, positionAUTD2, positionAUTD3, positionAUTD4;
-	eulerAnglesAUTD.resize(3, _autd.geometry()->numDevices());
-	eulerAnglesAUTD << eulerAngleAUTD0, eulerAngleAUTD1, eulerAngleAUTD2, eulerAngleAUTD3, eulerAngleAUTD4;
 	//arfModelPtr.reset(new arfModelTheoreticalTable());
 	arfModelPtr.reset(new arfModelFocusOnSphereExperimental());
-	std::cout << "centersAUTD\n" << CentersAUTD() << std::endl;
 	return 0;
 }
 
@@ -103,15 +85,15 @@ void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, 
 	this->gainI = _gainI;
 }
 
-autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr)
+autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr, int numObj)
 {
 	Eigen::Vector3f accel
 		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
-		+ gainD.asDiagonal() * (objPtr->getVelocity() - objPtr->getVelocityTarget())
+		+ gainD.asDiagonal() * (objPtr->averageVelocity() - objPtr->getVelocityTarget())
 		+ gainI.asDiagonal() * objPtr->getIntegral()
 		+ objPtr->getAccelTarget();
-	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665f);
-	Eigen::VectorXf duties = FindDutyQP(forceToApply, objPtr->getPosition());
+	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
+	Eigen::VectorXf duties = numObj * FindDutySelectiveQP(forceToApply, objPtr->getPosition(), 0.5);
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
@@ -199,6 +181,50 @@ Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f co
 	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }
 
+Eigen::VectorXf ocs::FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position) {
+	Eigen::VectorXf result;
+	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
+	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
+	EigenCgalQpSolver(result,
+		Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		F.transpose() * F,
+		-F.transpose() * force,
+		Eigen::VectorXi::Ones(_autd.geometry()->numDevices()),
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		Eigen::VectorXf::Ones(_autd.geometry()->numDevices())
+	);
+	return std::move(result);
+}
+
+Eigen::VectorXf ocs::FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold) {
+	Eigen::MatrixXf posRel = (position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD());
+	//Choose effective autds based on their radiation angle to avoid modelling errors and undesirable reflections.
+	Eigen::ArrayXf innerProducts = (posRel.colwise().normalized().array() * DirectionsAUTD().array()).colwise().sum();
+	Eigen::Array<bool, 1, Eigen::Dynamic> isEffective = (innerProducts >= threshold) && (innerProducts < 0.97);
+	Eigen::MatrixXf selector = Eigen::MatrixXf::Zero(isEffective.size(), isEffective.count());
+	for (int iRow = 0, iCol = 0; iCol < selector.cols() && iRow < selector.rows();) {
+		if (isEffective(iRow)) {
+			selector(iRow, iCol) = 1.0f;
+			iCol++;
+		}
+		iRow++;
+	}
+	Eigen::MatrixXf F = arfModelPtr->arf(posRel * selector, eulerAnglesAUTD * selector);
+	Eigen::VectorXf result_reduced;
+	EigenCgalQpSolver(result_reduced,
+		Eigen::MatrixXf::Identity(isEffective.count(), isEffective.count()),
+		Eigen::VectorXf::Zero(isEffective.count()),
+		F.transpose() * F,
+		-F.transpose() * force,
+		Eigen::VectorXi::Ones(isEffective.count()),
+		Eigen::VectorXf::Zero(isEffective.count()),
+		Eigen::VectorXf::Ones(isEffective.count())
+	);
+	return selector * result_reduced;	//expanded to specify which autd to use.
+
+}
+
 Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	Eigen::MatrixXf const &constrainedDirections,
 	Eigen::Vector3f const &position,
@@ -206,16 +232,15 @@ Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 	float &force,
 	Eigen::Vector3f const &force_offset)
 {
-	int const scale = 10000000; // variables are scaled for CGAL LP solver accepts only integer numbers
 	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, CentersAUTD().cols()) - CentersAUTD();
 	force = EigenLinearProgrammingSolver(result,
-		scale*constrainedDirections.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD),
-		-scale*constrainedDirections.transpose() * force_offset, //right hand side of constraints.
-		-scale * direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
+		constrainedDirections.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD),
+		-constrainedDirections.transpose() * force_offset, //right hand side of constraints.
+		-direction.transpose() * arfModelPtr->arf(posRel, eulerAnglesAUTD), //formulation for minimization problem
 		Eigen::VectorXi::Zero(constrainedDirections.cols()), //all the conditions are equality ones.
 		Eigen::VectorXf::Zero(eulerAnglesAUTD.cols()), //lower bound
-		scale * duty_limit,
-		scale); //upper bound
-	return result / scale;
+		duty_limit,
+		1.0e-8f); //upper bound
+	return result;
 }

@@ -29,6 +29,10 @@ extern "C" {
 		((odcs*)dynamanPtr)->odsPtr->SetSensorGeometry(Eigen::Vector3f(x,y,z), Eigen::Vector3f(angle_z1, angle_y2, angle_z3));
 	}
 
+	__declspec(dllexport) void SetWorkSpace(void* dynamanPtr, float x0, float y0, float z0, float x1, float y1, float z1) {
+		((odcs*)dynamanPtr)->odsPtr->SetWorkSpace(Eigen::Vector3f(x0, y0, z0), Eigen::Vector3f(x1, y1, z1));
+	}
+
 	__declspec(dllexport) void* CreateFloatingObject(float x, float y, float z, float weight, float radius) {
 		auto pObjPtr = new FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(x, y, z), weight, radius));
 		return (void*)pObjPtr;

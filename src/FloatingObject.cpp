@@ -11,7 +11,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass)
+FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass, float _radius)
 {
 	position << _positionTarget;
 	velocity << 0, 0, 0;
@@ -37,11 +37,12 @@ FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _ad
 		*itr = 1;
 	}
 	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
+	radius = _radius;
 }
 
-FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, float _additionalMass)
+FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, float _additionalMass, float _radius)
 {
-	return FloatingObjectPtr(new FloatingObject(posTgt, _additionalMass));
+	return FloatingObjectPtr(new FloatingObject(posTgt, _additionalMass, _radius));
 }
 
 float FloatingObject::sphereMass()

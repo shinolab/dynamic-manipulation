@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8.2)
+
+enable_language(CSharp)
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -79,6 +81,19 @@ target_link_libraries(DynamicLevitation autd3
  QPSolver
  winMultiplexer
 )
+
+add_library(dynaman_dll SHARED
+	dll/dll.cpp
+)
+target_link_libraries(dynaman_dll DynamicLevitation)
+
+add_executable(simple_cs
+	cs_api/simple.cs
+	cs_api/dynaman.cs
+)
+
+target_link_libraries(simple_cs dynaman_dll)
+target_compile_options(simple_cs PUBLIC "/unsafe")
 
 add_subdirectory(sample)
 add_subdirectory(test)

@@ -62,8 +62,8 @@ private:
 	std::shared_mutex mtxTrajectory;
 	std::shared_ptr<Trajectory> trajectoryPtr;
 public:
-	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3);
-	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3);
+	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3, float _radius = 90.f);
+	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3, float radius = 90.f);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 	float AdditionalMass();

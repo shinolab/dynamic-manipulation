@@ -1,5 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
+#if ENABLE_MATHNET
+using MathNet.Numerics.LinearAlgebra;
+#endif
 
 namespace Dynaman
 {
@@ -106,5 +109,64 @@ namespace Dynaman
             Dynaman.Api.MoveObjectFromTo(floatingObjectPtr, x0, y0, z0, x, y, z, timeToGo, timeInit);
         }
 
+#if ENABLE_MATHNET
+        public static void AddDevice(Vector<float> pos, Vector<float> eulerAngles)
+        {
+            Api.AddDevice(dynamanPtr, pos[0], pos[1], pos[2], eulerAngles[0], eulerAngles[1], eulerAngles[2]);
+        }
+
+        public static void SetSensorGeometry(Vector<float> pos, Vector<float> eulerAngles)
+        {
+            Api.SetSensorGeometry(dynamanPtr, pos[0], pos[1], pos[2], eulerAngles[0], eulerAngles[1], eulerAngles[2]);
+        }
+
+        public static void SetWorkspece(Vector<float> corner0, Vector<float> corner1)
+        {
+            Api.SetWorkSpace(dynamanPtr, corner0[0], corner0[1], corner0[2], corner1[0], corner1[1], corner1[2]);
+        }
+
+        public FloatingObject(Vector<float> posTgt, float weight, float radius)
+        {
+            Api.CreateFloatingObject(posTgt[0], posTgt[1], posTgt[2], weight, radius);
+        }
+
+        public void StayAt(Vector<float> pos)
+        {
+            Dynaman.Api.KeepObjectAt(floatingObjectPtr, pos[0], pos[1], pos[2]);
+        }
+
+        public Vector<float> Position()
+        {
+            var pos = new float[3];
+            unsafe
+            {
+                fixed (float* pPos = &pos[0])
+                {
+                    Dynaman.Api.GetObjectPosition(floatingObjectPtr, pPos, pPos+1, pPos+2);
+                }
+            }
+            return Vector<float>.Build.DenseOfArray(pos);
+        }
+
+        public Vector<float> PositionTarget()
+        {
+            var pos = new float[3];
+            unsafe
+            {
+                fixed (float* pPos = &pos[0])
+                {
+                    Dynaman.Api.GetObjectPositionTarget(floatingObjectPtr, pPos, pPos + 1, pPos + 2);
+                }
+            }
+            return Vector<float>.Build.DenseOfArray(pos);
+        }
+
+        public unsafe void MoveTo(Vector<float> pos, float timeToGo, float timeInit)
+        {
+            float x0, y0, z0;
+            PositionTarget(&x0, &y0, &z0);
+            Dynaman.Api.MoveObjectFromTo(floatingObjectPtr, x0, y0, z0, pos[0], pos[1], pos[2], timeToGo, timeInit);
+        }
+#endif
     }
 }

@@ -64,7 +64,7 @@ namespace Dynaman
 
         public FloatingObject(float x, float y, float z, float weight, float radius)
         {
-            Api.CreateFloatingObject(x, y, z, weight, radius);
+            floatingObjectPtr = Api.CreateFloatingObject(x, y, z, weight, radius);
         }
 
         public void Register()

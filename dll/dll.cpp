@@ -34,8 +34,7 @@ extern "C" {
 	}
 
 	__declspec(dllexport) void* CreateFloatingObject(float x, float y, float z, float weight, float radius) {
-		auto pObjPtr = new FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(x, y, z), weight, radius));
-		return (void*)pObjPtr;
+		return (void*)(new FloatingObjectPtr(new FloatingObject(Eigen::Vector3f(x, y, z), weight, radius)));
 	}
 
 	__declspec(dllexport) bool DeleteFloatingObject(void* objPtr) {
@@ -45,7 +44,7 @@ extern "C" {
 		return true;
 	}
 
-	__declspec(dllexport) void RegisterFloatingObject(void* dynamanPtr, void* objPtr) {
+	__declspec(dllexport) void RegisterFloatingObject(void* objPtr, void* dynamanPtr) {
 		((odcs*)dynamanPtr)->RegisterObject(*(FloatingObjectPtr*)objPtr);
 	}
 

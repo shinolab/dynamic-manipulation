@@ -91,8 +91,14 @@ add_executable(simple_cs
 	cs_api/simple.cs
 	cs_api/dynaman.cs
 )
+option(USE_MATHNET "use Math.Net" ON)
+if(USE_MATHNET)
+	add_definitions(-DENABLE_MATHNET)
+	target_link_libraries(simple_cs dynaman_dll cs_api/deps/MathNet.Numerics)
+else()
+	target_link_libraries(simple_cs dynaman_dll)
+endif()
 
-target_link_libraries(simple_cs dynaman_dll)
 target_compile_options(simple_cs PUBLIC "/unsafe")
 
 add_subdirectory(sample)

@@ -83,7 +83,9 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		//std::cout << timeGetTime() - loopInit << std::endl;
 
 		int waitTime = loopPeriod - (timeGetTime() - loopInit);
+		timeBeginPeriod(1);
 		Sleep(std::max(waitTime, 0));
+		timeEndPeriod(1);
 	}
 
 }

@@ -1,5 +1,3 @@
-#ifndef kinectApp_
-#define kinectApp_
 #include <iostream>
 #include <sstream>
 #include <atlbase.h>
@@ -243,5 +241,3 @@ HRESULT KinectApp::getBodies()
 	}
 	return hr;
 }
-
-#endif

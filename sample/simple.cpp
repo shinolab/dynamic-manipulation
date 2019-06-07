@@ -29,7 +29,8 @@ int main()
 		-0.999986, -0.000739038, 0.00521048,
 		0.00518096, 0.0355078, 0.999356,
 		-0.000923425, 0.999369, -0.0355035;
-	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(35.1867f, -1242.32f, 1085.62f), rotationKinect2Global);
+	Eigen::Matrix3f rot2 = rotationKinect2Global.transpose();
+	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(35.1867f, -1242.32f, 1085.62f), rot2);
 
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
@@ -51,13 +52,13 @@ int main()
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
-	FloatingObjectPtr objPtr1 = FloatingObject::Create(center, -0.0001f);
+	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f);
 	FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
 	dynaman.RegisterObject(objPtr1); // add object
-	//dynaman.RegisterObject(objPtr2); // add object
+	dynaman.RegisterObject(objPtr2); // add object
 	dynaman.StartControl();	
 	std::thread th_log([&objPtr1, &objPtr2]() {
-		std::ofstream ofs("20190405_log_single.csv");
+		std::ofstream ofs("20190607_log_double3.csv");
 		DWORD timeInit = timeGetTime();
 		while (1) {
 			DWORD currentTime = timeGetTime();
@@ -83,9 +84,9 @@ int main()
 			std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(40));
 		}
 	});
-	//std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(60));
-	//objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
-	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
+	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(60));
+	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	dynaman.Close();

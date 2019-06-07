@@ -244,7 +244,7 @@ bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectY = 1000 * detectPosition.Y;
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-				float outpor = (detectR + objPtr->radius) / detectR;
+				float outpor = (detectR + objPtr->radius + 55) / detectR;
 				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}
@@ -297,8 +297,8 @@ bool ods::GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, boo
 		//cv::imshow("ROI-masked", maskedImage);
 		cv::inRange(maskedImage, cv::Scalar(255 * RangeWorkspaceMin()/kinectApp.depthMaxReliableDistance), cv::Scalar(255 * RangeWorkspace() / kinectApp.depthMaxReliableDistance), maskedImage);
 		cv::morphologyEx(maskedImage, maskedImage, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 2);
-		//cv::imshow("In-range", maskedImage);
-		//cv::waitKey(1);
+		cv::imshow("In-range", maskedImage);
+		cv::waitKey(1);
 		
 		//detect position of the object
 		cv::Moments mu = cv::moments(maskedImage, true);

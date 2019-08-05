@@ -27,10 +27,11 @@ int main()
 	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1570.f));
 	Eigen::Matrix3f rotationKinect2Global;
 	rotationKinect2Global <<
-		-0.999986, -0.000739038, 0.00521048,
-		0.00518096, 0.0355078, 0.999356,
-		-0.000923425, 0.999369, -0.0355035;
-	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(35.1867f, -1242.32f, 1085.62f), rotationKinect2Global);
+		-0.999971f,  0.00739537f, -0.00169575f,
+		-0.001628f, 0.0091623f, 0.999957f,
+		0.00741063f, 0.999931f, -0.00915001f;
+	Eigen::Matrix3f rot2 = rotationKinect2Global;
+	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f), rot2);
 
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
@@ -51,12 +52,17 @@ int main()
 	Eigen::Vector3f gainI = 0.0f*Eigen::Vector3f::Constant(-0.05f);
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
-	FloatingObjectPtr objPtr = FloatingObject::Create(center, -0.0001f, 178);
-	dynaman.RegisterObject(objPtr); // add object
-	dynaman.StartControl();
+
+	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f);
+	//FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
+	dynaman.RegisterObject(objPtr1); // add object
+	//dynaman.RegisterObject(objPtr2); // add object
+	dynaman.StartControl();	
+
+	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;
-
 	getchar();
 	dynaman.Close();
 	return 0;

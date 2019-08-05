@@ -47,10 +47,10 @@ public:
 	std::deque<Eigen::Vector3f> velocityBuffer;
 	std::deque<float> dTBuffer;
 	const int velocityBufferSize = 3;
-	float radius = 90.0; // [mm]
+	float radius; // [mm]
 	//const float mass = 5.4e-3; //[Kg]
 	float speedLimit = 400; // [mm/s]
-	float additionalMass = 0.1e-3;
+	float additionalMass;
 
 private:
 	Eigen::Vector3f position;
@@ -62,8 +62,8 @@ private:
 	std::shared_mutex mtxTrajectory;
 	std::shared_ptr<Trajectory> trajectoryPtr;
 public:
-	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3, float _radius = 90.f);
-	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3, float radius = 90.f);
+	FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3f, float _radius = 90.f);
+	static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3f, float radius = 90.f);
 
 	float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 	float AdditionalMass();

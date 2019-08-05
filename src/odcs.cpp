@@ -52,7 +52,7 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 	return ((i < objPtrs.size()) ? objPtrs[i] : nullptr);		
 }
 
-void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 20)
+void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 33)
 {
 	//int periodPerObject = loopPeriod / objPtrs.size();
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)

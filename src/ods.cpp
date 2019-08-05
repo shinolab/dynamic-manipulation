@@ -244,7 +244,7 @@ bool ods::GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::S
 				float detectY = 1000 * detectPosition.Y;
 				float detectZ = 1000 * detectPosition.Z;
 				float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
-				float outpor = (detectR + objPtr->radius + 55) / detectR;
+				float outpor = (detectR + objPtr->radius) / detectR;
 				pos << AffineKinect2Global() * Eigen::Vector3f(outpor * detectX, outpor * detectY, outpor * detectZ);
 				isValid = true;
 			}

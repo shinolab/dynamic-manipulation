@@ -20,12 +20,18 @@ int main() {
 	std::string projectorName = "projector1";
 	projector proj(projectorName);
 	proj.CreateScreen();
-	cv::VideoCapture cap0(0);
+	cv::VideoCapture cap0(1);
 	if (!cap0.isOpened()) {
 		std::cerr << "ERROR: failed to open camera." << std::endl;
 		return -1;
 	}
-	cv::VideoCapture cap1(1);
+	cv::VideoCapture cap1(2);
+	if (!cap1.isOpened()) {
+		std::cerr << "ERROR: failed to open camera." << std::endl;
+		return -1;
+	}
+
+	cv::VideoCapture cap2(0);
 	if (!cap1.isOpened()) {
 		std::cerr << "ERROR: failed to open camera." << std::endl;
 		return -1;

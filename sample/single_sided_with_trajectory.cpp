@@ -47,6 +47,7 @@ int main() {
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 	dynaman.RegisterObject(objPtr);
 	dynaman.StartControl();
+
 	std::thread th_log([&objPtr]() {
 		std::ofstream ofs_log("0190323_trajectory_log8_aveVel.csv");
 		ofs_log << "t, x, y, z, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, axTgt, ayTgt, azTgt" << std::endl;

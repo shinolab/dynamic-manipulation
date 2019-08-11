@@ -20,10 +20,10 @@
 int main() {
 
 	/*デモするときに調整するパラメータ*/
-	Eigen::Vector3f posRight(426.14f, 596.04f, 1331.f);//右に移動した後の位置
-	Eigen::Vector3f posLeft(-423.86f, 596.04f, 1331.f);//左に移動した後の位置
-	double translationTime = 10.0; //移動にかける時間(短いほど早い、安定性は下がる)
-	double intervalTime = 10.0; //移動後の待ち時間
+	Eigen::Vector3f posRight(200.14f, 596.04f, 1331.f);//右に移動した後の位置
+	Eigen::Vector3f posLeft(-200.86f, 596.04f, 1331.f);//左に移動した後の位置
+	double translationTime = 8.0; //移動にかける時間(短いほど早い、安定性は下がる)
+	double intervalTime = 4.0; //移動後の待ち時間
 
 	odcs dynaman;
 	dynaman.Initialize();
@@ -64,7 +64,7 @@ int main() {
 		std::make_pair([&]() {objPtr->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(translationTime, timeGetTime() / 1000.f, posRight, posLeft))); std::cout << "translation started" << std::endl; } , 1000*(translationTime + intervalTime)),
 	};
 	winMultiplexer multiplexer(orders);
-	multiplexer.RunAsync();
+	//multiplexer.RunAsync();
 	getchar();
 	multiplexer.Stop();
 	dynaman.Close();

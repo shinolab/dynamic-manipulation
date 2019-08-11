@@ -103,3 +103,4 @@ target_compile_options(simple_cs PUBLIC "/unsafe")
 
 add_subdirectory(sample)
 add_subdirectory(test)
+add_subdirectory(server)

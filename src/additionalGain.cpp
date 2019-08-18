@@ -118,15 +118,13 @@ void autd::VortexFocalPointGain::build() {
 			Eigen::Vector3f point = this->_points.col(idevice);
 			Eigen::Vector3f trp_local = trp - center;
 			float dist = (trp - point).norm();
-			float xtrans = xaxis.dot(trp_local);
-			float ytrans = yaxis.dot(trp_local);
-			float theta = atan2(ytrans, xtrans);
+		
 			/*
 			float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH
 				- _chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local));
 
 			*/
-			float fphase = -_chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local));
+			float fphase = _chiralities[idevice] * (atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local)) + M_PI) / 2.f / M_PI;
 
 			uint8_t phase = round(255.0*(1 - fphase));
 			this->_data[idevice][itrans] = ((uint16_t)amplitude << 8) + phase;

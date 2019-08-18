@@ -76,7 +76,7 @@ void ods::CornersWorkspaceAll(Matrix38f &corners) {
 	int index[3];
 	for (int i = 0; i < 8; i++) {
 		int res = i;
-		for (int j = 0; j < 8; j++) {
+		for (int j = 0; j < 3; j++) {
 			index[j] = res % 2;
 			res /= 2;
 		}

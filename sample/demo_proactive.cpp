@@ -20,9 +20,9 @@
 int main() {
 
 	/*デモするときに調整するパラメータ*/
-	Eigen::Vector3f posRight(200.14f, 596.04f, 1331.f);//右に移動した後の位置
-	Eigen::Vector3f posLeft(-200.86f, 596.04f, 1331.f);//左に移動した後の位置
-	double translationTime = 8.0; //移動にかける時間(短いほど早い、安定性は下がる)
+	Eigen::Vector3f posRight(400.14f, 596.04f, 1331.f);//右に移動した後の位置
+	Eigen::Vector3f posLeft(-400.86f, 596.04f, 1331.f);//左に移動した後の位置
+	double translationTime = 2.0; //移動にかける時間(短いほど早い、安定性は下がる)
 	double intervalTime = 4.0; //移動後の待ち時間
 
 	odcs dynaman;
@@ -35,7 +35,7 @@ int main() {
 		-0.000923425, 0.999369, -0.0355035;
 	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(35.1867f, -1242.32f, 1085.62f), rotationKinect2Global);
 
-	FloatingObjectPtr objPtr = FloatingObject::Create(posLeft, -0.0001f);
+	FloatingObjectPtr objPtr = FloatingObject::Create(posLeft, -0.0001f, 79.0f);
 
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
@@ -64,7 +64,7 @@ int main() {
 		std::make_pair([&]() {objPtr->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(translationTime, timeGetTime() / 1000.f, posRight, posLeft))); std::cout << "translation started" << std::endl; } , 1000*(translationTime + intervalTime)),
 	};
 	winMultiplexer multiplexer(orders);
-	//multiplexer.RunAsync();
+	multiplexer.RunAsync();
 	getchar();
 	multiplexer.Stop();
 	dynaman.Close();

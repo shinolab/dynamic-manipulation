@@ -19,3 +19,6 @@ target_link_libraries(WorkSpaceTest DynamicLevitation)]]
 
 add_executable(FindDutyTest FindDutyTest.cpp)
 target_link_libraries(FindDutyTest DynamicLevitation)
+
+add_executable(Vortex Vortex.cpp)
+target_link_libraries(Vortex DynamicLevitation)

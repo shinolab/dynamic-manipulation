@@ -9,7 +9,6 @@
 #include <thread>
 #include <Windows.h>
 #include <opencv2/core.hpp>
-#include <opencv2/shape.hpp>
 #include <opencv2/highgui.hpp>
 
 #pragma comment(lib, "winmm.lib")

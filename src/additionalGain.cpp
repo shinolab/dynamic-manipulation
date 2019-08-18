@@ -83,13 +83,13 @@ void autd::GaussianBeamGain::build()
 }
 
 autd::GainPtr autd::VortexFocalPointGain::Create(Eigen::Matrix3Xf const &points,
-	Eigen::VectorXf const &amplitudes,
+	Eigen::VectorXi const &amplitudes,
 	Eigen::VectorXf const &chilarities) {
 	auto ptr = std::shared_ptr<VortexFocalPointGain>(new VortexFocalPointGain());
 	ptr->_points = points;
 	ptr->_amplitudes = amplitudes;
 	ptr->_chiralities = chilarities;
-	ptr->geometry = autd::GeometryPtr(nullptr);
+	ptr->_geometry = autd::GeometryPtr(nullptr);
 	return ptr;
 }
 
@@ -109,7 +109,9 @@ void autd::VortexFocalPointGain::build() {
 		Eigen::Vector3f yaxis = ((this->geometry()->position(idevice*NUM_TRANS_IN_UNIT + 18)
 			- this->geometry()->position(idevice*NUM_TRANS_IN_UNIT))).normalized();
 		uint8_t amplitude = this->_amplitudes[idevice];
-
+		std::cout << "center: " << center.x() << ", " << center.y() << ", " << center.z() << std::endl;
+		std::cout << "xaxis: " << xaxis.x() << ", " << xaxis.y() << ", " << xaxis.z() << std::endl;
+		std::cout << "yaxis: " << yaxis.x() << ", " << yaxis.y() << ", " << yaxis.z() << std::endl;
 		this->_data[this->geometry()->deviceIdForDeviceIdx(idevice)].resize(NUM_TRANS_IN_UNIT);
 		for (int itrans = 0; itrans < NUM_TRANS_IN_UNIT; itrans++) {
 			Eigen::Vector3f trp = this->geometry()->position(idevice * NUM_TRANS_IN_UNIT + itrans);
@@ -119,10 +121,16 @@ void autd::VortexFocalPointGain::build() {
 			float xtrans = xaxis.dot(trp_local);
 			float ytrans = yaxis.dot(trp_local);
 			float theta = atan2(ytrans, xtrans);
+			/*
 			float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH
-				- _chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local))  ;
+				- _chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local));
+
+			*/
+			float fphase = -_chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local));
+
 			uint8_t phase = round(255.0*(1 - fphase));
 			this->_data[idevice][itrans] = ((uint16_t)amplitude << 8) + phase;
+			std::cout << fphase << ",";
 		}
 	}
 }

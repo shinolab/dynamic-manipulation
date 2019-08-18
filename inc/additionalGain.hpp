@@ -29,7 +29,7 @@ namespace autd{
 	class VortexFocalPointGain : public Gain {
 	public:
 		static GainPtr Create(Eigen::Matrix3Xf const &points,
-			Eigen::VectorXf const &amplitudes,
+			Eigen::VectorXi const &amplitudes,
 			Eigen::VectorXf const &chiralities);
 		void build();
 	private:

@@ -3,6 +3,8 @@
 #include "autd3.hpp"
 #include "additionalGain.hpp"
 #include <iostream>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 autd::GainPtr autd::DeviceSpecificFocalPointGain::Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes)
 {
@@ -78,5 +80,49 @@ void autd::GaussianBeamGain::build()
 			this->_data[this->geometry()->deviceIdForTransIdx(i)][i%NUM_TRANS_IN_UNIT] = ((uint16_t)amp << 8) + phase;
 		}
 	}
-	std::cout << count << " transducers operating." << std::endl;
+}
+
+autd::GainPtr autd::VortexFocalPointGain::Create(Eigen::Matrix3Xf const &points,
+	Eigen::VectorXf const &amplitudes,
+	Eigen::VectorXf const &chilarities) {
+	auto ptr = std::shared_ptr<VortexFocalPointGain>(new VortexFocalPointGain());
+	ptr->_points = points;
+	ptr->_amplitudes = amplitudes;
+	ptr->_chiralities = chilarities;
+	ptr->geometry = autd::GeometryPtr(nullptr);
+	return ptr;
+}
+
+void autd::VortexFocalPointGain::build() {
+	int count = 0;
+	if (this->built()) return;
+	if (this->geometry() == nullptr) BOOST_ASSERT_MSG(false, "Geometry is required to build Gain.");
+	
+	this->_data.clear();
+	const int ndevice = this->geometry()->numDevices();
+	for (int idevice = 0; idevice < ndevice; idevice++)
+	{
+		Eigen::Vector3f center = 0.5 * (this->geometry()->position(idevice*NUM_TRANS_IN_UNIT)
+			+ this->geometry()->position((idevice + 1)*NUM_TRANS_IN_UNIT - 1));
+		Eigen::Vector3f xaxis = ((this->geometry()->position(idevice*NUM_TRANS_IN_UNIT + 1) 
+			- this->geometry()->position(idevice*NUM_TRANS_IN_UNIT))).normalized();
+		Eigen::Vector3f yaxis = ((this->geometry()->position(idevice*NUM_TRANS_IN_UNIT + 18)
+			- this->geometry()->position(idevice*NUM_TRANS_IN_UNIT))).normalized();
+		uint8_t amplitude = this->_amplitudes[idevice];
+
+		this->_data[this->geometry()->deviceIdForDeviceIdx(idevice)].resize(NUM_TRANS_IN_UNIT);
+		for (int itrans = 0; itrans < NUM_TRANS_IN_UNIT; itrans++) {
+			Eigen::Vector3f trp = this->geometry()->position(idevice * NUM_TRANS_IN_UNIT + itrans);
+			Eigen::Vector3f point = this->_points.col(idevice);
+			Eigen::Vector3f trp_local = trp - center;
+			float dist = (trp - point).norm();
+			float xtrans = xaxis.dot(trp_local);
+			float ytrans = yaxis.dot(trp_local);
+			float theta = atan2(ytrans, xtrans);
+			float fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH
+				- _chiralities[idevice] * atan2f(yaxis.dot(trp_local), xaxis.dot(trp_local))  ;
+			uint8_t phase = round(255.0*(1 - fphase));
+			this->_data[idevice][itrans] = ((uint16_t)amplitude << 8) + phase;
+		}
+	}
 }

@@ -25,4 +25,17 @@ namespace autd{
 		int _amplitude;
 		float _cosBeamAngle;
 	};
+
+	class VortexFocalPointGain : public Gain {
+	public:
+		static GainPtr Create(Eigen::Matrix3Xf const &points,
+			Eigen::VectorXf const &amplitudes,
+			Eigen::VectorXf const &chiralities);
+		void build();
+	private:
+		Eigen::Matrix3Xf _points;
+		Eigen::VectorXi _amplitudes;
+		Eigen::VectorXf _chiralities;
+	};
+
 }

@@ -101,6 +101,13 @@ endif()
 
 target_compile_options(simple_cs PUBLIC "/unsafe")
 
-add_subdirectory(sample)
-add_subdirectory(test)
+option(BUILD_SAMPLES "build sample programs" ON)
+if(BUILD_SAMPLES)
+	add_subdirectory(sample)
+endif()
+
+option(BUILD_TEST "build test programs" ON)
+if(BUILD_TEST)
+	add_subdirectory(test)
+endif()
 add_subdirectory(server)

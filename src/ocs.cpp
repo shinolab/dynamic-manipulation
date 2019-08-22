@@ -247,27 +247,26 @@ Eigen::VectorXf ocs::FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 
 Eigen::VectorXf ocs::FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matrix3Xf const &positions, float const penalty) {
 	Eigen::VectorXf result;
-	//Create D matrix
 	auto numObjects = positions.cols();
 	auto numDevices = _autd.geometry()->numDevices();
 	int dimResult = numObjects * numDevices;
 	Eigen::MatrixXf A(numDevices, dimResult);
-	auto F = Eigen::MatrixXf::Zero((3*numDevices, dimResult));
-	for (int i = 0; i < numDevices; i++) {
+	Eigen::MatrixXf F = Eigen::MatrixXf::Zero(3 * numDevices, dimResult);
+	for (int i = 0; i < numObjects; i++) {
 		Eigen::MatrixXf posRel = positions.col(i).replicate(1, numDevices) - CentersAUTD();
-		F.block(i*3, i*numDevices, (i + 1)*3, (i + 1)*numDevices) = arfModelPtr->arf(posRel, eulerAnglesAUTD);
-		A.block(0, i*numDevices, numDevices, (i + 1)*numDevices).setIdentity();
+		F.block(3*i, i*numDevices, 3, numDevices) = arfModelPtr->arf(posRel, eulerAnglesAUTD);
+		A.block(0, i*numDevices, numDevices, numDevices) = Eigen::MatrixXf::Identity(numDevices, numDevices);
 	}
 	Eigen::Map<const Eigen::VectorXf> fTgt(forces.data(), forces.size());
-	//construct D matrix
 	EigenCgalQpSolver(result,
 		A, //ieq. cond
 		Eigen::VectorXf::Ones(numDevices), //sum of duties for each device must be smaller than one.
 		F.transpose()*F,
 		-F.transpose() * fTgt,
 		-Eigen::VectorXi::Ones(numDevices), //equality conditions
-		Eigen::VectorXf::Zero(numDevices), //lower bound 
+		Eigen::VectorXf::Zero(numDevices), //lower bound
 		Eigen::VectorXf::Ones(numDevices) //upper bound
 	);
 	return std::move(result);
 }
+

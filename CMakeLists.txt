@@ -4,7 +4,7 @@ enable_language(CSharp)
 
 set (CMAKE_CXX_STANDARD 11)
 
-project(DynamicLevitation)
+project(DynamicManipulation)
 
 #add_subdirectory(deps/autd3/client)
 add_subdirectory(deps/autd3-library-software/client/deps/BeckhoffADS)
@@ -34,7 +34,7 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 #Dlib
 include_directories(deps/dlib-19.0)
 
-add_library(DynamicLevitation STATIC
+add_library(DynamicManipulation STATIC
  inc/odcs.hpp
  src/odcs.cpp
  inc/additionalGain.hpp
@@ -56,7 +56,7 @@ add_library(DynamicLevitation STATIC
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
-  target_compile_definitions( DynamicLevitation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
+  target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
 endif()
 
 add_library(Projector STATIC
@@ -74,7 +74,7 @@ add_library(QPSolver
 	src/QPSolver.cpp
 )
 target_link_libraries(QPSolver CGAL::CGAL)
-target_link_libraries(DynamicLevitation autd3
+target_link_libraries(DynamicManipulation autd3
  ${Boost_LIBRARIES}
  ${OpenCV_LIBS}
  ${KinectSDK2_LIBRARIES}
@@ -85,7 +85,7 @@ target_link_libraries(DynamicLevitation autd3
 add_library(dynaman_dll SHARED
 	dll/dll.cpp
 )
-target_link_libraries(dynaman_dll DynamicLevitation)
+target_link_libraries(dynaman_dll DynamicManipulation)
 
 add_executable(simple_cs
 	cs_api/simple.cs

@@ -14,7 +14,10 @@ float EigenLinearProgrammingSolver(
 	int const scale = 10000000
 );
 
-/*Find x such that minimizes: 0.5*x'Dx + cx, subject to Ax >=/=/=< b, lb<=x<=ub*/
+/*
+Find x such that minimizes: 0.5*x'Dx + cx, subject to Ax >=/=/=< b, lb<=x<=ub
+positive/zero/negative number of the equalityConditions[i] means Ax[i] <=/==/>= b[i]. 
+*/
 float EigenCgalQpSolver(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,

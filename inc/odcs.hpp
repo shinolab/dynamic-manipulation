@@ -164,6 +164,8 @@ public:
 		float &force,
 		Eigen::Vector3f const &force_offset = Eigen::Vector3f(0.f, 0.f, 0.f));
 	
+	Eigen::VectorXf FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matrix3Xf const &positions, float const penalty = 0.01f);
+
 	autd::GainPtr CreateGain(FloatingObjectPtr objPtr, int numObj = 1);
 
 	//Legacy Module

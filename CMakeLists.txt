@@ -7,8 +7,8 @@ set (CMAKE_CXX_STANDARD 11)
 project(DynamicLevitation)
 
 #add_subdirectory(deps/autd3/client)
-add_subdirectory(deps/autd3-software/client/deps/BeckhoffADS)
-add_subdirectory(deps/autd3-software/client/lib)
+add_subdirectory(deps/autd3-library-software/client/deps/BeckhoffADS)
+add_subdirectory(deps/autd3-library-software/client/lib)
 
 #Boost / Eigen3 / OpenCV
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)
@@ -17,7 +17,7 @@ find_package( Boost REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( CGAL REQUIRED )
 
-include_directories(inc/ deps/autd3-software/client/include ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
+include_directories(inc/ deps/autd3-library-software/client/include ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
 
 #OpenCV
 find_package( OpenCV REQUIRED )

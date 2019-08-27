@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8.2)
 enable_language(CSharp)
 
 set (CMAKE_CXX_STANDARD 11)
+cmake_policy(SET CMP0074 NEW)
 
 project(DynamicManipulation)
 

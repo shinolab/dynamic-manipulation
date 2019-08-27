@@ -40,7 +40,7 @@ int main() {
 	dynaman.StartControl();
 	
 	std::thread t_log([&objPtr]() {
-		std::ofstream ofs("20190816_7inch_log7.csv");
+		std::ofstream ofs("20190827_multi_log.csv");
 		DWORD tInit = timeGetTime();
 		ofs << "time[ms], x[mm], y[mm], z[mm], vx[mm/s], vy[mm/s], vz[mm/s], Ix[mm s], Iy[mm s], Iz[mm s], xTgt[mm], yTgt[mm], zTgt[mm], vxTgt[mm/s], vyTgt[mm/s], vzTgt[mm/s] " << std::endl;
 		while (timeGetTime() - tInit < 60000) {

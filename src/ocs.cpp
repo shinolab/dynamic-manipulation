@@ -33,10 +33,16 @@ void ocs::Close()
 
 int ocs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles) {
 	Eigen::MatrixXf positionsAutdNew(3, _autd.geometry()->numDevices() + 1);
-	positionsAutdNew << positionsAUTD, position;
-	positionsAUTD = positionsAutdNew;
 	Eigen::MatrixXf eulerAnglesAutdNew(3, _autd.geometry()->numDevices() + 1);
-	eulerAnglesAutdNew << eulerAnglesAUTD, eulerAngles;
+	if (_autd.geometry()->numDevices() == 0) {
+		positionsAutdNew << position;
+		eulerAnglesAutdNew << eulerAngles;
+	}
+	else {
+		positionsAutdNew << positionsAUTD, position;
+		eulerAnglesAutdNew << eulerAnglesAUTD, eulerAngles;
+	}
+	positionsAUTD = positionsAutdNew;
 	eulerAnglesAUTD = eulerAnglesAutdNew;
 	return _autd.geometry()->AddDevice(position, eulerAngles);
 }
@@ -110,7 +116,7 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 	Eigen::Matrix3Xf integrals(3, num_object);
 	Eigen::Matrix3Xf accelsTarget(3, num_object);
 	Eigen::Matrix3Xf forcesToApply(3, num_object);
-	
+	std::cout << "calcurating force..." << std::endl;
 	for (auto itrObj = objPtrs.begin(); itrObj != objPtrs.end(); itrObj++) {
 		int index = std::distance(objPtrs.begin(), itrObj);
 		positions.col(index) = (*itrObj)->getPosition();
@@ -121,8 +127,9 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 			+ (*itrObj)->getAccelTarget();
 		forcesToApply.col(index) = (*itrObj)->totalMass() * accel + (*itrObj)->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 	}
+	std::cout << "programming duties..." << std::endl;
 	const Eigen::VectorXf duties = FindDutyQPMulti(forcesToApply, positions);
-	
+	std::cout << "constructing duties matrix..." << std::endl;
 	const Eigen::Map<const Eigen::MatrixXf> duties_mat(duties.data(), num_object, num_autd);
 	Eigen::Array<bool, -1, -1> nonzero = duties_mat.array().abs() > 1.0e-3f;
 	Eigen::RowVectorXi count_nonzero = nonzero.matrix().cast<int>().colwise().sum();
@@ -318,21 +325,24 @@ Eigen::VectorXf ocs::FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matr
 	auto numDevices = _autd.geometry()->numDevices();
 	int dimResult = numObjects * numDevices;
 	Eigen::MatrixXf A(numDevices, dimResult);
-	Eigen::MatrixXf F = Eigen::MatrixXf::Zero(3 * numDevices, dimResult);
+	Eigen::MatrixXf F = Eigen::MatrixXf::Zero(3 * numObjects, dimResult);
 	for (int i = 0; i < numObjects; i++) {
 		Eigen::MatrixXf posRel = positions.col(i).replicate(1, numDevices) - CentersAUTD();
 		F.block(3*i, i*numDevices, 3, numDevices) = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 		A.block(0, i*numDevices, numDevices, numDevices) = Eigen::MatrixXf::Identity(numDevices, numDevices);
 	}
+	std::cout << "F:\n" << F << std::endl;
+	std::cout << "A:\n" << A << std::endl;
 	Eigen::Map<const Eigen::VectorXf> fTgt(forces.data(), forces.size());
+	std::cout << "solving QP..." << std::endl;
 	EigenCgalQpSolver(result,
 		A, //ieq. cond
 		Eigen::VectorXf::Ones(numDevices), //sum of duties for each device must be smaller than one.
 		F.transpose()*F,
-		-F.transpose() * fTgt,
+		-F.transpose()*fTgt,
 		-Eigen::VectorXi::Ones(numDevices), //equality conditions
-		Eigen::VectorXf::Zero(numDevices), //lower bound
-		Eigen::VectorXf::Ones(numDevices) //upper bound
+		Eigen::VectorXf::Zero(dimResult), //lower bound
+		Eigen::VectorXf::Ones(dimResult) //upper bound
 	);
 	return std::move(result);
 }

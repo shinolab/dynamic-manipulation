@@ -73,6 +73,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 			(*itr)->SetTrackingStatus(false);
 		}
 	}
+	std::cout << "Creating Gain..." << std::endl;
 	auto gains = ocsPtr->CreateBalanceGainMulti(objPtrs);
 	//Update gain
 	ocsPtr->_autd.ResetLateralGain();

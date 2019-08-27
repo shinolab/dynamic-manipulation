@@ -328,6 +328,7 @@ Eigen::VectorXf ocs::FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matr
 	Eigen::MatrixXf F = Eigen::MatrixXf::Zero(3 * numObjects, dimResult);
 	for (int i = 0; i < numObjects; i++) {
 		Eigen::MatrixXf posRel = positions.col(i).replicate(1, numDevices) - CentersAUTD();
+		std::cout << "posRel:\n" << posRel << std::endl;
 		F.block(3*i, i*numDevices, 3, numDevices) = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 		A.block(0, i*numDevices, numDevices, numDevices) = Eigen::MatrixXf::Identity(numDevices, numDevices);
 	}
@@ -335,6 +336,8 @@ Eigen::VectorXf ocs::FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matr
 	std::cout << "A:\n" << A << std::endl;
 	Eigen::Map<const Eigen::VectorXf> fTgt(forces.data(), forces.size());
 	std::cout << "solving QP..." << std::endl;
+	std::cout << "C:" << F.transpose()*F << std::endl;
+	std::cout << "D:" << -F.transpose()*fTgt<< std::endl;
 	EigenCgalQpSolver(result,
 		A, //ieq. cond
 		Eigen::VectorXf::Ones(numDevices), //sum of duties for each device must be smaller than one.

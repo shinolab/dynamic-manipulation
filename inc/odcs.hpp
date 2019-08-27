@@ -88,6 +88,10 @@ public:
 class ods
 {
 public:
+	enum ROI_USE
+	{
+		NEVER, FOUND, ALWAYS
+	};
 private:
 	typedef Eigen::Matrix<float, 3, 8> Matrix38f;
 	KinectApp kinectApp;
@@ -190,8 +194,8 @@ public:
 	std::shared_ptr<ods> odsPtr;
 	std::shared_ptr<ocs> ocsPtr;
 	std::thread thread_control;
-private:
 	std::vector<FloatingObjectPtr> objPtrs;
+private:
 	std::shared_mutex mtxRunning;
 	bool flagRunning = false;
 

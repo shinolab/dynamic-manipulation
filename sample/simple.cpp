@@ -59,7 +59,7 @@ int main()
 	std::cout << "starting control..." << std::endl;
 	dynaman.StartControl();	
 
-	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	//objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
 	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;

@@ -131,6 +131,7 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 	const Eigen::VectorXf duties = FindDutyQPMulti(forcesToApply, positions);
 	std::cout << "constructing duties matrix..." << std::endl;
 	const Eigen::Map<const Eigen::MatrixXf> duties_mat(duties.data(), num_object, num_autd);
+
 	Eigen::Array<bool, -1, -1> nonzero = duties_mat.array().abs() > 1.0e-3f;
 	Eigen::RowVectorXi count_nonzero = nonzero.matrix().cast<int>().colwise().sum();
 
@@ -328,16 +329,10 @@ Eigen::VectorXf ocs::FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matr
 	Eigen::MatrixXf F = Eigen::MatrixXf::Zero(3 * numObjects, dimResult);
 	for (int i = 0; i < numObjects; i++) {
 		Eigen::MatrixXf posRel = positions.col(i).replicate(1, numDevices) - CentersAUTD();
-		std::cout << "posRel:\n" << posRel << std::endl;
 		F.block(3*i, i*numDevices, 3, numDevices) = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 		A.block(0, i*numDevices, numDevices, numDevices) = Eigen::MatrixXf::Identity(numDevices, numDevices);
 	}
-	std::cout << "F:\n" << F << std::endl;
-	std::cout << "A:\n" << A << std::endl;
 	Eigen::Map<const Eigen::VectorXf> fTgt(forces.data(), forces.size());
-	std::cout << "solving QP..." << std::endl;
-	std::cout << "C:" << F.transpose()*F << std::endl;
-	std::cout << "D:" << -F.transpose()*fTgt<< std::endl;
 	EigenCgalQpSolver(result,
 		A, //ieq. cond
 		Eigen::VectorXf::Ones(numDevices), //sum of duties for each device must be smaller than one.

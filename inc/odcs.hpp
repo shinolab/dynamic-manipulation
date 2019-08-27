@@ -166,8 +166,8 @@ public:
 	
 	Eigen::VectorXf FindDutyQPMulti(Eigen::Matrix3Xf const &forces, Eigen::Matrix3Xf const &positions, float const penalty = 0.01f);
 
-	autd::GainPtr CreateGain(FloatingObjectPtr objPtr, int numObj = 1);
-
+	autd::GainPtr CreateBalanceGain(FloatingObjectPtr objPtr, int numObj = 1);
+	std::vector<autd::GainPtr> CreateBalanceGainMulti(std::vector<FloatingObjectPtr> const &objPtr);
 	//Legacy Module
 	Eigen::VectorXf FindDutySI(FloatingObjectPtr objPtr);
 	Eigen::VectorXf FindDutyQPEq(FloatingObjectPtr objPtr);

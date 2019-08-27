@@ -54,10 +54,10 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 
 void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 33)
 {
-	//int periodPerObject = loopPeriod / objPtrs.size();
+	DWORD loopInit = timeGetTime();
+	//Determination
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
 	{
-		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
 		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
@@ -65,29 +65,24 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
 		{
 			//----------Determination----------
-			//odcs.DetermineStateKF(objPtr, posObserved, observationTime);
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->SetTrackingStatus(true);
-			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateGain((*itr), objPtrs.size()));
 		}
 		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
 		{
 			(*itr)->SetTrackingStatus(false);
 		}
-		/*
-		ods.DeterminePositionByDepth(*itr, true);
-		Eigen::VectorXf amplitudes = ocs.FindDutyQP((*itr)) * objPtrs.size();
-		Eigen::VectorXi duties = (510 / M_PI * amplitudes.array().sqrt().asin().max(0).min(255)).matrix().cast<int>();
-		ocs.DirectSemiPlaneWave((*itr), duties);
-		*/	
-		//std::cout << timeGetTime() - loopInit << std::endl;
-
-		int waitTime = loopPeriod - (timeGetTime() - loopInit);
-		timeBeginPeriod(1);
-		Sleep(std::max(waitTime, 0));
-		timeEndPeriod(1);
 	}
+	auto gains = ocsPtr->CreateBalanceGainMulti(objPtrs);
+	//Update gain
+	ocsPtr->_autd.ResetLateralGain();
+	ocsPtr->_autd.AppendLateralGain(gains);
+	ocsPtr->_autd.StartLateralModulation(100);
 
+	int waitTime = loopPeriod - (timeGetTime() - loopInit);
+	timeBeginPeriod(1);
+	Sleep(std::max(waitTime, 0));
+	timeEndPeriod(1);
 }
 
 bool odcs::isRunning() {

@@ -6,6 +6,7 @@
 #include <Eigen\Geometry>
 #include <dlib\matrix.h>
 #include <dlib\optimization.h>
+#include <boost/math/common_factor_rt.hpp>
 #include <algorithm>
 #include <vector>
 #include <deque>
@@ -85,7 +86,7 @@ void ocs::SetGain(Eigen::Vector3f const &_gainP, Eigen::Vector3f const &_gainD, 
 	this->gainI = _gainI;
 }
 
-autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr, int numObj)
+autd::GainPtr ocs::CreateBalanceGain(FloatingObjectPtr objPtr, int numObj)
 {
 	Eigen::Vector3f accel
 		= gainP.asDiagonal() * (objPtr->getPosition() - objPtr->getPositionTarget())
@@ -97,6 +98,72 @@ autd::GainPtr ocs::CreateGain(FloatingObjectPtr objPtr, int numObj)
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
 	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
+}
+
+std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjectPtr> const &objPtrs) {
+	std::vector<autd::GainPtr> gain_list;
+	
+	int num_autd = _autd.geometry()->numDevices();
+	int num_object = objPtrs.size();
+	Eigen::Matrix3Xf positions(3, num_object); Eigen::Matrix3Xf positionsTarget(3, num_object);
+	Eigen::Matrix3Xf velocities(3, num_object); Eigen::Matrix3Xf velocitiesTarget(3, num_object);
+	Eigen::Matrix3Xf integrals(3, num_object);
+	Eigen::Matrix3Xf accelsTarget(3, num_object);
+	Eigen::Matrix3Xf forcesToApply(3, num_object);
+	
+	for (auto itrObj = objPtrs.begin(); itrObj != objPtrs.end(); itrObj++) {
+		int index = std::distance(objPtrs.begin(), itrObj);
+		positions.col(index) = (*itrObj)->getPosition();
+		Eigen::Vector3f accel
+			= gainP.asDiagonal() * ((*itrObj)->getPosition() - (*itrObj)->getPositionTarget())
+			+ gainD.asDiagonal() * ((*itrObj)->averageVelocity() - (*itrObj)->getVelocityTarget())
+			+ gainI.asDiagonal() * (*itrObj)->getIntegral()
+			+ (*itrObj)->getAccelTarget();
+		forcesToApply.col(index) = (*itrObj)->totalMass() * accel + (*itrObj)->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
+	}
+	const Eigen::VectorXf duties = FindDutyQPMulti(forcesToApply, positions);
+	
+	const Eigen::Map<const Eigen::MatrixXf> duties_mat(duties.data(), num_object, num_autd);
+	Eigen::Array<bool, -1, -1> nonzero = duties_mat.array().abs() > 1.0e-3f;
+	Eigen::RowVectorXi count_nonzero = nonzero.matrix().cast<int>().colwise().sum();
+
+	//Determine the number of gains:
+	int num_gains = 1;
+	for (int i_autd = 0; i_autd < num_autd; i_autd++) {
+		if (count_nonzero[i_autd] != 0) {
+			num_gains = boost::math::lcm(num_gains, count_nonzero[i_autd]);
+		}
+	}
+	std::vector<int> counter(num_autd, -1);
+
+	for (int i_gain = 0; i_gain < num_gains; i_gain++) {
+		std::map<int, autd::GainPtr> gain_map;
+		for (auto itr_counter = counter.begin(); itr_counter != counter.end(); itr_counter++) {
+			autd::GainPtr gain;
+			int i_autd = std::distance(counter.begin(), itr_counter);
+
+			for (int i_obj = 0; i_obj < num_object; i_obj++) {
+				(*itr_counter)++;
+				if ((*itr_counter) == num_object) {
+					*itr_counter = 0;
+				}
+				if (nonzero(*itr_counter, i_autd)) {
+					int amplitude = 255 * std::sqrt(std::max(std::min(count_nonzero(i_autd) * duties_mat(*itr_counter, i_autd), 1.0f), 0.0f));
+					gain = autd::FocalPointGain::Create(objPtrs[*itr_counter]->getPosition(), amplitude);
+					//Create FocalPointGain
+				}
+				if (i_obj == num_object - 1) { // in case that the autd is inactive.
+					gain = autd::NullGain::Create();
+					//Create Null Gain
+				}
+			}
+			gain_map.insert(std::make_pair(std::distance(counter.begin(), itr_counter), gain));
+		}
+		gain_list.push_back(autd::GroupedGain::Create(gain_map));
+	}
+	
+	return gain_list;
+	
 }
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)

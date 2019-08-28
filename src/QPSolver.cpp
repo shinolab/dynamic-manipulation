@@ -107,24 +107,23 @@ float EigenCgalQpSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	float accuracy = 1.0e-6f
+	float accuracy
 )
 {
 	std::cout << "A: " << A << std::endl;
 	std::cout << "b: " << b.transpose() << std::endl;
 	std::cout << "D: " << D << std::endl;
 	std::cout << "c: " << c.transpose() << std::endl;
-	Eigen::MatrixXi A_scaled = (A / accuracy).cast<int>();
-	Eigen::VectorXi b_scaled = (b / accuracy).cast<int>();
-	Eigen::MatrixXi D_scaled = (D / accuracy).cast<int>();
-	Eigen::VectorXi c_scaled = (c / accuracy).cast<int>();
+	Eigen::MatrixXf A_scaled = A / accuracy;
+	Eigen::VectorXf b_scaled = b / accuracy;
+	Eigen::MatrixXf D_scaled = D / accuracy;
+	Eigen::VectorXf c_scaled = c / accuracy;
 	auto _A_scaled = Eigen2CgalArray2d(A_scaled);
 	auto _D_scaled = Eigen2CgalArray2d(D_scaled);
 	CGAL::Comparison_result* r = new CGAL::Comparison_result[A.rows()];
 	for (int i_eq = 0; i_eq < A.rows(); i_eq++) {
 		if (equalityConditions[i_eq] < 0) {
 			r[i_eq] = CGAL::SMALLER;
-			std::cout << "SMALLER." << std::endl;
 		}
 		else if (equalityConditions[i_eq] > 0)
 			r[i_eq] = CGAL::LARGER;
@@ -138,10 +137,8 @@ float EigenCgalQpSolver(
 		flb[i] = true;
 		fub[i] = true;
 	}
-	Eigen::VectorXi lowerbound_int = lowerbound.cast<int>();
-	Eigen::VectorXi upperbound_int = upperbound.cast<int>();
 
-	QpProgram_int qp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lowerbound_int.data(), fub, upperbound_int.data(), _D_scaled.get(), c_scaled.data(), 0);
+	QpProgram qp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lowerbound.data(), fub, upperbound.data(), _D_scaled.get(), c_scaled.data(), 0);
 	Solution s = CGAL::solve_quadratic_program(qp, ET());
 	result.resize(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)

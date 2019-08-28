@@ -18,10 +18,10 @@ int main() {
 	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	auto objPtr1 = FloatingObject::Create(Eigen::Vector3f(-423.86f, 596.04f + 100, 1431.f), -1.0e-4f);
-	//auto objPtr2 = FloatingObject::Create(Eigen::Vector3f(-423.86f, 596.04f + 100, 1431.f), -1.0e-4f);
+	auto objPtr2 = FloatingObject::Create(Eigen::Vector3f(-423.86f, 596.04f + 100, 1431.f), -1.0e-4f);
 
 	dynaman.RegisterObject(objPtr1);
-	//dynaman.RegisterObject(objPtr2);
+	dynaman.RegisterObject(objPtr2);
 	auto objPtrs = dynaman.objPtrs;
 
 	Eigen::Vector3f gainP = -Eigen::Vector3f::Constant(1.0f);
@@ -46,9 +46,9 @@ int main() {
 		forcesToApply.col(index) = (*itrObj)->totalMass() * accel + (*itrObj)->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 	}
 	std::cout << "forces to apply:\n" << forcesToApply << std::endl;
-	auto duties = dynaman.ocsPtr->FindDutyQPCGAL(forcesToApply, positions);
+	//auto duties = dynaman.ocsPtr->FindDutyQPCGAL(forcesToApply, positions);
 	auto dutiesMulti = dynaman.ocsPtr->FindDutyQPMulti(forcesToApply, positions);
-	std::cout << "duties:\n" << duties << std::endl;
+	std::cout << "duties:\n" << dutiesMulti << std::endl;
 	dynaman.Close();
 	return 0;
 }

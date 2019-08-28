@@ -130,8 +130,7 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 	std::cout << "programming duties..." << std::endl;
 	const Eigen::VectorXf duties = FindDutyQPMulti(forcesToApply, positions);
 	std::cout << "constructing duties matrix..." << std::endl;
-	const Eigen::Map<const Eigen::MatrixXf> duties_mat(duties.data(), num_object, num_autd);
-
+	const Eigen::Map<const Eigen::Matrix<float, -1, -1, Eigen::RowMajor>> duties_mat(duties.data(), num_object, num_autd);
 	Eigen::Array<bool, -1, -1> nonzero = duties_mat.array().abs() > 1.0e-3f;
 	Eigen::RowVectorXi count_nonzero = nonzero.matrix().cast<int>().colwise().sum();
 
@@ -169,9 +168,7 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 		}
 		gain_list.push_back(autd::GroupedGain::Create(gain_map));
 	}
-	
-	return gain_list;
-	
+	return gain_list;	
 }
 
 Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)

@@ -16,8 +16,8 @@
 int main()
 {
 	Eigen::Vector3f center(0, 596.04f, 1331.f);
-	Eigen::Vector3f posRight1(426.14f, 596.04f + 160.f, 1331.f);//右に移動した後の位置
-	Eigen::Vector3f posLeft1(-423.86f, 596.04f+100, 1431.f);//左に移動した後の位置
+	Eigen::Vector3f posRight1(426.14f, 596.04f, 1331.f);//右に移動した後の位置
+	Eigen::Vector3f posLeft1(-423.86f, 596.04f, 1431.f);//左に移動した後の位置
 	Eigen::Vector3f posRight2(426.14f, 596.04f - 160.f, 1431.f);//右に移動した後の位置
 	Eigen::Vector3f posLeft2(-423.86f, 596.04f - 160.f, 1431.f);//左に移動した後の位置
 
@@ -48,18 +48,19 @@ int main()
 	//control parameters
 	Eigen::Vector3f gainP = 1.0f*Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = 1.0f*Eigen::Vector3f::Constant(-4.0f);
-	Eigen::Vector3f gainI = 0.0f*Eigen::Vector3f::Constant(-0.05f);
+	Eigen::Vector3f gainI = 1.0f*Eigen::Vector3f::Constant(-0.05f);
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	std::cout << "Creating floating objects..." << std::endl;
-	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f, 80.f);
+	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f, 127.f);
 	//FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
 	dynaman.RegisterObject(objPtr1); // add object
 	//dynaman.RegisterObject(objPtr2); // add object
 	std::cout << "starting control..." << std::endl;
 	dynaman.StartControl();	
-
-	//objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	getchar();
+	std::cout << "Press any key to start translation." << std::endl;
+	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
 	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;

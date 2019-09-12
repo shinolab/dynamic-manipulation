@@ -110,10 +110,6 @@ float EigenCgalQpSolver(
 	float accuracy
 )
 {
-	std::cout << "A: " << A << std::endl;
-	std::cout << "b: " << b.transpose() << std::endl;
-	std::cout << "D: " << D << std::endl;
-	std::cout << "c: " << c.transpose() << std::endl;
 	Eigen::MatrixXf A_scaled = A / accuracy;
 	Eigen::VectorXf b_scaled = b / accuracy;
 	Eigen::MatrixXf D_scaled = D / accuracy;

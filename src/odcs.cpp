@@ -54,6 +54,31 @@ const FloatingObjectPtr odcs::GetFloatingObject(int i)
 
 void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod = 33)
 {
+	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
+	{
+		DWORD loopInit = timeGetTime();
+		//----------Observation----------
+		Eigen::Vector3f posObserved;
+		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
+		DWORD observationTime = timeGetTime();
+		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
+		{
+			//----------Determination----------
+			(*itr)->updateStates(observationTime, posObserved);
+			(*itr)->SetTrackingStatus(true);
+			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));
+		}
+		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
+		{
+			(*itr)->SetTrackingStatus(false);
+		}
+
+		int waitTime = loopPeriod - (timeGetTime() - loopInit);
+		timeBeginPeriod(1);
+		Sleep(std::max(waitTime, 0));
+		timeEndPeriod(1);
+	}
+	/*
 	DWORD loopInit = timeGetTime();
 	//Determination
 	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
@@ -84,6 +109,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 	timeBeginPeriod(1);
 	Sleep(std::max(waitTime, 0));
 	timeEndPeriod(1);
+	*/
 }
 
 bool odcs::isRunning() {

@@ -138,9 +138,11 @@ namespace dynaman {
 					float detectR = sqrt(detectX * detectX + detectY * detectY + detectZ * detectZ);
 					float outpor = (detectR + objPtr->radius) / detectR;
 					Eigen::Vector3f positionObserved = _quo * (outpor * Eigen::Vector3f(detectX, detectY, detectZ)) + _pos;
-					objPtr->updateStates(observationTime, positionObserved);
-					objPtr->SetTrackingStatus(true);
-					isValid = true;
+					if (isInsideWorkspace(positionObserved)) {
+						objPtr->updateStates(observationTime, positionObserved);
+						objPtr->SetTrackingStatus(true);
+						isValid = true;
+					}
 				}
 			}
 		}

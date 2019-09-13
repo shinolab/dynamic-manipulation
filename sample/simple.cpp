@@ -30,9 +30,8 @@ int main()
 		Eigen::Vector3f(-800.f, 0.f, 500.f),
 		Eigen::Vector3f(800.f, 1000.f, 1570.f),
 		true);
-	dynaman::odcs dynaman;
+	dynaman::odcs dynaman(sensor);
 	dynaman.Initialize();
-	dynaman.SetSensor(std::shared_ptr<dynaman::Sensor>(&sensor));
 
 	std::cout << "adding devices..." << std::endl;
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
@@ -61,13 +60,15 @@ int main()
 	//dynaman.RegisterObject(objPtr2); // add object
 	std::cout << "starting control..." << std::endl;
 	dynaman.StartControl();	
-	getchar();
 	std::cout << "Press any key to start translation." << std::endl;
+	getchar();
 	objPtr1->SetTrajectory(std::shared_ptr<dynaman::Trajectory>(new dynaman::TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
 	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	dynaman.Close();
+	std::cout << "dynaman has been closed." << std::endl;
+
 	return 0;
 }

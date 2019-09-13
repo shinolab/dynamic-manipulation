@@ -15,6 +15,8 @@
 
 using namespace dynaman;
 
+odcs::odcs(Sensor& sensor) :sensor(sensor) {};
+
 void odcs::Initialize()
 {
 	if (ocsPtr == nullptr)
@@ -28,8 +30,8 @@ std::shared_ptr<ocs> odcs::Controller() {
 	return ocsPtr;
 }
 
-void odcs::SetSensor(std::shared_ptr<Sensor> new_sensorPtr) {
-	sensorPtr = new_sensorPtr;
+void odcs::SetSensor(Sensor &new_sensor) {
+	sensor = new_sensor;
 }
 
 int odcs::AddObject(Eigen::Vector3f const &targetPosition)
@@ -56,7 +58,7 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		if (sensorPtr->updateStates(*itr)) {
+		if (sensor.updateStates(*itr)) {
 			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));
 		}
 		else if (loopInit - (*itr)->lastDeterminationTime > 1000)

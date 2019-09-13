@@ -188,19 +188,20 @@ namespace dynaman {
 	class odcs
 	{
 	public:
+		odcs(Sensor& sensor);
 		void Initialize();
 		//std::shared_ptr<ods> Sensor();
 		std::shared_ptr<ocs> Controller();
 		int AddObject(Eigen::Vector3f const &positionTarget);
 		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 		void RegisterObject(FloatingObjectPtr objPtr);
-		void SetSensor(std::shared_ptr<Sensor> sensorPtr);
+		void SetSensor(Sensor &new_sensor);
 		const FloatingObjectPtr GetFloatingObject(int i);
 		void StartControl();
 		void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 		void Close();
 		void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD determinationTime);
-		std::shared_ptr<Sensor> sensorPtr;
+		Sensor &sensor;
 		//std::shared_ptr<ods> odsPtr;
 		std::shared_ptr<ocs> ocsPtr;
 		std::thread thread_control;

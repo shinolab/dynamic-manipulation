@@ -10,6 +10,7 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+using namespace dynaman;
 
 FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass, float _radius)
 {

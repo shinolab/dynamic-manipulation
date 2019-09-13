@@ -16,6 +16,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+using namespace dynaman;
+
 int ods::Initialize()
 {
 	kinectApp.initialize();

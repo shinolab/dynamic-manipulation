@@ -7,6 +7,7 @@
 #include <memory>
 
 using namespace boost::numeric::odeint;
+using namespace dynaman;
 
 TrajectoryConstantState::TrajectoryConstantState(Eigen::Vector3f const &positionTarget,
 	Eigen::Vector3f const &velocityTarget,

@@ -13,6 +13,8 @@
 #define _USE_MATH_DEFINES
 #include<math.h>
 
+using namespace dynaman;
+
 void odcs::Initialize()
 {
 	if (odsPtr == nullptr)

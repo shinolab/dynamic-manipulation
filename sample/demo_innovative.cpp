@@ -16,6 +16,7 @@
 #include <math.h>
 
 #pragma comment(lib, "winmm")
+using namespace dynaman;
 
 int main() {
 

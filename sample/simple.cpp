@@ -1,6 +1,5 @@
 #include "odcs.hpp"
 #include "kalmanFilter.hpp"
-#include "profile.hpp"
 #include <Eigen\Geometry>
 #include <iostream>
 #include <fstream>
@@ -21,7 +20,7 @@ int main()
 	Eigen::Vector3f posRight2(426.14f, 596.04f - 160.f, 1431.f);//‰E‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 	Eigen::Vector3f posLeft2(-423.86f, 596.04f - 160.f, 1431.f);//¶‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 
-	odcs dynaman;
+	dynaman::odcs dynaman;
 	dynaman.Initialize();
 	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1570.f));
 	Eigen::Matrix3f rotationKinect2Global;
@@ -52,7 +51,7 @@ int main()
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	std::cout << "Creating floating objects..." << std::endl;
-	FloatingObjectPtr objPtr1 = FloatingObject::Create(posLeft1, -0.0001f, 127.f);
+	auto objPtr1 = dynaman::FloatingObject::Create(posLeft1, -0.0001f, 127.f);
 	//FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
 	dynaman.RegisterObject(objPtr1); // add object
 	//dynaman.RegisterObject(objPtr2); // add object
@@ -60,7 +59,7 @@ int main()
 	dynaman.StartControl();	
 	getchar();
 	std::cout << "Press any key to start translation." << std::endl;
-	objPtr1->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	objPtr1->SetTrajectory(std::shared_ptr<dynaman::Trajectory>(new dynaman::TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
 	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;

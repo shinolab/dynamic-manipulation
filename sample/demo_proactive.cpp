@@ -17,6 +17,8 @@
 
 #pragma comment(lib, "winmm")
 
+using namespace dynaman;
+
 int main() {
 
 	/*デモするときに調整するパラメータ*/

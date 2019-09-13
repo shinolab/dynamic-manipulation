@@ -15,6 +15,8 @@
 
 #define NUM_AUTDS 12
 
+using namespace dynaman;
+
 int ocs::Initialize()
 {
 	_autd.Open(autd::LinkType::ETHERCAT);

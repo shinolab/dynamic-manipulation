@@ -3,7 +3,7 @@
 
 #include "odcs.hpp"
 
-void initialize_uist_setup(odcs &dynaman) {
+void initialize_uist_setup(dynaman::odcs &dynaman) {
 	dynaman.Initialize();
 	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1570.f));
 	Eigen::Matrix3f rotationKinect2Global;

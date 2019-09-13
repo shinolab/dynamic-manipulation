@@ -5,14 +5,6 @@ add_executable(LPTest
 )
 target_link_libraries(LPTest DynamicManipulation)
 
-add_executable(ProfileTest
-	profileTest.cpp
-	../sample/profile.hpp
-	../sample/profile.cpp
-)
-
-target_link_libraries(ProfileTest DynamicManipulation)
-
 add_executable(WorkSpaceTest workSpaceTest.cpp)
 target_link_libraries(WorkSpaceTest DynamicManipulation)
 

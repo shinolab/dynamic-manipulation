@@ -51,7 +51,6 @@ add_library(DynamicManipulation STATIC
  src/arfModel.cpp
  inc/kalmanFilter.hpp
  src/kalmanFilter.cpp
- inc/QPSolver.h
  src/Trajectory.cpp
  inc/EigenTools.hpp
 )

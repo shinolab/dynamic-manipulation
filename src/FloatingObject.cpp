@@ -12,11 +12,17 @@
 #include <math.h>
 using namespace dynaman;
 
-FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass, float _radius)
+FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget,
+	Eigen::Vector3f const &lowerbound,
+	Eigen::Vector3f const &upperbound,
+	float _additionalMass,
+	float _radius)
 {
 	position << _positionTarget;
 	velocity << 0, 0, 0;
 	integral << 0, 0, 0;
+	_upperbound << upperbound;
+	_lowerbound << lowerbound;
 	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget)));
 	additionalMass = _additionalMass;
 	lastDeterminationTime = 0;
@@ -41,9 +47,9 @@ FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget, float _ad
 	radius = _radius;
 }
 
-FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, float _additionalMass, float _radius)
+FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, Eigen::Vector3f const &lowerbound, Eigen::Vector3f const &upperbound, float _additionalMass, float _radius)
 {
-	return FloatingObjectPtr(new FloatingObject(posTgt, _additionalMass, _radius));
+	return FloatingObjectPtr(new FloatingObject(posTgt, lowerbound, upperbound, _additionalMass, _radius));
 }
 
 float FloatingObject::sphereMass()
@@ -205,4 +211,13 @@ void FloatingObject::SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr)
 {
 	std::lock_guard<std::shared_mutex> lock(mtxTrajectory);
 	trajectoryPtr = newTrajectoryPtr;
+}
+
+
+Eigen::Vector3f FloatingObject::lowerbound() {
+	return _lowerbound;
+}
+
+Eigen::Vector3f FloatingObject::upperbound() {
+	return _upperbound;
 }

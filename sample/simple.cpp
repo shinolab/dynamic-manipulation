@@ -27,8 +27,6 @@ int main()
 		0.00741063f, 0.999931f, -0.00915001f;
 	dynaman::KinectDepthPositionSensor sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
 		Eigen::Quaternionf(rotationKinect2Global),
-		Eigen::Vector3f(-800.f, 0.f, 500.f),
-		Eigen::Vector3f(800.f, 1000.f, 1570.f),
 		true);
 	dynaman::odcs dynaman(sensor);
 	dynaman.Initialize();
@@ -52,9 +50,11 @@ int main()
 	Eigen::Vector3f gainD = 1.0f*Eigen::Vector3f::Constant(-4.0f);
 	Eigen::Vector3f gainI = 1.0f*Eigen::Vector3f::Constant(-0.05f);
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
+	Eigen::Vector3f lowerbound(-800.f, 0.f, 500.f);
+	Eigen::Vector3f upperbound(800.f, 1000.f, 1570.f);
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	std::cout << "Creating floating objects..." << std::endl;
-	auto objPtr1 = dynaman::FloatingObject::Create(posLeft1, -0.0001f, 127.f);
+	auto objPtr1 = dynaman::FloatingObject::Create(posLeft1, lowerbound, upperbound, -0.0001f, 127.f);
 	//FloatingObjectPtr objPtr2 = FloatingObject::Create(posRight2, -0.0001f);
 	dynaman.RegisterObject(objPtr1); // add object
 	//dynaman.RegisterObject(objPtr2); // add object

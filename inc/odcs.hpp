@@ -58,14 +58,24 @@ namespace dynaman {
 		Eigen::Vector3f position;
 		Eigen::Vector3f velocity;
 		Eigen::Vector3f integral;
+		Eigen::Vector3f _upperbound;
+		Eigen::Vector3f _lowerbound;
 		bool isTracked;
 		std::mutex mtxState;
 		std::mutex mtxTrack;
 		std::shared_mutex mtxTrajectory;
 		std::shared_ptr<Trajectory> trajectoryPtr;
 	public:
-		FloatingObject(Eigen::Vector3f const &_positionTarget, float _additionalMass = 0.1e-3f, float _radius = 90.f);
-		static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt, float _additionalMass = 0.1e-3f, float radius = 90.f);
+		FloatingObject(Eigen::Vector3f const &_positionTarget,
+			Eigen::Vector3f const &lowerbound,
+			Eigen::Vector3f const &upperbound,
+			float _additionalMass = 0.1e-3f,
+			float _radius = 90.f);
+		static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt,
+			Eigen::Vector3f const &lpperbound,
+			Eigen::Vector3f const &uowerbound,
+			float _additionalMass = 0.1e-3f,
+			float radius = 90.f);
 
 		float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 		float AdditionalMass();
@@ -85,6 +95,8 @@ namespace dynaman {
 		Eigen::Vector3f averageVelocity();
 		Eigen::Vector3f AveragePosition();
 		Eigen::Vector3f AveragePosition(int sumpleNum);
+		Eigen::Vector3f lowerbound();
+		Eigen::Vector3f upperbound();
 	};
 
 	class Sensor {

@@ -56,6 +56,8 @@ add_library(DynamicManipulation STATIC
  src/kalmanFilter.cpp
  src/Trajectory.cpp
  inc/EigenTools.hpp
+ inc/geometryUtil.hpp
+ src/geometryUtil.cpp
 )
 
 source_group("sensor" FILES 

@@ -34,12 +34,6 @@ void odcs::SetSensor(Sensor &new_sensor) {
 	sensor = new_sensor;
 }
 
-int odcs::AddObject(Eigen::Vector3f const &targetPosition)
-{
-	odcs::RegisterObject(FloatingObjectPtr(new FloatingObject(targetPosition)));
-	return objPtrs.size();
-}
-
 void odcs::RegisterObject(FloatingObjectPtr objPtr)
 {
 	objPtrs.push_back(objPtr);

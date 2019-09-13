@@ -1,3 +1,6 @@
+#ifndef _KINECT_DEPTH_SENSOR_HPP
+#define _KINECT_DEPTH_SENSOR_HPP
+
 #include "odcs.hpp"
 #include "KinectApp.hpp"
 #include <opencv2/core.hpp>
@@ -10,8 +13,6 @@ namespace dynaman {
 	public:
 		KinectDepthPositionSensor(Eigen::Vector3f const &pos,
 			Eigen::Quaternionf const &quo,
-			Eigen::Vector3f const &corner0,
-			Eigen::Vector3f const &corner1,
 			bool useROI = true);
 		bool updateStates(FloatingObjectPtr objPtr);
 		Eigen::Quaternionf rotation();
@@ -19,15 +20,14 @@ namespace dynaman {
 	private:
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;
-		Eigen::Vector3f _corner0;
-		Eigen::Vector3f _corner1;
 		KinectApp kinect;
 		bool _useROI;
-		std::vector<Eigen::Vector3f> cornersWorkspaceAll();
-		void maskWorkspace(cv::Mat &mat);
-		float rangeWorkspaceMin();
-		float rangeWorkspaceMax();
-		bool isInsideWorkspace(Eigen::Vector3f const &pos);
+		void maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const & upperbound, cv::Mat& mask);
 	};
 
 }
+
+
+#endif // !_KINECT_DEPTH_SENSOR_HPP
+
+

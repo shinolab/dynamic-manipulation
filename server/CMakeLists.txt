@@ -20,7 +20,7 @@ include_directories(dataStruct)
 add_executable(ServerTest 
 	test/serverTest.cpp 
 	dataStruct/position.hpp)
-target_link_libraries(ServerTest Server DynamicLevitation)
+target_link_libraries(ServerTest Server DynamicManipulation)
 add_executable(ClientTest
 	test/clientTest.cpp
 	dataStruct/position.hpp)

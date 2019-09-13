@@ -9,6 +9,8 @@
 #include <string>
 #include <iostream>
 
+using namespace dynaman;
+
 int main() {
 	//sensor();
 	//

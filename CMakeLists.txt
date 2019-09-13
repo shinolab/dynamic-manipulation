@@ -35,13 +35,14 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 #Dlib
 include_directories(deps/dlib-19.0)
 
+add_library(KinectApp STATIC inc/KinectApp.hpp src/KinectApp.cpp)
+target_link_libraries(KinectApp ${KinectSDK2_LIBRARIES})
+
 add_library(DynamicManipulation STATIC
  inc/odcs.hpp
  src/odcs.cpp
  inc/additionalGain.hpp
  src/additionalGain.cpp
- inc/KinectApp.hpp
- src/KinectApp.cpp
  src/ocs.cpp
  src/ods.cpp
  src/FloatingObject.cpp
@@ -77,7 +78,7 @@ target_link_libraries(QPSolver CGAL::CGAL)
 target_link_libraries(DynamicManipulation autd3
  ${Boost_LIBRARIES}
  ${OpenCV_LIBS}
- ${KinectSDK2_LIBRARIES}
+ KinectApp
  QPSolver
  winMultiplexer
 )

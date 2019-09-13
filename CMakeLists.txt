@@ -45,6 +45,8 @@ add_library(DynamicManipulation STATIC
  src/additionalGain.cpp
  src/ocs.cpp
  src/ods.cpp
+ inc/KinectPositionSensor.hpp
+ src/KinectPositionSensor.cpp
  src/FloatingObject.cpp
  inc/read-csv-to-eigen.hpp
  src/read-csv-to-eigen.cpp
@@ -54,6 +56,10 @@ add_library(DynamicManipulation STATIC
  src/kalmanFilter.cpp
  src/Trajectory.cpp
  inc/EigenTools.hpp
+)
+
+source_group("sensor" FILES 
+	src/KinectPositionSensor.cpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)

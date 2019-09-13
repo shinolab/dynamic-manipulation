@@ -24,6 +24,7 @@
 namespace dynaman {
 	class FloatingObject;
 	typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
+	class Sensor;
 	class ods;
 	class ocs;
 	class Trajectory;
@@ -84,6 +85,12 @@ namespace dynaman {
 		Eigen::Vector3f averageVelocity();
 		Eigen::Vector3f AveragePosition();
 		Eigen::Vector3f AveragePosition(int sumpleNum);
+	};
+
+	class Sensor {
+	public:
+		virtual ~Sensor() {};
+		virtual bool updateStates(FloatingObjectPtr objPtr) = 0;
 	};
 
 	class ods
@@ -182,17 +189,19 @@ namespace dynaman {
 	{
 	public:
 		void Initialize();
-		std::shared_ptr<ods> Sensor();
+		//std::shared_ptr<ods> Sensor();
 		std::shared_ptr<ocs> Controller();
 		int AddObject(Eigen::Vector3f const &positionTarget);
 		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 		void RegisterObject(FloatingObjectPtr objPtr);
+		void SetSensor(std::shared_ptr<Sensor> sensorPtr);
 		const FloatingObjectPtr GetFloatingObject(int i);
 		void StartControl();
 		void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 		void Close();
 		void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD determinationTime);
-		std::shared_ptr<ods> odsPtr;
+		std::shared_ptr<Sensor> sensorPtr;
+		//std::shared_ptr<ods> odsPtr;
 		std::shared_ptr<ocs> ocsPtr;
 		std::thread thread_control;
 		std::vector<FloatingObjectPtr> objPtrs;

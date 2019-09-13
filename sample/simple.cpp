@@ -1,5 +1,5 @@
 #include "odcs.hpp"
-#include "kalmanFilter.hpp"
+#include "KinectPositionSensor.hpp"
 #include <Eigen\Geometry>
 #include <iostream>
 #include <fstream>
@@ -20,16 +20,20 @@ int main()
 	Eigen::Vector3f posRight2(426.14f, 596.04f - 160.f, 1431.f);//‰E‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 	Eigen::Vector3f posLeft2(-423.86f, 596.04f - 160.f, 1431.f);//¶‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 
-	dynaman::odcs dynaman;
-	dynaman.Initialize();
-	dynaman.odsPtr->SetWorkSpace(Eigen::Vector3f(-800.f, 0.f, 500.f), Eigen::Vector3f(800.f, 1000.f, 1570.f));
 	Eigen::Matrix3f rotationKinect2Global;
 	rotationKinect2Global <<
 		-0.999971f,  0.00739537f, -0.00169575f,
 		-0.001628f, 0.0091623f, 0.999957f,
 		0.00741063f, 0.999931f, -0.00915001f;
-	Eigen::Matrix3f rot2 = rotationKinect2Global;
-	dynaman.odsPtr->SetSensorGeometry(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f), rot2);
+	dynaman::KinectDepthPositionSensor sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
+		Eigen::Quaternionf(rotationKinect2Global),
+		Eigen::Vector3f(-800.f, 0.f, 500.f),
+		Eigen::Vector3f(800.f, 1000.f, 1570.f),
+		true);
+	dynaman::odcs dynaman;
+	dynaman.Initialize();
+	dynaman.SetSensor(std::shared_ptr<dynaman::Sensor>(&sensor));
+
 	std::cout << "adding devices..." << std::endl;
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
 	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));

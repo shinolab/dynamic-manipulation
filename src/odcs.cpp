@@ -17,11 +17,6 @@ using namespace dynaman;
 
 void odcs::Initialize()
 {
-	if (odsPtr == nullptr)
-	{
-		odsPtr = std::make_shared<ods>();
-		odsPtr->Initialize();
-	}
 	if (ocsPtr == nullptr)
 	{
 		ocsPtr = std::make_shared<ocs>();
@@ -29,12 +24,12 @@ void odcs::Initialize()
 	}
 }
 
-std::shared_ptr<ods> odcs::Sensor() {
-	return odsPtr;
-}
-
 std::shared_ptr<ocs> odcs::Controller() {
 	return ocsPtr;
+}
+
+void odcs::SetSensor(std::shared_ptr<Sensor> new_sensorPtr) {
+	sensorPtr = new_sensorPtr;
 }
 
 int odcs::AddObject(Eigen::Vector3f const &targetPosition)
@@ -61,16 +56,10 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
-		DWORD observationTime = timeGetTime();
-		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
-		{
-			//----------Determination----------
-			(*itr)->updateStates(observationTime, posObserved);
-			(*itr)->SetTrackingStatus(true);
+		if (sensorPtr->updateStates(*itr)) {
 			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));
 		}
-		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
+		else if (loopInit - (*itr)->lastDeterminationTime > 1000)
 		{
 			(*itr)->SetTrackingStatus(false);
 		}

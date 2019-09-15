@@ -7,8 +7,6 @@
 
 #pragma comment(lib, "ws2_32")
 
-#define BUFFER_SIZE 1024
-
 class client {
 public:
 	client(const char* ipAddr, const int port);
@@ -17,6 +15,7 @@ public:
 	const char* replyBuffer();
 	void queryPosition(position* positionPtr);
 private:
+	enum { BUFFER_SIZE = 1024 };
 	int dstSocket;
 	sockaddr_in dstAddr;
 	WSADATA data;

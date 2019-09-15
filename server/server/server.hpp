@@ -4,14 +4,13 @@
 #include <WS2tcpip.h>
 #include <functional>
 
-#define BUFFER_SIZE 1024
-
 class server {
 public:
 	server(const std::function<void (const char*, char*)> &process, const int port);
 	~server();
 	void start();
 private:
+	enum{ BUFFER_SIZE = 1024 };
 	sockaddr_in srcAddr;
 	sockaddr_in dstAddr;
 	WSAData data;

@@ -1,7 +1,6 @@
 #ifndef _KinectApp_H_
 #define _KinectApp_H_
 
-#include <iostream>
 #include <Kinect.h>
 #include <atlbase.h>
 #include <vector>
@@ -29,6 +28,7 @@ public:
 
 private:
 
+	inline void error_check(HRESULT hr) noexcept(false);
 	CComPtr<IKinectSensor> kinect;
 	CComPtr<IColorFrameReader> colorFrameReader;
 	CComPtr<IDepthFrameReader> depthFrameReader;

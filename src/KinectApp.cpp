@@ -9,24 +9,31 @@
 
 using namespace std;
 
-// 書籍での解説のためにマクロにしています。実際には展開した形で使うことを検討してください。
-#define ERROR_CHECK( ret )  \
+//#define ERROR_CHECK( ret )  \
     if ( (ret) != S_OK ) {    \
         std::stringstream ss;	\
         ss << "failed " #ret " " << std::hex << ret << std::endl;			\
         throw std::runtime_error( ss.str().c_str() );			\
 			    }
 
+inline void KinectApp::error_check(HRESULT hr) {
+	if (hr != S_OK) {
+		std::stringstream ss;
+		ss << "failed " << std::hex << hr << std::endl;
+		throw std::runtime_error(ss.str().c_str());
+	}
+}
+
 void KinectApp::initialize()
 {
 	// デフォルトのKinectを取得する
-	ERROR_CHECK(::GetDefaultKinectSensor(&kinect));
+	error_check(::GetDefaultKinectSensor(&kinect));
 	
 	// Kinectを開く
-	ERROR_CHECK(kinect->Open());
+	error_check(kinect->Open());
 
 	BOOLEAN isOpen = false;
-	ERROR_CHECK(kinect->get_IsOpen(&isOpen));
+	error_check(kinect->get_IsOpen(&isOpen));
 	if (!isOpen){
 		throw std::runtime_error("cannot open Kinect");
 	}

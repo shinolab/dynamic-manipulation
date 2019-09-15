@@ -4,16 +4,12 @@
 #include "additionalGain.hpp"
 #include "QPSolver.h"
 #include <Eigen\Geometry>
-#include <dlib\matrix.h>
-#include <dlib\optimization.h>
 #include <boost/math/common_factor_rt.hpp>
 #include <algorithm>
 #include <vector>
 #include <deque>
 #define _USE_MATH_DEFINES
 #include <math.h>
-
-#define NUM_AUTDS 12
 
 using namespace dynaman;
 
@@ -173,45 +169,6 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 	return gain_list;	
 }
 
-Eigen::VectorXf ocs::FindDutySI(FloatingObjectPtr objPtr)
-{
-	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
-	Eigen::VectorXf dutiesOffset(CentersAUTD().cols()); dutiesOffset.setZero();
-	Eigen::VectorXf gainPSi(CentersAUTD().cols()); gainPSi.setConstant(-0.75); gainPSi[0] = -1.0;
-	Eigen::VectorXf gainDSi(CentersAUTD().cols()); gainDSi.setConstant(-1.3); gainDSi[0] = -1.8;
-	Eigen::VectorXf gainISi(CentersAUTD().cols()); gainISi.setConstant(-0.01);
-	Eigen::VectorXf drRel = DirectionsAUTD().transpose() * dr;
-	Eigen::VectorXf dvRel = DirectionsAUTD().transpose() * objPtr->getVelocity();
-	Eigen::VectorXf diRel = DirectionsAUTD().transpose() * objPtr->getIntegral();
-	Eigen::VectorXf duties = dutiesOffset + gainPSi.asDiagonal() * drRel + gainDSi.asDiagonal() * dvRel;// +gainI.asDiagonal() * diRel;
-	return duties;
-}
-
-Eigen::VectorXf ocs::FindDutyQPEq(FloatingObjectPtr objPtr)
-{
-	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
-	Eigen::Vector3f dutiesOffset(0, 0, 0);
-	Eigen::Vector3f gainPEq(-0.6, -0.6, -1.0);
-	Eigen::Vector3f gainDEq(-1.0, -1.0, -1.8);
-	Eigen::Vector3f gainIEq(0.0, 0.0, 0.0);
-	Eigen::MatrixXf directions2obj = (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD()).colwise().normalized();
-	Eigen::VectorXf f = dutiesOffset + gainPEq.asDiagonal() * dr + gainDEq.asDiagonal() * objPtr->averageVelocity() + gainIEq.asDiagonal() * objPtr->getIntegral();
-	Eigen::MatrixXf E = directions2obj.transpose() * directions2obj;
-	Eigen::VectorXf b = -directions2obj.transpose() * f;
-	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Ed = dlib::mat(E);
-	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
-	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(CentersAUTD().cols(), 1);
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = 255 * dlib::ones_matrix<float>(CentersAUTD().cols(), 1);
-	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(CentersAUTD().cols(), 1);
-	dlib::solve_qp_box_constrained(Ed, bd, u, lowerbound, upperbound, (float)1e-5, 100);
-	Eigen::VectorXf duty(CentersAUTD().cols());
-	for (int index = 0; index < CentersAUTD().cols(); index++)
-	{
-		duty[index] = u(index, 0);
-	}
-	return duty;
-}
-
 Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 {
 	Eigen::Vector3f dr = objPtr->getPosition() - objPtr->getPositionTarget();
@@ -227,32 +184,6 @@ Eigen::VectorXf ocs::FindDutySVD(FloatingObjectPtr objPtr)
 		- 0.5 * F.rowwise().sum();
 	Eigen::VectorXf duties =  F.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(force) + 0.5 * Eigen::VectorXf::Ones(F.cols());
 	return duties;
-}
-
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, Eigen::VectorXf const &duty_forward)
-{
-	Eigen::MatrixXf posRel = position.replicate(1, CentersAUTD().cols()) - CentersAUTD();
-	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
-	Eigen::MatrixXf Q = F.transpose() * F;
-	Eigen::VectorXf b = -F.transpose() * force;
-	Eigen::VectorXf duty_reserved = Eigen::VectorXf::Ones(duty_forward.size()) - duty_forward;
-	dlib::matrix<float, NUM_AUTDS, 1> upperbound = dlib::mat(duty_reserved);
-	dlib::matrix<float, NUM_AUTDS, NUM_AUTDS> Qd = dlib::mat(Q);
-	dlib::matrix<float, NUM_AUTDS, 1> bd = dlib::mat(b);
-	dlib::matrix<float, NUM_AUTDS, 1> u = dlib::zeros_matrix<float>(NUM_AUTDS, 1);
-	dlib::matrix<float, NUM_AUTDS, 1> lowerbound = dlib::zeros_matrix<float>(CentersAUTD().cols(), 1);
-	dlib::solve_qp_box_constrained(Qd, bd, u, lowerbound, upperbound, (float)1e-5, 100);
-	Eigen::VectorXf duty(CentersAUTD().cols());
-	for (int index = 0; index < NUM_AUTDS; index++)
-	{
-		duty[index] = u(index, 0);
-	}
-	return duty;
-}
-
-Eigen::VectorXf ocs::FindDutyQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position)
-{
-	return FindDutyQP(force, position, Eigen::VectorXf::Zero(positionsAUTD.cols()));
 }
 
 Eigen::VectorXf ocs::FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position) {

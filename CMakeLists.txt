@@ -32,9 +32,6 @@ find_package( KinectSDK2 REQUIRED )
 include_directories( ${KinectSDK2_INCLUDE_DIRS} )
 link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 
-#Dlib
-include_directories(deps/dlib-19.0)
-
 add_library(KinectApp STATIC inc/KinectApp.hpp src/KinectApp.cpp)
 target_link_libraries(KinectApp ${KinectSDK2_LIBRARIES})
 

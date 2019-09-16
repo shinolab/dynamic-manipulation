@@ -11,7 +11,7 @@ namespace dynaman {
 	KinectDepthPositionSensor::KinectDepthPositionSensor(Eigen::Vector3f const &pos,
 		Eigen::Quaternionf const &quo,
 		bool useROI)
-		:_useROI(useROI), _pos(pos), _quo(quo){
+		:_pos(pos), _quo(quo), _useROI(useROI){
 		kinect.initialize();
 	}
 

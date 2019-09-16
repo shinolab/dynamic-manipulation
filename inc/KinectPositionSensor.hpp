@@ -20,8 +20,8 @@ namespace dynaman {
 	private:
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;
-		KinectApp kinect;
 		bool _useROI;
+		KinectApp kinect;
 		void maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const & upperbound, cv::Mat& mask);
 	};
 

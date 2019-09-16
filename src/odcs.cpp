@@ -15,7 +15,7 @@
 
 using namespace dynaman;
 
-odcs::odcs(Sensor& sensor) :sensor(sensor) {};
+odcs::odcs(Sensor& sensor) :sensor(sensor), flagRunning(false) {};
 
 void odcs::Initialize()
 {

@@ -43,15 +43,11 @@ namespace dynaman {
 
 		Eigen::MatrixXf covError;
 		DWORD lastDeterminationTime;
-		bool _isStable;
-		bool isControlled;
+		const int velocityBufferSize;
 		std::deque<Eigen::Vector3f> positionBuffer;
 		std::deque<Eigen::Vector3f> velocityBuffer;
 		std::deque<float> dTBuffer;
-		const int velocityBufferSize = 3;
 		float radius; // [mm]
-		//const float mass = 5.4e-3; //[Kg]
-		float speedLimit = 400; // [mm/s]
 		float additionalMass;
 
 	private:
@@ -65,12 +61,14 @@ namespace dynaman {
 		std::mutex mtxTrack;
 		std::shared_mutex mtxTrajectory;
 		std::shared_ptr<Trajectory> trajectoryPtr;
+
 	public:
 		FloatingObject(Eigen::Vector3f const &_positionTarget,
 			Eigen::Vector3f const &lowerbound,
 			Eigen::Vector3f const &upperbound,
 			float _additionalMass = 0.1e-3f,
 			float _radius = 90.f);
+
 		static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt,
 			Eigen::Vector3f const &lpperbound,
 			Eigen::Vector3f const &uowerbound,
@@ -88,7 +86,6 @@ namespace dynaman {
 		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
 		void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
 
-		bool isStable();
 		bool isConverged(float tolPos, float tolVel);
 		bool IsTracked();
 		void SetTrackingStatus(bool _isTracked);
@@ -212,7 +209,7 @@ namespace dynaman {
 		std::vector<FloatingObjectPtr> objPtrs;
 	private:
 		std::shared_mutex mtxRunning;
-		bool flagRunning = false;
+		bool flagRunning;
 
 	public:
 		bool isRunning();

@@ -8,44 +8,32 @@
 #include <shared_mutex>
 #include <Eigen\Geometry>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 using namespace dynaman;
+
+namespace {
+	const float pi = 3.14159265359;
+}
 
 FloatingObject::FloatingObject(Eigen::Vector3f const &_positionTarget,
 	Eigen::Vector3f const &lowerbound,
 	Eigen::Vector3f const &upperbound,
 	float _additionalMass,
 	float _radius)
-{
-	position << _positionTarget;
-	velocity << 0, 0, 0;
-	integral << 0, 0, 0;
-	_upperbound << upperbound;
-	_lowerbound << lowerbound;
-	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget)));
-	additionalMass = _additionalMass;
-	lastDeterminationTime = 0;
-	isTracked = false;
-	isControlled = true;
-	positionBuffer.resize(velocityBufferSize);
-	velocityBuffer.resize(velocityBufferSize);
-	dTBuffer.resize(velocityBufferSize);
-	for (auto itr = velocityBuffer.begin(); itr != velocityBuffer.end(); itr++)
-	{
-		itr->setZero();
-	}
-	for (auto itr = positionBuffer.begin(); itr != positionBuffer.end(); itr++)
-	{
-		*itr << _positionTarget;
-	}
-	for (auto itr = dTBuffer.begin(); itr != dTBuffer.end(); itr++)
-	{
-		*itr = 1;
-	}
-	covError = 100 * Eigen::VectorXf::Ones(6).asDiagonal();
-	radius = _radius;
-}
+	:position(_positionTarget),
+	velocity(Eigen::Vector3f::Zero()),
+	integral(Eigen::Vector3f::Zero()),
+	_lowerbound(lowerbound),
+	_upperbound(upperbound),
+	additionalMass(_additionalMass),
+	radius(_radius),
+	isTracked(false),
+	lastDeterminationTime(0),
+	velocityBufferSize(3),
+	positionBuffer(velocityBufferSize, _positionTarget),
+	velocityBuffer(velocityBufferSize, Eigen::Vector3f::Zero()),
+	dTBuffer(velocityBufferSize, 1),
+	covError(100.f * Eigen::MatrixXf::Identity(6, 6)),
+	trajectoryPtr(std::make_shared<TrajectoryConstantState>(_positionTarget)){}
 
 FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, Eigen::Vector3f const &lowerbound, Eigen::Vector3f const &upperbound, float _additionalMass, float _radius)
 {
@@ -54,7 +42,7 @@ FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, Eigen::V
 
 float FloatingObject::sphereMass()
 {
-	return 1.293 * 4.0 * M_PI * pow(radius/1000, 3) / 3.0;
+	return 1.293f * 4.0f * pi * radius * radius * radius / 3.0f * 1e-9;
 }
 
 float FloatingObject::Radius() {
@@ -120,7 +108,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	velocityBuffer.pop_front();
 	if (IsTracked())
 	{
-		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
+		integral += (0.5f * (positionNew + position) - getPositionTarget()) * dt;
 	}
 	position = positionNew;
 	lastDeterminationTime = determinationTime;
@@ -132,7 +120,7 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
 	if (IsTracked())
 	{
-		integral += (0.5 * (positionNew + position) - getPositionTarget()) * dt;
+		integral += (0.5f * (positionNew + position) - getPositionTarget()) * dt;
 	}
 	velocity = velocityNew;
 	position = positionNew;
@@ -195,11 +183,6 @@ Eigen::VectorXf FloatingObject::getLatestInput()
 void FloatingObject::setLatestInput(Eigen::VectorXf input)
 {
 	inputLatest = input;
-}
-
-bool FloatingObject::isStable()
-{
-	return (averageVelocity().norm() < speedLimit);
 }
 
 bool FloatingObject::isConverged(float tolPos, float tolVel)

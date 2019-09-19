@@ -25,7 +25,6 @@ namespace dynaman {
 	class FloatingObject;
 	typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
 	class Sensor;
-	class ods;
 	class ocs;
 	class Trajectory;
 
@@ -99,51 +98,6 @@ namespace dynaman {
 	public:
 		virtual ~PositionSensor() {};
 		virtual bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) = 0;
-	};
-
-	class ods
-	{
-	public:
-		enum ROI_USE
-		{
-			NEVER, FOUND, ALWAYS
-		};
-	private:
-		typedef Eigen::Matrix<float, 3, 8> Matrix38f;
-		KinectApp kinectApp;
-		Eigen::Vector3f positionKinect;
-		//Eigen::Matrix3f dcmGlobal2Kinect;
-		Eigen::Matrix3f dcmKinect2Global;
-		//Eigen::Affine3f affineKinect2Global;
-		Eigen::Matrix<float, 3, 2> workspace;
-		std::vector<UINT16> backgroundDepth;
-
-	public:
-		int Initialize();
-		void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngle);
-		void SetSensorGeometry(Eigen::Vector3f const &position, Eigen::Matrix3f const &rotKinect2Global);
-		KinectApp* kinect();
-		void SetWorkSpace(Eigen::Vector3f const &corner1, Eigen::Vector3f const &corner2);
-		void CornersWorkspaceAll(Matrix38f &corners);
-		void MaskWorkspace(cv::Mat &mask);
-		float RangeWorkspace();
-		float RangeWorkspaceMin();
-		Eigen::Affine3f AffineKinect2Global() { return Eigen::Translation3f(positionKinect)*dcmKinect2Global; }
-		Eigen::Affine3f AffineGlobal2Kinect() { return AffineKinect2Global().inverse(); }
-		Eigen::Matrix3f DcmGlobal2Kinect() { return dcmKinect2Global.transpose(); }
-		Eigen::Matrix3f DcmKinect2Global() { return dcmKinect2Global; }
-		bool isInsideWorkSpace(const Eigen::Vector3f &pos);
-
-		void DeterminePositionByHSV(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-		void DeterminePositionByBGR(FloatingObjectPtr objPtr, cv::Scalar lb, cv::Scalar ub);
-		void DeterminePositionByDepth(FloatingObjectPtr objPtr, bool useROI);
-
-		bool GetPositionByBGR(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-		bool GetPositionByHSV(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, cv::Scalar lb, cv::Scalar ub);
-		bool GetPositionByDepth(FloatingObjectPtr objPtr, Eigen::Vector3f &pos, bool useROI);
-
-		HRESULT updateBackgroundDepth();
-		bool findSphere(const cv::Mat src, cv::Point &center, float &radius);
 	};
 
 	class single_actuator{

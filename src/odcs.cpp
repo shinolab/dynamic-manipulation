@@ -69,38 +69,6 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		Sleep(std::max(waitTime, 0));
 		timeEndPeriod(1);
 	}
-	/*
-	DWORD loopInit = timeGetTime();
-	//Determination
-	for (auto itr = objPtrs.begin(); itr != objPtrs.end(); itr++)
-	{
-		//----------Observation----------
-		Eigen::Vector3f posObserved;
-		bool succeeded = odsPtr->GetPositionByDepth((*itr), posObserved, true);
-		DWORD observationTime = timeGetTime();
-		if (succeeded && odsPtr->isInsideWorkSpace(posObserved))
-		{
-			//----------Determination----------
-			(*itr)->updateStates(observationTime, posObserved);
-			(*itr)->SetTrackingStatus(true);
-		}
-		else if (observationTime - (*itr)->lastDeterminationTime > 1000)
-		{
-			(*itr)->SetTrackingStatus(false);
-		}
-	}
-	std::cout << "Creating Gain..." << std::endl;
-	auto gains = ocsPtr->CreateBalanceGainMulti(objPtrs);
-	//Update gain
-	ocsPtr->_autd.ResetLateralGain();
-	ocsPtr->_autd.AppendLateralGain(gains);
-	ocsPtr->_autd.StartLateralModulation(100);
-
-	int waitTime = loopPeriod - (timeGetTime() - loopInit);
-	timeBeginPeriod(1);
-	Sleep(std::max(waitTime, 0));
-	timeEndPeriod(1);
-	*/
 }
 
 bool odcs::isRunning() {

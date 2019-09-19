@@ -1,3 +1,4 @@
+#include "geometryUtil.hpp"
 #include <thread>
 #include <vector>
 #include <iostream>
@@ -10,12 +11,11 @@
 #include "arfModel.hpp"
 #include "kalmanFilter.hpp"
 
-#define _USE_MATH_DEFINES
 #include<math.h>
 
 using namespace dynaman;
 
-odcs::odcs(Sensor& sensor) :sensor(sensor), flagRunning(false) {};
+odcs::odcs(PositionSensor& sensor) :sensor(sensor), flagRunning(false) {};
 
 void odcs::Initialize()
 {
@@ -30,7 +30,7 @@ std::shared_ptr<ocs> odcs::Controller() {
 	return ocsPtr;
 }
 
-void odcs::SetSensor(Sensor &new_sensor) {
+void odcs::SetSensor(PositionSensor &new_sensor) {
 	sensor = new_sensor;
 }
 
@@ -52,7 +52,9 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		DWORD loopInit = timeGetTime();
 		//----------Observation----------
 		Eigen::Vector3f posObserved;
-		if (sensor.updateStates(*itr)) {
+		DWORD observationTime;
+		bool observed = sensor.observe(observationTime, posObserved, *itr);
+		if (observed && isInsideWorkspace(posObserved, (*itr)->lowerbound(), (*itr)->upperbound())) {
 			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));
 		}
 		else if (loopInit - (*itr)->lastDeterminationTime > 1000)

@@ -35,6 +35,10 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 add_library(KinectApp STATIC inc/KinectApp.hpp src/KinectApp.cpp)
 target_link_libraries(KinectApp ${KinectSDK2_LIBRARIES})
 
+add_library(KinectUtility STATIC inc/KinectUtility.hpp src/KinectUtility.cpp)
+target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
+
+
 add_library(DynamicManipulation STATIC
  inc/odcs.hpp
  src/odcs.cpp
@@ -42,8 +46,8 @@ add_library(DynamicManipulation STATIC
  src/additionalGain.cpp
  src/ocs.cpp
  src/ods.cpp
- inc/KinectPositionSensor.hpp
- src/KinectPositionSensor.cpp
+ inc/KinectSphereTracker.hpp
+ src/KinectSphereTracker.cpp
  src/FloatingObject.cpp
  inc/read-csv-to-eigen.hpp
  src/read-csv-to-eigen.cpp
@@ -57,9 +61,6 @@ add_library(DynamicManipulation STATIC
  src/geometryUtil.cpp
 )
 
-source_group("sensor" FILES 
-	src/KinectPositionSensor.cpp
-)
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
   target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
@@ -83,7 +84,7 @@ target_link_libraries(QPSolver CGAL::CGAL)
 target_link_libraries(DynamicManipulation autd3
  ${Boost_LIBRARIES}
  ${OpenCV_LIBS}
- KinectApp
+ KinectUtility
  QPSolver
  winMultiplexer
 )

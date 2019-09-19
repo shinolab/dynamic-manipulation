@@ -9,7 +9,7 @@
 
 namespace dynaman {
 
-	class KinectDepthPositionSensor : public Sensor {
+	class KinectDepthPositionSensor{
 	public:
 		KinectDepthPositionSensor(Eigen::Vector3f const &pos,
 			Eigen::Quaternionf const &quo,

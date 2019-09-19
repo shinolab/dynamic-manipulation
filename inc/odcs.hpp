@@ -95,10 +95,10 @@ namespace dynaman {
 		Eigen::Vector3f upperbound();
 	};
 
-	class Sensor {
+	class PositionSensor {
 	public:
-		virtual ~Sensor() {};
-		virtual bool updateStates(FloatingObjectPtr objPtr) = 0;
+		virtual ~PositionSensor() {};
+		virtual bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) = 0;
 	};
 
 	class ods
@@ -146,6 +146,24 @@ namespace dynaman {
 		bool findSphere(const cv::Mat src, cv::Point &center, float &radius);
 	};
 
+	class single_actuator{
+	public:
+		single_actuator(autd::Controller& autd) :_autd(autd) {};
+		virtual ~single_actuator() {};
+		virtual void actuate(FloatingObjectPtr objPtr) = 0;
+	protected:
+		autd::Controller& _autd;
+	};
+
+	class multiple_actuator{
+	public:
+		multiple_actuator(autd::Controller& autd) :_autd(autd) {};
+		virtual ~multiple_actuator() {};
+		virtual void actuate(std::vector<FloatingObjectPtr> objPtrs) = 0;
+	protected:
+		autd::Controller& _autd;
+	};
+
 	class ocs
 	{
 	public:
@@ -190,19 +208,20 @@ namespace dynaman {
 	class odcs
 	{
 	public:
-		odcs(Sensor& sensor);
+		odcs(PositionSensor& sensor);
 		void Initialize();
 		//std::shared_ptr<ods> Sensor();
 		std::shared_ptr<ocs> Controller();
 		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
 		void RegisterObject(FloatingObjectPtr objPtr);
-		void SetSensor(Sensor &new_sensor);
+		void SetSensor(PositionSensor &new_sensor);
 		const FloatingObjectPtr GetFloatingObject(int i);
 		void StartControl();
 		void ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod);
 		void Close();
 		void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD determinationTime);
-		Sensor &sensor;
+		PositionSensor &sensor;
+
 		//std::shared_ptr<ods> odsPtr;
 		std::shared_ptr<ocs> ocsPtr;
 		std::thread thread_control;

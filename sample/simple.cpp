@@ -1,5 +1,5 @@
 #include "odcs.hpp"
-#include "KinectPositionSensor.hpp"
+#include "KinectSphereTracker.hpp"
 #include <Eigen\Geometry>
 #include <iostream>
 #include <fstream>
@@ -20,14 +20,17 @@ int main()
 	Eigen::Vector3f posRight2(426.14f, 596.04f - 160.f, 1431.f);//‰E‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 	Eigen::Vector3f posLeft2(-423.86f, 596.04f - 160.f, 1431.f);//¶‚ÉˆÚ“®‚µ‚½Œã‚ÌˆÊ’u
 
+	//initialization of the sensor
 	Eigen::Matrix3f rotationKinect2Global;
 	rotationKinect2Global <<
 		-0.999971f,  0.00739537f, -0.00169575f,
 		-0.001628f, 0.0091623f, 0.999957f,
 		0.00741063f, 0.999931f, -0.00915001f;
-	dynaman::KinectDepthPositionSensor sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
+	dynaman::KinectDepthSphereTracker sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
 		Eigen::Quaternionf(rotationKinect2Global),
 		true);
+
+	//initialization of dynaman
 	dynaman::odcs dynaman(sensor);
 	dynaman.Initialize();
 

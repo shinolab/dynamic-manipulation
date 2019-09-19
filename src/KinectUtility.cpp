@@ -10,12 +10,14 @@ namespace KinectUtility {
 	KinectDepthManager::KinectDepthManager(){
 		CComPtr<IKinectSensor> pKinect;
 		error_check(::GetDefaultKinectSensor(&pKinect));
+		error_check(pKinect->Open());
 		BOOLEAN isOpen;
 		error_check(pKinect->get_IsOpen(&isOpen));
 		if (!isOpen) {
+			std::cerr << "kinect cannot be opened." << std::endl;
 			throw std::runtime_error("Kinect is not opened.");
 		}
-		
+
 		CComPtr<IDepthFrameSource> pDepthFrameSource;
 		pKinect->get_DepthFrameSource(&pDepthFrameSource);
 		pDepthFrameSource->OpenReader(&_pFrameReader);

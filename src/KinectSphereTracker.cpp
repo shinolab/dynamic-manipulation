@@ -22,7 +22,7 @@ namespace dynaman {
 		bool useROI)
 		:_depthManager(),
 		_coordManager(),
-		_depthBuffer(_depthManager.makeBuffer()),
+		_depthBuffer(_depthManager.numPixels()),
 		_pos(pos),
 		_quo(quo),
 		_useROI(useROI) {}
@@ -81,7 +81,7 @@ namespace dynaman {
 				maskWorkspace(objPtr->lowerbound(), objPtr->upperbound(), mask);
 			}
 			depthImageUc8.copyTo(maskedImage, mask);
-			//cv::imshow("ROI-masked", maskedImage);
+			//cv::imshow("ROI-masked", maskedImage); cv::waitKey(1);
 			auto corners = cornersWorkspaceAll(objPtr->lowerbound(), objPtr->upperbound());
 			auto rangesWorkspace = range2Points(_pos, _quo, corners);
 			auto minRange = *std::min_element(rangesWorkspace.begin(), rangesWorkspace.end());

@@ -55,6 +55,8 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		DWORD observationTime;
 		bool observed = sensor.observe(observationTime, posObserved, *itr);
 		if (observed && isInsideWorkspace(posObserved, (*itr)->lowerbound(), (*itr)->upperbound())) {
+			(*itr)->updateStates(observationTime, posObserved);
+			(*itr)->SetTrackingStatus(true);
 			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));
 		}
 		else if (loopInit - (*itr)->lastDeterminationTime > 1000)

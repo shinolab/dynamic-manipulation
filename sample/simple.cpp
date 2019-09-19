@@ -26,10 +26,12 @@ int main()
 		-0.999971f,  0.00739537f, -0.00169575f,
 		-0.001628f, 0.0091623f, 0.999957f,
 		0.00741063f, 0.999931f, -0.00915001f;
+	std::cout << "constructing sensor ... " << std::endl;
 	dynaman::KinectDepthSphereTracker sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
-		Eigen::Quaternionf(rotationKinect2Global),
+		Eigen::Quaternionf(rotationKinect2Global.inverse()),
 		true);
 
+	std::cout << "sensor initialized" << std::endl;
 	//initialization of dynaman
 	dynaman::odcs dynaman(sensor);
 	dynaman.Initialize();

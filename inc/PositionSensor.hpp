@@ -1,5 +1,0 @@
-#ifndef _POSITION_SENSOR_HPP
-#define _POSITION_SENSOR_HPP
-
-
-#endif

@@ -35,7 +35,6 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 add_library(KinectUtility STATIC inc/KinectUtility.hpp src/KinectUtility.cpp)
 target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
 
-
 add_library(DynamicManipulation STATIC
  inc/odcs.hpp
  src/odcs.cpp

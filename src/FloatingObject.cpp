@@ -135,7 +135,8 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 
 void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
-	SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryConstantState(_positionTarget, _velocityTarget, _accelTarget)));
+	auto constTrajPtr = std::make_shared<TrajectoryConstantState>(_positionTarget, _velocityTarget, _accelTarget);
+	SetTrajectory(constTrajPtr);
 }
 
 bool FloatingObject::IsTracked() {

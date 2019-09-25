@@ -67,7 +67,9 @@ int main()
 	dynaman.StartControl();	
 	std::cout << "Press any key to start translation." << std::endl;
 	getchar();
-	objPtr1->SetTrajectory(std::shared_ptr<dynaman::Trajectory>(new dynaman::TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	
+	auto trajPtrLeft2Right = std::make_shared<dynaman::TrajectoryBangBang>(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1);
+	objPtr1->SetTrajectory(trajPtrLeft2Right);
 	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	std::cout << "Press any key to close." << std::endl;

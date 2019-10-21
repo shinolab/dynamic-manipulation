@@ -1,40 +1,39 @@
-�����菇
+導入手順
 
-1.���L�̈ˑ����C�u������\�߃C���X�g�\�����Ă����D
-�EBoost(���ϐ���BOOST_ROOT�Ƃ������O��Boost�̃��[�g�f�B���N�g���̃p�X��ǉ����Ă������ƁD)
-�EEigen3
-�EOpenCV�i�g�p����\��̍\��(x64 / Win32, Debug / Release)�Ńr���h����j�i��C�܂�Make�Ńr���h���ꂽOpenCV�ł������؂��Ă��܂���j
-�EKinectSDK2
+1.下記の依存ライブラリを予めインスト—ルしておく．
+    -Boost(環境変数にBOOST_ROOTという名前でBoostのルートディレクトリのパスを追加しておくこと．)
+    -Eigen3
+    -OpenCV（使用する予定の構成(x64 / Win32, Debug / Release)でビルドする）（※CまだMakeでビルドされたOpenCVでしか検証していません）
+    -KinectSDK2
 
-����ɁC���L�̃\�t�g���C���X�g�\�����Ă����D
-�ECMake
-�EGit (��������git Bash��O��.)
+さらに，下記のソフトをインスト—ルしておく．
+    -CMake
+    -Git (※説明はgit Bashを前提.)
 
-2. Git���g���ă����[�g���|�W�g����clone����D��̓I�ɂ͈ȉ��̃R�}���h����͂���D
+2. Gitを使ってリモートリポジトリをcloneする．具体的には以下のコマンドを入力する．
 
-2-1.�t�H���_���쐬�������ꏊ�Ɉړ�����D�i�t�H���_���쐬����ꏊ�ŉE�N���b�N���C"Git Bash Here"�������j
+2-1.フォルダを作成したい場所に移動する．（フォルダを作成する場所で右クリックし，"Git Bash Here"を押す）
 
-2-2. �����[�g���|�W�g���̃t�@�C���𕡐�����D
-(git clone http://gitlab.hapis.k.u-tokyo.ac.jp/furumoto/dynamic-levitation.git����͂���D)
-�ݒ�ɂ���Ă̓p�X���[�h�̓��͂����߂���̂ŁCgitlab�ɓ��邽�߂̃p�X���[�h����͂���D
-��������ƁCdynamic-levitation�Ƃ����f�B���N�g�����쐬����C���̒��Ƀ\�[�X�t�@�C�����_�E�����[�h�����D
-���������̒i�K�ł́Cdynamic-levitation���ˑ����Ă��郉�C�u����(autd-software��ads)�͂܂��_�E�����[�h����Ă��Ȃ��D
+2-2. リモートリポジトリのファイルを複製する．
+(git clone http://gitlab.hapis.k.u-tokyo.ac.jp/furumoto/dynamic-levitation.gitを入力する．)
+設定によってはパスワードの入力を求められるので，gitlabに入るためのパスワードを入力する．
+成功すると，dynamic-levitationというディレクトリが作成され，その中にソースファイルがダウンロードされる．
+ただしこの段階では，dynamic-levitationが依存しているライブラリ(autd-softwareとads)はまだダウンロードされていない．
 
-���Ԉ�������i���i���[�U�[���ƃp�X���[�h�j����͂��Ă��܂��ƁC���ꂪwindows�ɋL�^����Ă��܂�gitlab�Ƀ��O�C���ł��Ȃ��Ȃ�D
-�ԈႦ���ꍇ�́Cwindows�̎��i���}�l�[�W���[���O�����C�Y���̎��i�����폜���邱�ƁD
+※間違った資格情報（ユーザー名とパスワード）を入力してしまうと，それがwindowsに記録されてしまいgitlabにログインできなくなる．
+間違えた場合は，windowsの資格情報マネージャーを軌道し，該当の資格情報を削除すること．
 
-2-3 dynamic-levitation�f�B���N�g���Ɉړ�����(cd dynamic-levitation����͂���D) 
+2-3 dynamic-levitationディレクトリに移動する(cd dynamic-levitationを入力する．) 
 
-2-4 �ˑ�����\�[�X�t�@�C�����_�E�����[�h����D(git submodule update --init --recursive�Ɠ��͂���D)
-��������ƁCdynamic-levitation/deps/autd3-software���Ɋe��t�@�C�������������D
+2-4 依存するソースファイルをダウンロードする．(git submodule update --init --recursiveと入力する．)
+成功すると，dynamic-levitation/deps/autd3-software内に各種ファイルが生成される．
 
-3.CMake���g���ă\�����[�V�����t�@�C���E�v���W�F�N�g�t�@�C���𐶐�����D
-�ꍇ�ɂ���ẮC
+3.CMakeを使ってソリューションファイル・プロジェクトファイルを生成する．
+場合によっては，
+    -Eigen
+    -OpenCV
 
-�EEigen
-�EOpenCV
+のディレクトリパスを聞かれるので，適切なパスを入力する．
+(OpenCVに関しては，CMakeを利用するとOpenCVディレクトリのどこかに"install"というディレクトリが生成されているはずなので，そのパスを指定する)
 
-�̃f�B���N�g���p�X�𕷂����̂ŁC�K�؂ȃp�X����͂���D
-(OpenCV�Ɋւ��ẮCCMake�𗘗p�����OpenCV�f�B���N�g���̂ǂ�����"install"�Ƃ����f�B���N�g������������Ă���͂��Ȃ̂ŁC���̃p�X���w�肷��)
-
-��������ƁCDynamicLevitation.sln�Ƃ����\�����[�V�����t�@�C�������������D
+成功すると，DynamicLevitation.slnというソリューションファイルが生成される．

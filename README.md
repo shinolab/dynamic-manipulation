@@ -1,14 +1,14 @@
 導入手順
 
--下記の依存ライブラリを予めインスト—ルしておく．
-    -Boost(環境変数にBOOST_ROOTという名前でBoostのルートディレクトリのパスを追加しておくこと．)
-    -Eigen3
-    -OpenCV（使用する予定の構成(x64 / Win32, Debug / Release)でビルドする）（※CまだMakeでビルドされたOpenCVでしか検証していません）
-    -KinectSDK2
+下記の依存ライブラリを予めインスト—ルしておく．
+    - Boost(環境変数にBOOST_ROOTという名前でBoostのルートディレクトリのパスを追加しておくこと．)
+    - Eigen3
+    - OpenCV（使用する予定の構成(x64 / Win32, Debug / Release)でビルドする）（※CまだMakeでビルドされたOpenCVでしか検証していません）
+    - KinectSDK2
 
 さらに，下記のソフトをインスト—ルしておく．
-    -CMake
-    -Git (※説明はgit Bashを前提.)
+    - CMake
+    - Git (※説明はgit Bashを前提.)
 
 2. Gitを使ってリモートリポジトリをcloneする．具体的には以下のコマンドを入力する．
 

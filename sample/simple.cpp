@@ -80,8 +80,7 @@ int main()
 	//dynaman.RegisterObject(objPtr2); // add object
 	std::cout << "starting control..." << std::endl;
 	dynaman.StartControl();	
-	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
-
+	
 
 	std::thread t_log([&objPtr1]() {
 		std::ofstream ofs("20191112_log.csv");
@@ -99,7 +98,9 @@ int main()
 
 	std::cout << "Press any key to start translation." << std::endl;
 	getchar();
-	objPtr1->SetTrajectory(std::shared_ptr<dynaman::Trajectory>(new dynaman::TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
+	
+	objPtr1->SetTrajectory(std::make_shared<dynaman::TrajectoryBangBang>(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1));
+	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
 	t_log.join();
 	std::cout << "Press any key to close." << std::endl;

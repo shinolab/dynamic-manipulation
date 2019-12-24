@@ -54,3 +54,6 @@ target_link_libraries(demo_avatar DynamicManipulation Projector)
 
 add_executable(demo_innovative demo_innovative.cpp init_uist.hpp)
 target_link_libraries(demo_innovative DynamicManipulation)
+
+add_executable(haptic_icon haptic_icon.cpp)
+target_link_libraries(haptic_icon DynamicManipulation)

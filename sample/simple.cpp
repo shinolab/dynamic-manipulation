@@ -23,12 +23,12 @@ int main()
 	//initialization of the sensor
 	Eigen::Matrix3f rotationKinect2Global;
 	rotationKinect2Global <<
-		-0.999971f,  0.00739537f, -0.00169575f,
-		-0.001628f, 0.0091623f, 0.999957f,
-		0.00741063f, 0.999931f, -0.00915001f;
+		-0.999964f, 0.00838503f, 0.00165846f,
+		0.00108414f, -0.0680396f, 0.997682f,
+		0.00847844f, 0.997648f, 0.068028f;
 	std::cout << "constructing sensor ... " << std::endl;
-	dynaman::KinectDepthSphereTracker sensor(Eigen::Vector3f(38.5924f, -1244.1f, 1087.02f),
-		Eigen::Quaternionf(rotationKinect2Global.inverse()),
+	dynaman::KinectDepthSphereTracker sensor(Eigen::Vector3f(44.9728f, -1200.87f, 1086.58f),
+		Eigen::Quaternionf(rotationKinect2Global),
 		true);
 
 	std::cout << "sensor initialized" << std::endl;
@@ -37,18 +37,33 @@ int main()
 	dynaman.Initialize();
 
 	std::cout << "adding devices..." << std::endl;
-	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(542.5f, 10.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(542.5f, 530.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(542.5f, 1050.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(92.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(92.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 10.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 530.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 1050.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 270.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
-	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 790.f, 1931.f), Eigen::Vector3f(0.f, M_PI, 0.f));
+	dynaman.AddDevice(Eigen::Vector3f(-992.5f, 790.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-992.5f, 270.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-542.5f, 1050.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-542.5f, 530.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-542.5f, 10.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-92.5f, 790.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-92.5f, 270.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(357.5f, 1050.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(357.5f, 530.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(357.5f, 10.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(807.5f, 790.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(807.5f, 270.f + 122.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	/*
+	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 790.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-807.5f, 270.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 1050.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 530.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(-357.5f, 10.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(92.5f, 790.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(92.5f, 270.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(542.5f, 1050.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(542.5f, 530.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(542.5f, 10.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(992.5f, 790.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	dynaman.AddDevice(Eigen::Vector3f(992.5f, 270.f, 1911.f), Eigen::Vector3f(0.f, M_PI, M_PI));
+	*/
+	
 	std::cout << "applying control gains..." << std::endl;
 	//control parameters
 	Eigen::Vector3f gainP = 1.0f*Eigen::Vector3f::Constant(-1.6f);
@@ -56,7 +71,7 @@ int main()
 	Eigen::Vector3f gainI = 1.0f*Eigen::Vector3f::Constant(-0.05f);
 	dynaman.ocsPtr->SetGain(gainP, gainD, gainI);
 	Eigen::Vector3f lowerbound(-800.f, 0.f, 500.f);
-	Eigen::Vector3f upperbound(800.f, 1000.f, 1570.f);
+	Eigen::Vector3f upperbound(800.f, 1200.f, 1570.f);
 	//odcs.ocs.SetGain(Eigen::Vector3f::Constant(-1.6f), Eigen::Vector3f::Constant(-2.6f), Eigen::Vector3f::Constant(-0.36f));
 	std::cout << "Creating floating objects..." << std::endl;
 	auto objPtr1 = dynaman::FloatingObject::Create(posLeft1, lowerbound, upperbound, -0.0001f, 127.f);
@@ -65,14 +80,32 @@ int main()
 	//dynaman.RegisterObject(objPtr2); // add object
 	std::cout << "starting control..." << std::endl;
 	dynaman.StartControl();	
+	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
+
+
+	std::thread t_log([&objPtr1]() {
+		std::ofstream ofs("20191112_log.csv");
+		DWORD t_init = timeGetTime();
+		while (timeGetTime() - t_init < 12000) {
+			Eigen::Vector3f position = objPtr1->getPosition();
+			Eigen::Vector3f positionTarget = objPtr1->getPositionTarget();
+			ofs << timeGetTime() << ", " << position.x() << ", " << position.y() << ", " << position.z() << ", " << positionTarget.x() << ", " << positionTarget.y() << ", " << positionTarget.z() << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(33));
+		}
+
+		ofs.close();
+		}
+	);
+
 	std::cout << "Press any key to start translation." << std::endl;
 	getchar();
 	objPtr1->SetTrajectory(std::shared_ptr<dynaman::Trajectory>(new dynaman::TrajectoryBangBang(5.0f, timeGetTime() / 1000.f, posLeft1, posRight1)));
-	//objPtr2->SetTrajectory(std::shared_ptr<Trajectory>(new TrajectoryBangBang(10.0f, timeGetTime() / 1000.f, posRight2, posLeft2)));
 
+	t_log.join();
 	std::cout << "Press any key to close." << std::endl;
 	getchar();
 	dynaman.Close();
+
 	std::cout << "dynaman has been closed." << std::endl;
 
 	return 0;

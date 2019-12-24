@@ -1,3 +1,4 @@
+#include "additionalGain.hpp"
 #include "autd3.hpp"
 #include <Eigen/Geometry>
 #include <iostream>
@@ -13,10 +14,14 @@ namespace haptic_icon {
 
 		Eigen::Vector3f euler_angles;
 		isUpper ? euler_angles << phi, theta - pi, pi / 2 : euler_angles << phi, theta - pi, -pi / 2;
-		Eigen::Vector3f pos_autd = radius * Eigen::Vector3f(sinf(theta) * cosf(phi), sinf(theta) * cosf(phi), cosf(theta))
+		Eigen::Vector3f centerGlobal = radius* Eigen::Vector3f(sinf(theta) * cosf(phi), sinf(theta) * sinf(phi), cosf(theta));
+		Eigen::Vector3f pos_autd = centerGlobal
 			- Eigen::AngleAxisf(euler_angles.x(), Eigen::Vector3f::UnitZ())
 			* Eigen::AngleAxisf(euler_angles.y(), Eigen::Vector3f::UnitY())
 			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
+
+		std::cout << "set autd #" << geometry->numDevices() << " : " << pos_autd.transpose() << "(center : " << centerGlobal.transpose() << ")" <<  std::endl;
+
 		return geometry->AddDevice(pos_autd, euler_angles);
 	}
 }
@@ -28,38 +33,77 @@ int main(int argc, char** argv) {
 		return ENXIO;
 	}
 	//top autd
-	const float theta0 = 0.f, phi0 = pi / 4;
+	const float theta0 = 0.f, phi0 = -3 * pi / 4;
 	//upper autd
 	const float theta1 = pi / 4, phi1 = pi / 4;
-	const float theta2 = pi / 4, phi2 = 2 * pi / 4;
-	const float theta3 = pi / 4, phi3 = 3 * pi / 4;
-	const float theta4 = pi / 4, phi4 = 4 * pi / 4;
+	const float theta2 = pi / 4, phi2 = 3 * pi / 4;
+	const float theta3 = pi / 4, phi3 = - 3 * pi / 4;
+	const float theta4 = pi / 4, phi4 = - pi / 4;
 	//middle autd
 	const float theta5 = pi / 2, phi5 = pi / 2;
 	const float theta6 = pi / 2, phi6 = 3 * pi / 2;
 	//lower autd
 	const float theta7 = 3 * pi / 4, phi7 = pi / 4;
-	const float theta8 = 3 * pi / 4, phi8 = 2 * pi / 4;
-	const float theta9 = 3 * pi / 4, phi9 = 3 * pi / 4;
-	const float theta10 = 3 * pi / 4, phi10 = 4 * pi / 4;
+	const float theta8 = 3 * pi / 4, phi8 = 3 * pi / 4;
+	const float theta9 = 3 * pi / 4, phi9 = -3 * pi / 4;
+	const float theta10 = 3 * pi / 4, phi10 = - pi / 4;
 	
-	haptic_icon::CustomAddDevice(autd.geometry(), theta0, phi0, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta1, phi1, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta2, phi2, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta3, phi3, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta4, phi4, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta5, phi5, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta6, phi6, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta7, phi7, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta8, phi8, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta9, phi9, false);
-	haptic_icon::CustomAddDevice(autd.geometry(), theta10, phi10, false);
-
-	for (int i = 0; i < autd.geometry()->numDevices(); i++) {
-		int trans_id = i * num_trans_in_device;
-		std::cout << "direction of AUTD " << i << ":" << autd.geometry()->direction(trans_id).transpose() << std::endl;
-	}
-	autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f::Zero()));
+	/*
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
+	autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f(10.16 * 8.5, 10.16 * 6.5, 528.f)));
 	autd.AppendModulationSync(autd::SineModulation::Create(150));
+	*/
+
+	haptic_icon::CustomAddDevice(autd.geometry(), theta9, phi9, false);
+	autd.geometry()->AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));// AUTD #6 (Middle-left)
+	haptic_icon::CustomAddDevice(autd.geometry(), theta8, phi8, false);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta7, phi7, false);
+	autd.geometry()->AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0));// AUTD #5 (Middle-right)
+	haptic_icon::CustomAddDevice(autd.geometry(), theta10, phi10, false);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta4, phi4, true);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta1, phi1, true);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta2, phi2, true);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta3, phi3, true);
+	haptic_icon::CustomAddDevice(autd.geometry(), theta0, phi0, true);
+	Eigen::MatrixXf foci(3, autd.geometry()->numDevices() - 1);
+	/*
+	Eigen::Vector3f focus0(0, 0, 300);
+	Eigen::Vector3f focus1(50, 50, 200);
+	Eigen::Vector3f focus2(-50, 50, 200);
+	Eigen::Vector3f focus3(-50, -50, 200);
+	Eigen::Vector3f focus4(50, -50, 200);
+	Eigen::Vector3f focus5(300, 0, 0);
+	Eigen::Vector3f focus6(-300, 0, 0);
+	Eigen::Vector3f focus7(50, 50, -200);
+	Eigen::Vector3f focus8(-50, 50, -200);
+	Eigen::Vector3f focus9(50, -50, -200);
+	Eigen::Vector3f focus10(50, -50, -200);
+	*/
+	foci.setZero();
+	Eigen::VectorXi amplitudes(11);
+	amplitudes.setZero();
+	amplitudes(2) = 255;
+	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(foci, amplitudes));
+	//autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f(0.f, 0.f, 100.f)));
+	autd.AppendModulationSync(autd::SineModulation::Create(150));
+	
+	//for (int i = 0; i < autd.geometry()->numDevices(); i++) {
+	//	int trans_id = i * num_trans_in_device;
+	//	std::cout << "direction of AUTD #" << i << " :" << autd.geometry()->direction(trans_id).transpose() << std::endl;
+	//	std::cout << "center of AUTD #" << i << ": " << autd.geometry()->position(trans_id).transpose() <<std::endl;
+	//}
+
+	std::cout << "Press any key to close " << std::endl;
+	getchar();
 	autd.Close();
 }

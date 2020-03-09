@@ -31,7 +31,7 @@ if(BUILD_SAMPLES)
 	add_subdirectory(sample)
 endif()
 
-option(BUILD_TEST "build test programs" ON)
+option(BUILD_TEST "build test programs" OFF)
 if(BUILD_TEST)
 	add_subdirectory(test)
 endif()

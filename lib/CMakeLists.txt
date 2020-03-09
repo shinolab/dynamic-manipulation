@@ -32,6 +32,9 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
 target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
 
+add_library(KinectSphereTracker ../inc/KinectSphereTracker.hpp KinectSphereTracker.cpp)
+target_link_libraries(KinectSphereTracker ${OpenCV_LIBS} KinectUtility)
+
 option(USE_XIMEA "USE XIMEA CAMERA" ON)
 if(USE_XIMEA)
 	find_package( XIMEA REQUIRED )
@@ -56,8 +59,6 @@ add_library(DynamicManipulation STATIC
  ../inc/additionalGain.hpp
  additionalGain.cpp
  ocs.cpp
- ../inc/KinectSphereTracker.hpp
- KinectSphereTracker.cpp
  FloatingObject.cpp
  ../inc/read-csv-to-eigen.hpp
  read-csv-to-eigen.cpp
@@ -70,7 +71,6 @@ add_library(DynamicManipulation STATIC
  ../inc/geometryUtil.hpp
  geometryUtil.cpp
 )
-
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
   target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
@@ -94,7 +94,7 @@ target_link_libraries(QPSolver CGAL::CGAL)
 target_link_libraries(DynamicManipulation autd3
  ${Boost_LIBRARIES}
  ${OpenCV_LIBS}
- KinectUtility
+ KinectSphereTracker
  QPSolver
  winMultiplexer
 )

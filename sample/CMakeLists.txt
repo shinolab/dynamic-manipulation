@@ -7,9 +7,10 @@ cmake_policy(SET CMP0074 NEW)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)
 find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
+include_directories( ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include )
+include_directories(${PROJECT_SOURCE_DIR}/inc)
 
 add_executable(simple simple.cpp)
-include_directories(../inc)
 target_link_libraries(simple DynamicManipulation)
 
 add_executable(pipeline pipeline.cpp)

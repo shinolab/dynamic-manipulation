@@ -10,7 +10,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)
 find_package( Boost REQUIRED )
 find_package( Eigen3 REQUIRED )
 find_package( CGAL REQUIRED )
-find_package( XIMEA REQUIRED )
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/inc 
@@ -18,7 +17,6 @@ include_directories(
     ${Boost_INCLUDE_DIR} 
     ${EIGEN3_INCLUDE_DIR}
     )
-include_directories(${XIMEA_INCLUDE_DIR})
 
 #OpenCV
 find_package( OpenCV REQUIRED )
@@ -34,14 +32,23 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
 target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
 
-add_library(xiApiPlusOcv ../inc/xiApiPlusOcv.hpp xiApiPlusOcv.cpp)
-target_link_libraries(xiApiPlusOcv ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
+option(USE_XIMEA "USE XIMEA CAMERA" ON)
+if(USE_XIMEA)
+	find_package( XIMEA REQUIRED )
 
-add_library(ImgProcUtil ../inc/ImgProcUtil.hpp ImgProcUtil.cpp)
-target_link_libraries(ImgProcUtil ${OpenCV_LIBS})
+	include_directories(${XIMEA_INCLUDE_DIR})
 
-add_library(CameraDevice ../inc/CameraDevice.hpp CameraDevice.cpp)
-target_link_libraries(CameraDevice xiApiPlusOcv)
+	add_library(xiApiPlusOcv ../inc/xiApiPlusOcv.hpp xiApiPlusOcv.cpp)
+	target_link_libraries(xiApiPlusOcv ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
+
+	add_library(ImgProcUtil ../inc/ImgProcUtil.hpp ImgProcUtil.cpp)
+	target_link_libraries(ImgProcUtil ${OpenCV_LIBS})
+
+	add_library(CameraDevice ../inc/CameraDevice.hpp CameraDevice.cpp)
+	target_link_libraries(CameraDevice xiApiPlusOcv)
+endif()
+
+
 
 add_library(DynamicManipulation STATIC
  ../inc/odcs.hpp

@@ -1,7 +1,11 @@
+#include "odcs.hpp"
 #include "additionalGain.hpp"
 #include "autd3.hpp"
 #include <Eigen/Geometry>
 #include <iostream>
+#include <Windows.h>
+
+#pragma comment(lib, "winmm")
 
 const float pi = 3.14159265359f;
 const int num_trans_in_device = 249;
@@ -20,8 +24,9 @@ namespace haptic_icon {
 			* Eigen::AngleAxisf(euler_angles.y(), Eigen::Vector3f::UnitY())
 			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
 
-		std::cout << "set autd #" << geometry->numDevices() << " : " << pos_autd.transpose() << "(center : " << centerGlobal.transpose() << ")" <<  std::endl;
-
+		std::cout << "AUTD # " << geometry->numDevices() << std::endl
+			<< "position: " << pos_autd.transpose() << std::endl
+			<< "euler_angles(ZYZ): " << euler_angles.transpose() / pi *180<< std::endl;
 		return geometry->AddDevice(pos_autd, euler_angles);
 	}
 }
@@ -47,22 +52,6 @@ int main(int argc, char** argv) {
 	const float theta8 = 3 * pi / 4, phi8 = 3 * pi / 4;
 	const float theta9 = 3 * pi / 4, phi9 = -3 * pi / 4;
 	const float theta10 = 3 * pi / 4, phi10 = - pi / 4;
-	
-	/*
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.geometry()->AddDevice(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero());// AUTD #6 (Middle-left)
-	autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f(10.16 * 8.5, 10.16 * 6.5, 528.f)));
-	autd.AppendModulationSync(autd::SineModulation::Create(150));
-	*/
 
 	haptic_icon::CustomAddDevice(autd.geometry(), theta9, phi9, false);
 	autd.geometry()->AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));// AUTD #6 (Middle-left)
@@ -75,27 +64,29 @@ int main(int argc, char** argv) {
 	haptic_icon::CustomAddDevice(autd.geometry(), theta2, phi2, true);
 	haptic_icon::CustomAddDevice(autd.geometry(), theta3, phi3, true);
 	haptic_icon::CustomAddDevice(autd.geometry(), theta0, phi0, true);
-	Eigen::MatrixXf foci(3, autd.geometry()->numDevices() - 1);
-	/*
-	Eigen::Vector3f focus0(0, 0, 300);
-	Eigen::Vector3f focus1(50, 50, 200);
-	Eigen::Vector3f focus2(-50, 50, 200);
-	Eigen::Vector3f focus3(-50, -50, 200);
-	Eigen::Vector3f focus4(50, -50, 200);
-	Eigen::Vector3f focus5(300, 0, 0);
-	Eigen::Vector3f focus6(-300, 0, 0);
-	Eigen::Vector3f focus7(50, 50, -200);
-	Eigen::Vector3f focus8(-50, 50, -200);
-	Eigen::Vector3f focus9(50, -50, -200);
-	Eigen::Vector3f focus10(50, -50, -200);
-	*/
-	foci.setZero();
-	Eigen::VectorXi amplitudes(11);
-	amplitudes.setZero();
-	amplitudes(2) = 255;
-	autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(foci, amplitudes));
-	//autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f(0.f, 0.f, 100.f)));
-	autd.AppendModulationSync(autd::SineModulation::Create(150));
+	Eigen::MatrixXf foci(3, autd.geometry()->numDevices());
+	Eigen::Vector3f point(0, 0, 0);
+	autd.AppendGainSync(autd::FocalPointGain::Create(point));
+	autd.AppendModulationSync(autd::Modulation::Create(255));
+
+	
+	//auto initTime = timeGetTime();
+	//int m = rand();
+	//int sign;
+	//m % 2 == 0 ? sign = 1 : sign = -1;
+	//while (timeGetTime() - initTime < 30000) {
+	//	//float x = -150 + 300.f * float((timeGetTime() - initTime) % 5000) / 5000.f;
+	//	float z = -150 + 300.f * float((timeGetTime() - initTime) % 3000) / 3000.f;
+
+	//	point << 0, 0, sign*z;
+	//	autd.AppendGainSync(autd::FocalPointGain::Create(point));
+	//	//autd.AppendGainSync(autd::FocalPointGain::Create(Eigen::Vector3f(10.16f * 8.5f, 10.16f * 6.5f, 528.f)));
+	//}
+	//foci.setZero();
+	//Eigen::VectorXi amplitudes(11);
+	//amplitudes.setZero();
+	//amplitudes(2) = 255;
+	//autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(foci, amplitudes));
 	
 	//for (int i = 0; i < autd.geometry()->numDevices(); i++) {
 	//	int trans_id = i * num_trans_in_device;
@@ -106,4 +97,5 @@ int main(int argc, char** argv) {
 	std::cout << "Press any key to close " << std::endl;
 	getchar();
 	autd.Close();
+	return 0;
 }

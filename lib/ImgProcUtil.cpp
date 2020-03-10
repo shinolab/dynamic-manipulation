@@ -10,7 +10,7 @@ namespace imgProc {
 		_lowerBound(lowerBound),
 		_upperBound(upperBound){}
 
-	cv::Point2f threshold_extractor::center(const cv::Mat& img) {
+	cv::Point2f threshold_extractor::extract_center(const cv::Mat& img) {
 		cv::Mat img_bin;
 		cv::inRange(img, _lowerBound, _upperBound, img_bin);
 		cv::Moments mu = cv::moments(img_bin, true);
@@ -37,7 +37,7 @@ namespace imgProc {
 		cv::normalize(_hist_target, _hist_target, 255, cv::NORM_MINMAX);
 	}
 
-	cv::Point2f hue_backproject_extractor::center(const cv::Mat &img) {
+	cv::Point2f hue_backproject_extractor::extract_center(const cv::Mat &img) {
 		cv::Mat img_hsv;
 		cv::cvtColor(img, img_hsv, cv::COLOR_BGR2HSV);
 		std::vector<cv::Mat> imgs_hsv = { img_hsv };

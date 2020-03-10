@@ -12,16 +12,11 @@
 
 namespace dynaman {
 
-	stereoTracker::stereoTracker(
+	stereoCamera::stereoCamera(
 		std::shared_ptr<CameraDevice> leftCameraPtr,
-		std::shared_ptr<CameraDevice> rightCameraPtr,
-		Eigen::Vector3f &pos,
-		Eigen::Quaternionf &quo,
-		cv::Mat &img_target):
+		std::shared_ptr<CameraDevice> rightCameraPtr):
 		_leftCameraPtr(leftCameraPtr),
-		_rightCameraPtr(rightCameraPtr),
-		_pos(pos),
-		_quo(quo) {
+		_rightCameraPtr(rightCameraPtr) {
 		cv::FileStorage fs("cam_stereo.yml", cv::FileStorage::READ);
 		if (!fs.isOpened()) {
 			throw std::runtime_error("cannot open cam_stereo.yml");
@@ -46,26 +41,58 @@ namespace dynaman {
 		fs.release();
 	}
 
-	void stereoTracker::open() {
+	void stereoCamera::open() {
 		_leftCameraPtr->open();
 		_rightCameraPtr->open();
 	}
 
-	void stereoTracker::close() {
+	void stereoCamera::close() {
 		_leftCameraPtr->close();
 		_rightCameraPtr->close();
 	}
 
-	void stereoTracker::imgLeftRect(cv::Mat& img) {
+	void stereoCamera::imgLeftRect(cv::Mat& img) {
 		cv::Mat img_raw;
 		_leftCameraPtr->fetch_frame(img_raw);
 		cv::remap(img_raw, img, _mapx_left, _mapy_left, cv::INTER_LINEAR);
 	}
 
-	void stereoTracker::imgRightRect(cv::Mat& img) {
+	void stereoCamera::imgRightRect(cv::Mat& img) {
 		cv::Mat img_raw;
 		_rightCameraPtr->fetch_frame(img_raw);
 		cv::remap(img_raw, img, _mapx_right, _mapy_right, cv::INTER_LINEAR);
+	}
+
+	std::shared_ptr<stereoCamera> create(
+		std::shared_ptr<CameraDevice> leftCamPtr,
+		std::shared_ptr<CameraDevice> rightCamPtr
+	) {
+		return std::make_shared<stereoCamera>(leftCamPtr, rightCamPtr);
+	}
+
+	cv::Point3f stereoCamera::triangulate(const cv::Point2f point_left, const cv::Point2f point_right) {
+		cv::Mat cvPosHomo;
+		cv::triangulatePoints(_proj_left, _proj_right, cv::Mat(point_left), cv::Mat(point_right), cvPosHomo);
+		cv::Mat cvPos;
+		cv::convertPointsFromHomogeneous(cvPosHomo.reshape(4, 1), cvPos);
+		return cv::Point3f(cvPos.reshape(1, 3));
+	}
+
+	stereoTracker::stereoTracker(
+		std::shared_ptr<stereoCamera> stereoCamPtr,
+		std::shared_ptr<imgProc::extractor> extractorPtr,
+		const Eigen::Vector3f &pos,
+		const Eigen::Quaternionf &quo) :
+		_stereoCamPtr(stereoCamPtr),
+		_extPtr(extractorPtr),
+		_pos(pos),
+		_quo(quo){}
+
+	std::shared_ptr<stereoTracker> stereoTracker::create(std::shared_ptr<stereoCamera> stereoCamPtr,
+		std::shared_ptr<imgProc::extractor> extractorPtr,
+		const Eigen::Vector3f& pos,
+		const Eigen::Quaternionf& quo) {
+		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtr, pos, quo);
 	}
 
 	bool stereoTracker::observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) {
@@ -73,30 +100,17 @@ namespace dynaman {
 		//rectify
 		cv::Mat img_left_rect, img_right_rect;
 		time = timeGetTime();
-		this->imgLeftRect(img_left_rect);
-		this->imgRightRect(img_right_rect);
+		_stereoCamPtr->imgLeftRect(img_left_rect);
+		_stereoCamPtr->imgRightRect(img_right_rect);
 #ifdef _DEBUG
 		cv::imshow("left (rectified)", img_rect_left);
 		cv::imshow("right (rectified)", img_rect_right);
 #endif
-		cv::Point2f point_left, point_right;
-		cv::Scalar lowerbound(10, 50, 150);
-		cv::Scalar upperbound(30, 255, 255);
-		imgProc::get_center_thr(img_left_rect, lowerbound, upperbound, point_left, cv::COLOR_BGR2HSV);
-		imgProc::get_center_thr(img_right_rect, lowerbound, upperbound, point_right, cv::COLOR_BGR2HSV);
-		cv::Mat cvPosHomo;
-		cv::triangulatePoints(_proj_left, _proj_right, cv::Mat(point_left), cv::Mat(point_right), cvPosHomo);
-		cv::Mat cvPos;
-		std::cout << cvPosHomo << std::endl << std::endl;
-		cv::convertPointsFromHomogeneous(cvPosHomo.reshape(4, 1), cvPos);
-		cv::cv2eigen(1000*cvPos.reshape(1, 3), pos);
+		cv::Point2f point_left = _extPtr->extract_center(img_left_rect);
+		cv::Point2f point_right = _extPtr->extract_center(img_right_rect);
+		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
+		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), pos);
+		return true;
 	}
 
-	cv::Point3f stereoTracker::triangulate(const cv::Point2f point_left, const cv::Point2f point_right) {
-		cv::Mat cvPosHomo;
-		cv::triangulatePoints(_proj_left, _proj_right, cv::Mat(point_left), cv::Mat(point_right), cvPosHomo);
-		cv::Mat cvPos;
-		cv::convertPointsFromHomogeneous(cvPosHomo.reshape(4, 1), cvPos);
-		return cv::Point3f(cvPos.reshape(1, 3));
-	}
 }

@@ -2,20 +2,24 @@
 #define _STEREO_TRACKER_HPP
 #include "odcs.hpp"
 #include "CameraDevice.hpp"
+#include "ImgProcUtil.hpp"
 #include <opencv2/core.hpp>
 #include <Eigen/Dense>
 #include <memory>
 
 namespace dynaman {
-
-	class stereoTracker : public dynaman::PositionSensor{
+	class stereoCamera {
 	public:
-		stereoTracker(std::shared_ptr<CameraDevice> leftCameraPtr,
-			std::shared_ptr<CameraDevice> rightCameraPtr,
-			Eigen::Vector3f &pos,
-			Eigen::Quaternionf &quo,
-			cv::Mat &img_target);
-		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;
+		stereoCamera(
+			std::shared_ptr<CameraDevice> leftCameraPtr,
+			std::shared_ptr<CameraDevice> rightCameraPtr
+		);
+
+		static std::shared_ptr<stereoCamera> create(
+			std::shared_ptr<CameraDevice> leftCamPtr,
+			std::shared_ptr<CameraDevice> rightCamPtr
+		);
+
 		void open();
 		void close();
 		cv::Point3f triangulate(const cv::Point2f point_left, const cv::Point2f point_right);
@@ -27,9 +31,32 @@ namespace dynaman {
 		cv::Mat _proj_left;
 		cv::Mat _proj_right;
 		cv::Mat _mapx_left, _mapy_left, _mapx_right, _mapy_right;
+	};
+
+	class stereoTracker : public dynaman::PositionSensor {
+	public:
+		stereoTracker(
+			std::shared_ptr<stereoCamera> stereoCamPtr,
+			std::shared_ptr<imgProc::extractor> extractorPtr,
+			const Eigen::Vector3f& pos,
+			const Eigen::Quaternionf& quo
+		);
+
+		static std::shared_ptr<stereoTracker> create(
+			std::shared_ptr<stereoCamera> stereoCamPtr,
+			std::shared_ptr<imgProc::extractor> extractorPtr,
+			const Eigen::Vector3f &pos,
+			const Eigen::Quaternionf &quo
+		);
+
+		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;
+
+	private:
+		std::shared_ptr<imgProc::extractor> _extPtr;
+		std::shared_ptr<stereoCamera> _stereoCamPtr;
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;
-		cv::Mat _hist;
 	};
+
 }
 #endif // !_STEREO_TRACKER_HPP

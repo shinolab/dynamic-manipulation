@@ -9,13 +9,13 @@ namespace imgProc {
 	class extractor {
 	public:
 		virtual ~extractor() {};
-		virtual cv::Point2f center(const cv::Mat& img) = 0;
+		virtual cv::Point2f extract_center(const cv::Mat& img) = 0;
 	};
 
 	class threshold_extractor :public extractor {
 	public:
 		threshold_extractor(const cv::Scalar _lowerBound, const cv::Scalar _upperBound);
-		cv::Point2f center(const cv::Mat& img) override;
+		cv::Point2f extract_center(const cv::Mat& img) override;
 	private:
 		cv::Scalar _upperBound;
 		cv::Scalar _lowerBound;
@@ -30,7 +30,7 @@ namespace imgProc {
 			const int lowerBound,
 			const int upperBound,
 			int size_hist = 30);
-		cv::Point2f center(const cv::Mat& img) override;
+		cv::Point2f extract_center(const cv::Mat& img) override;
 	private:
 		cv::Mat _hist_target;
 		int _lowerBound;

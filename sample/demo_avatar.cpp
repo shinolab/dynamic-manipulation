@@ -12,6 +12,8 @@
 
 #pragma comment(lib, "winmm")
 
+using namespace dynaman;
+
 int main() {
 
 	float translationTime = 1.0f;

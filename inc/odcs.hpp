@@ -1,11 +1,9 @@
-#ifndef _ODCS_H_
-#define _ODCS_H_
+#ifndef _ODCS_HPP_
+#define _ODCS_HPP_
 
 #include "autd3.hpp"
-#include "KinectApp.hpp"
 #include <opencv2/core.hpp>
 #include "arfModel.hpp"
-//#include "engine.h"
 #include <queue>
 #include <vector>
 #include <memory>
@@ -24,7 +22,7 @@
 namespace dynaman {
 	class FloatingObject;
 	typedef std::shared_ptr<FloatingObject> FloatingObjectPtr;
-	class Sensor;
+	class PositionSensor;
 	class ocs;
 	class Trajectory;
 

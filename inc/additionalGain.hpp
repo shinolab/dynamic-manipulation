@@ -1,14 +1,17 @@
+#ifndef _ADDITIONAL_GAIN_HPP
+#define _ADDITIONAL_GAIN_HPP
+
 #include <Eigen\Dense>
 #include "autd3.hpp"
 
 #define ULTRASOUND_WAVELENGTH (8.66)
 #define NUM_TRANS_IN_UNIT (249)
 
-namespace autd{
+namespace autd {
 	class DeviceSpecificFocalPointGain : public Gain {
 
 	public:
-		static GainPtr Create(Eigen::MatrixXf const &points, Eigen::VectorXi const &amplitudes);
+		static GainPtr Create(Eigen::MatrixXf const& points, Eigen::VectorXi const& amplitudes);
 		void build();
 	private:
 		Eigen::MatrixXf _points;
@@ -17,7 +20,7 @@ namespace autd{
 
 	class GaussianBeamGain : public Gain {
 	public:
-		static GainPtr Create(Eigen::Vector3f const &point, Eigen::Vector3f const &direction, int const &amplitude, float const &beamAngle);
+		static GainPtr Create(Eigen::Vector3f const& point, Eigen::Vector3f const& direction, int const& amplitude, float const& beamAngle);
 		void build();
 	private:
 		Eigen::Vector3f _point;
@@ -28,9 +31,9 @@ namespace autd{
 
 	class VortexFocalPointGain : public Gain {
 	public:
-		static GainPtr Create(Eigen::Matrix3Xf const &points,
-			Eigen::VectorXi const &amplitudes,
-			Eigen::VectorXf const &chiralities);
+		static GainPtr Create(Eigen::Matrix3Xf const& points,
+			Eigen::VectorXi const& amplitudes,
+			Eigen::VectorXf const& chiralities);
 		void build();
 	private:
 		Eigen::Matrix3Xf _points;
@@ -39,3 +42,6 @@ namespace autd{
 	};
 
 }
+
+
+#endif // !_ADDITIONAL_GAIN_HPP

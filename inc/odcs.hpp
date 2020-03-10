@@ -67,8 +67,8 @@ namespace dynaman {
 			float _radius = 90.f);
 
 		static FloatingObjectPtr Create(Eigen::Vector3f const &posTgt,
-			Eigen::Vector3f const &lpperbound,
-			Eigen::Vector3f const &uowerbound,
+			Eigen::Vector3f const &lowerbound,
+			Eigen::Vector3f const &upperbound,
 			float _additionalMass = 0.1e-3f,
 			float radius = 90.f);
 

@@ -1,8 +1,8 @@
 #ifndef _KINECT_SPHERE_TRACKER_HPP
+#define _KINECT_SPHERE_TRACKER_HPP
 #include "odcs.hpp"
 #include "KinectUtility.hpp"
 #include <atlbase.h>
-#include <opencv2/core.hpp>
 #include <vector>
 
 namespace dynaman {

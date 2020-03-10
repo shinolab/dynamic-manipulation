@@ -49,27 +49,28 @@ if(USE_XIMEA)
 
 	add_library(CameraDevice ../inc/CameraDevice.hpp CameraDevice.cpp)
 	target_link_libraries(CameraDevice xiApiPlusOcv)
+
+	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
+	target_link_libraries(StereoTracker ImgProcUtil ${OpenCV_LIBS})
 endif()
 
-
-
 add_library(DynamicManipulation STATIC
- ../inc/odcs.hpp
- odcs.cpp
- ../inc/additionalGain.hpp
- additionalGain.cpp
- ocs.cpp
- FloatingObject.cpp
- ../inc/read-csv-to-eigen.hpp
- read-csv-to-eigen.cpp
- ../inc/arfModel.hpp
- arfModel.cpp
- ../inc/kalmanFilter.hpp
- kalmanFilter.cpp
- Trajectory.cpp
- ../inc/EigenTools.hpp
- ../inc/geometryUtil.hpp
- geometryUtil.cpp
+	../inc/odcs.hpp
+	odcs.cpp
+	../inc/additionalGain.hpp
+	additionalGain.cpp
+	ocs.cpp
+	FloatingObject.cpp
+	../inc/read-csv-to-eigen.hpp
+	read-csv-to-eigen.cpp
+	../inc/arfModel.hpp
+	arfModel.cpp
+	../inc/kalmanFilter.hpp
+	kalmanFilter.cpp
+	 Trajectory.cpp
+	../inc/EigenTools.hpp
+	../inc/geometryUtil.hpp
+	geometryUtil.cpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
@@ -92,11 +93,11 @@ add_library(QPSolver
 )
 target_link_libraries(QPSolver CGAL::CGAL)
 target_link_libraries(DynamicManipulation autd3
- ${Boost_LIBRARIES}
- ${OpenCV_LIBS}
- KinectSphereTracker
- QPSolver
- winMultiplexer
+	${Boost_LIBRARIES}
+	${OpenCV_LIBS}
+	KinectSphereTracker
+	QPSolver
+	winMultiplexer
 )
 
 add_library(dynaman_dll SHARED

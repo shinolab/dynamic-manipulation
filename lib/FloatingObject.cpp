@@ -42,7 +42,7 @@ FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const &posTgt, Eigen::V
 
 float FloatingObject::sphereMass()
 {
-	return 1.293f * 4.0f * pi * radius * radius * radius / 3.0f * 1e-9;
+	return 1.293f * 4.0f * pi * radius * radius * radius / 3.0f * 1e-9f;
 }
 
 float FloatingObject::Radius() {

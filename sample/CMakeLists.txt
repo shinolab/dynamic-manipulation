@@ -9,6 +9,10 @@ find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 include_directories( ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include )
 include_directories(${PROJECT_SOURCE_DIR}/inc)
+# Find Kinect SDK v2
+find_package( KinectSDK2 REQUIRED )
+include_directories( ${KinectSDK2_INCLUDE_DIRS} )
+link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 
 add_executable(simple simple.cpp)
 target_link_libraries(simple DynamicManipulation)
@@ -57,4 +61,4 @@ add_executable(demo_innovative demo_innovative.cpp init_uist.hpp)
 target_link_libraries(demo_innovative DynamicManipulation)
 
 add_executable(haptic_icon haptic_icon.cpp)
-target_link_libraries(haptic_icon DynamicManipulation)
+target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice)

@@ -6,9 +6,15 @@
 namespace imgProc {
 	threshold_extractor::threshold_extractor(
 		const cv::Scalar lowerBound,
-		cv::Scalar upperBound):
+		const cv::Scalar upperBound):
 		_lowerBound(lowerBound),
 		_upperBound(upperBound){}
+
+	std::shared_ptr<threshold_extractor> create(
+		const cv::Scalar lowerBound,
+		const cv::Scalar upperBound) {
+		return std::make_shared<threshold_extractor>(lowerBound, upperBound);
+	}
 
 	cv::Point2f threshold_extractor::extract_center(const cv::Mat& img) {
 		cv::Mat img_bin;
@@ -35,6 +41,19 @@ namespace imgProc {
 		std::vector<float> ranges_hist = { 0, 180 };
 		cv::calcHist(imgs_target_hsv, channels, cv::Mat(), _hist_target, sizes_hist, ranges_hist);
 		cv::normalize(_hist_target, _hist_target, 255, cv::NORM_MINMAX);
+	}
+
+	std::shared_ptr<hue_backproject_extractor> create(
+		const std::vector<cv::Mat>& img_target,
+		int lowerBound,
+		int upperBound,
+		int size_hist) {
+		return std::make_shared<hue_backproject_extractor>(
+			img_target,
+			lowerBound,
+			upperBound,
+			size_hist
+			);
 	}
 
 	cv::Point2f hue_backproject_extractor::extract_center(const cv::Mat &img) {

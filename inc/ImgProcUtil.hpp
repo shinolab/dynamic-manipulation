@@ -14,7 +14,8 @@ namespace imgProc {
 
 	class threshold_extractor :public extractor {
 	public:
-		threshold_extractor(const cv::Scalar _lowerBound, const cv::Scalar _upperBound);
+		threshold_extractor(const cv::Scalar lowerBound, const cv::Scalar upperBound);
+		static std::shared_ptr<threshold_extractor> create(const cv::Scalar lowerBound, const cv::Scalar upperBound);
 		cv::Point2f extract_center(const cv::Mat& img) override;
 	private:
 		cv::Scalar _upperBound;
@@ -29,7 +30,16 @@ namespace imgProc {
 			const std::vector<cv::Mat>& imgs_target,
 			const int lowerBound,
 			const int upperBound,
-			int size_hist = 30);
+			int size_hist = 30
+		);
+
+		static std::shared_ptr<hue_backproject_extractor> create(
+			const std::vector<cv::Mat>& imgs_target,
+			const int lowerBound,
+			const int upperBound,
+			int size_hist = 30
+		);
+
 		cv::Point2f extract_center(const cv::Mat& img) override;
 	private:
 		cv::Mat _hist_target;

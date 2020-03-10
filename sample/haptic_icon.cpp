@@ -7,18 +7,20 @@
 
 #pragma comment(lib, "winmm")
 
-const float pi = 3.14159265359f;
-const int num_trans_in_device = 249;
+namespace {
+	const float pi = 3.14159265359f;
+	const int num_trans_in_device = 249;
+	const float radius_ws = 528.f;
+	const float dia_trans = 10.16f;
+}
 
 namespace haptic_icon {
 	int CustomAddDevice(autd::GeometryPtr geometry, const float theta, const float phi, bool isUpper) {
-		const float radius = 528.f;
-		const float dia_trans = 10.16f;
-		Eigen::Vector3f centerLocal(dia_trans * 8.5f, dia_trans * 6.5f, 0.f);
 
+		Eigen::Vector3f centerLocal(dia_trans * 8.5f, dia_trans * 6.5f, 0.f);
 		Eigen::Vector3f euler_angles;
 		isUpper ? euler_angles << phi, theta - pi, pi / 2 : euler_angles << phi, theta - pi, -pi / 2;
-		Eigen::Vector3f centerGlobal = radius* Eigen::Vector3f(sinf(theta) * cosf(phi), sinf(theta) * sinf(phi), cosf(theta));
+		Eigen::Vector3f centerGlobal = radius_ws* Eigen::Vector3f(sinf(theta) * cosf(phi), sinf(theta) * sinf(phi), cosf(theta));
 		Eigen::Vector3f pos_autd = centerGlobal
 			- Eigen::AngleAxisf(euler_angles.x(), Eigen::Vector3f::UnitZ())
 			* Eigen::AngleAxisf(euler_angles.y(), Eigen::Vector3f::UnitY())
@@ -28,6 +30,21 @@ namespace haptic_icon {
 			<< "position: " << pos_autd.transpose() << std::endl
 			<< "euler_angles(ZYZ): " << euler_angles.transpose() / pi *180<< std::endl;
 		return geometry->AddDevice(pos_autd, euler_angles);
+
+	}
+
+	Eigen::Vector3f Polar2Euler(const float theta, const float phi, bool isUpper) {
+		return (isUpper ? Eigen::Vector3f(phi, theta - pi, pi / 2.f) : Eigen::Vector3f(phi, theta - pi, -pi / 2.f));
+	}
+
+	Eigen::Vector3f Polar2Position(const float theta, const float phi, bool isUpper) {
+		Eigen::Vector3f euler_angles = Polar2Euler(theta, phi, isUpper);
+		Eigen::Vector3f centerLocal(dia_trans * 8.5f, dia_trans * 6.5f, 0.f);
+		Eigen::Vector3f centerGlobal = radius_ws * Eigen::Vector3f(sinf(theta) * cosf(phi), sinf(theta) * sinf(phi), cosf(theta));
+		return centerGlobal
+			- Eigen::AngleAxisf(euler_angles.x(), Eigen::Vector3f::UnitZ())
+			* Eigen::AngleAxisf(euler_angles.y(), Eigen::Vector3f::UnitY())
+			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
 	}
 }
 

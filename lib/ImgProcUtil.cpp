@@ -20,7 +20,7 @@ namespace imgProc {
 		cv::Mat img_bin;
 		cv::inRange(img, _lowerBound, _upperBound, img_bin);
 		cv::Moments mu = cv::moments(img_bin, true);
-		return cv::Point2f(mu.m01 / mu.m00, mu.m10 / mu.m00);
+		return cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 	}
 
 	hue_backproject_extractor::hue_backproject_extractor(
@@ -83,7 +83,7 @@ namespace imgProc {
 			1
 		);
 		cv::Moments mu = cv::moments(morph2, true);
-		return cv::Point2f(mu.m01 / mu.m00, mu.m10 / mu.m00);
+		return cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 	}
 }
 

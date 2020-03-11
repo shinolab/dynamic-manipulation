@@ -106,6 +106,11 @@ namespace dynaman {
 
 		cv::Point2f point_left = _extPtr->extract_center(img_left_rect);
 		cv::Point2f point_right = _extPtr->extract_center(img_right_rect);
+		cv::circle(img_left_rect, point_left, 1, cv::Scalar(0, 0, 255), -1);
+		cv::circle(img_right_rect, point_right, 1, cv::Scalar(0, 0, 255), -1);
+		cv::imshow("left view", img_left_rect);
+		cv::imshow("right view", img_right_rect);
+		cv::waitKey(3);
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
 		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), pos);
 		return true;

@@ -64,4 +64,4 @@ target_link_libraries(sequential DynamicManipulation)
 #target_link_libraries(demo_innovative DynamicManipulation)
 
 add_executable(haptic_icon haptic_icon.cpp)
-target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice)
+target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice ImgProcUtil)

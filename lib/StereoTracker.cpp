@@ -63,7 +63,7 @@ namespace dynaman {
 		cv::remap(img_raw, img, _mapx_right, _mapy_right, cv::INTER_LINEAR);
 	}
 
-	std::shared_ptr<stereoCamera> create(
+	std::shared_ptr<stereoCamera> stereoCamera::create(
 		std::shared_ptr<CameraDevice> leftCamPtr,
 		std::shared_ptr<CameraDevice> rightCamPtr
 	) {
@@ -88,7 +88,8 @@ namespace dynaman {
 		_pos(pos),
 		_quo(quo){}
 
-	std::shared_ptr<stereoTracker> stereoTracker::create(std::shared_ptr<stereoCamera> stereoCamPtr,
+	std::shared_ptr<stereoTracker> stereoTracker::create(
+		std::shared_ptr<stereoCamera> stereoCamPtr,
 		std::shared_ptr<imgProc::extractor> extractorPtr,
 		const Eigen::Vector3f& pos,
 		const Eigen::Quaternionf& quo) {
@@ -102,10 +103,7 @@ namespace dynaman {
 		time = timeGetTime();
 		_stereoCamPtr->imgLeftRect(img_left_rect);
 		_stereoCamPtr->imgRightRect(img_right_rect);
-#ifdef _DEBUG
-		cv::imshow("left (rectified)", img_rect_left);
-		cv::imshow("right (rectified)", img_rect_right);
-#endif
+
 		cv::Point2f point_left = _extPtr->extract_center(img_left_rect);
 		cv::Point2f point_right = _extPtr->extract_center(img_right_rect);
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);

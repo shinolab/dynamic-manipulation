@@ -43,13 +43,13 @@ namespace imgProc {
 		cv::normalize(_hist_target, _hist_target, 255, cv::NORM_MINMAX);
 	}
 
-	std::shared_ptr<hue_backproject_extractor> create(
-		const std::vector<cv::Mat>& img_target,
+	std::shared_ptr<hue_backproject_extractor> hue_backproject_extractor::create(
+		const std::vector<cv::Mat>& imgs_target,
 		int lowerBound,
 		int upperBound,
 		int size_hist) {
 		return std::make_shared<hue_backproject_extractor>(
-			img_target,
+			imgs_target,
 			lowerBound,
 			upperBound,
 			size_hist

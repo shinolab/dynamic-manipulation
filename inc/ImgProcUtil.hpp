@@ -28,15 +28,15 @@ namespace imgProc {
 	public:
 		hue_backproject_extractor(
 			const std::vector<cv::Mat>& imgs_target,
-			const int lowerBound,
-			const int upperBound,
+			int lowerBound,
+			int upperBound,
 			int size_hist = 30
 		);
 
 		static std::shared_ptr<hue_backproject_extractor> create(
 			const std::vector<cv::Mat>& imgs_target,
-			const int lowerBound,
-			const int upperBound,
+			int lowerBound,
+			int upperBound,
 			int size_hist = 30
 		);
 

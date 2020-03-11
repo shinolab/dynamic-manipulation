@@ -51,7 +51,7 @@ if(USE_XIMEA)
 	target_link_libraries(CameraDevice xiApiPlusOcv)
 
 	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
-	target_link_libraries(StereoTracker ImgProcUtil ${OpenCV_LIBS})
+	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})
 endif()
 
 add_library(DynamicManipulation STATIC

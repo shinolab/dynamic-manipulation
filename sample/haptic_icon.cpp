@@ -35,7 +35,6 @@ namespace{
 			<< "position: " << pos_autd.transpose() << std::endl
 			<< "euler_angles(ZYZ): " << euler_angles.transpose() / pi *180<< std::endl;
 		return geometry->AddDevice(pos_autd, euler_angles);
-
 	}
 
 	Eigen::Vector3f Polar2Euler(const float theta, const float phi, bool isUpper) {
@@ -63,17 +62,24 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f pos_sensor(0.0f, 0.0f, 0.0f);
 	Eigen::Quaternionf quo_sensor(-7.98142e-05f, -0.0105203f, -0.0108641f, 0.707026f);
 	int lowerb = 100, upperb = 255, hist_size = 30;
+	std::cout << "loading image ..." << std::endl;
 	cv::Mat img_target = cv::imread(target_image_name);
-
+	if (img_target.empty()) {
+		std::cerr << "Failed to open the target image." << std::endl;
+	}
+	std::cout << "initializing extractor ..." << std::endl;
 	//initialize tracking algorithm
 	std::vector<cv::Mat> imgs_target = { img_target };
 	auto extractorPtr = imgProc::hue_backproject_extractor::create(imgs_target, lowerb, upperb, hist_size);
 
 	//initialize camera
+	std::cout << "initializing camera ..." << std::endl;
 	auto leftCamPtr = ximeaCameraDevice::create(leftCamId);
 	auto rightCamPtr = ximeaCameraDevice::create(rightCamId);
 	auto stereoCamPtr = dynaman::stereoCamera::create(leftCamPtr, rightCamPtr);
+	std::cout << "opening camera..." << std::endl;
 	stereoCamPtr->open();
+	std::cout << "initializing tracker..." << std::endl;
 	dynaman::stereoTracker tracker(stereoCamPtr, extractorPtr, pos_sensor, quo_sensor);
 
 	std::vector<std::tuple<float, float, bool>> polar_angles;
@@ -94,7 +100,7 @@ int main(int argc, char** argv) {
 	const float theta10 = 3 * pi / 4, phi10 = - pi / 4; bool isUpper10 = false;
 
 	dynaman::odcs manipulator(tracker);
-
+	manipulator.Initialize();
 	manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9));
 	manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));
 	manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8));
@@ -114,7 +120,7 @@ int main(int argc, char** argv) {
 	auto timeInit = timeGetTime();
 	
 	std::ofstream ofs(record_name);
-
+	ofs << "t, x, y, z, vx, vy, vz, xTgt, yTgt, zTgt, vxTgt, vyTgt, vzTgt, axTgt, ayTgt, azTgt" << std::endl;
 	while (timeGetTime() - timeInit < 30000) {
 		auto currentTime = timeGetTime();
 		auto pos = objPtr->getPosition();
@@ -125,11 +131,14 @@ int main(int argc, char** argv) {
 		ofs << currentTime << ", " << pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< posTgt.x() << ", " << posTgt.y() << ", " << posTgt.z() << ", "
-			<< velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z() << std::endl;
+			<< velTgt.x() << ", " << velTgt.y() << ", " << velTgt.z() << ", "
+			<< accelTgt.x() << ", " << accelTgt.y() << ", " << accelTgt.z() << std::endl;
+		Sleep(33);
 	}
-	ofs.close();
-	manipulator.Close();
 	std::cout << "Press any key to close " << std::endl;
 	getchar();
+	ofs.close();
+	manipulator.Close();
+
 	return 0;
 }

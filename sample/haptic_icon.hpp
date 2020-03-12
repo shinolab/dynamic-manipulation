@@ -27,7 +27,7 @@ namespace haptic_icon {
 			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
 	}
 
-	void SetGeometry(dynaman::odcs manipulator) {
+	void Initialize(dynaman::odcs &manipulator) {
 		//top autd
 		const float theta0 = 0.f, phi0 = -3 * pi / 4; bool isUpper0 = true;
 		//upper autd

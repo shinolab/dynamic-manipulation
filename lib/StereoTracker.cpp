@@ -112,7 +112,9 @@ namespace dynaman {
 		cv::imshow("right view", img_right_rect);
 		cv::waitKey(3);
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
-		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), pos);
+		Eigen::Vector3f posObserved;
+		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), posObserved);
+		pos = _quo * posObserved + _pos;
 		return true;
 	}
 

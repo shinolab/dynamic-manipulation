@@ -82,18 +82,21 @@ namespace dynaman {
 		std::shared_ptr<stereoCamera> stereoCamPtr,
 		std::shared_ptr<imgProc::extractor> extractorPtr,
 		const Eigen::Vector3f &pos,
-		const Eigen::Quaternionf &quo) :
+		const Eigen::Quaternionf &quo,
+		Eigen::Vector3f bias) :
 		_stereoCamPtr(stereoCamPtr),
 		_extPtr(extractorPtr),
 		_pos(pos),
-		_quo(quo){}
+		_quo(quo),
+		_bias(bias){}
 
 	std::shared_ptr<stereoTracker> stereoTracker::create(
 		std::shared_ptr<stereoCamera> stereoCamPtr,
 		std::shared_ptr<imgProc::extractor> extractorPtr,
 		const Eigen::Vector3f& pos,
-		const Eigen::Quaternionf& quo) {
-		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtr, pos, quo);
+		const Eigen::Quaternionf& quo,
+		Eigen::Vector3f bias) {
+		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtr, pos, quo, bias);
 	}
 
 	bool stereoTracker::observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) {
@@ -114,7 +117,7 @@ namespace dynaman {
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
 		Eigen::Vector3f posObserved;
 		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), posObserved);
-		pos = _quo * posObserved + _pos;
+		pos = _quo * (posObserved + _bias) + _pos;
 		return true;
 	}
 

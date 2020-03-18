@@ -19,13 +19,15 @@ namespace dynaman {
 #pragma region DepthSphereTracker
 	KinectDepthSphereTracker::KinectDepthSphereTracker(Eigen::Vector3f const &pos,
 		Eigen::Quaternionf const &quo,
-		bool useROI)
+		bool useROI,
+		Eigen::Vector3f bias)
 		:_depthManager(),
 		_coordManager(),
 		_depthBuffer(_depthManager.numPixels()),
 		_pos(pos),
 		_quo(quo),
-		_useROI(useROI) {}
+		_useROI(useROI),
+		_bias(bias) {}
 
 	void KinectDepthSphereTracker::maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const &upperbound, cv::Mat &mask) {
 		std::vector<cv::Point2i> cornerPixels;
@@ -74,7 +76,7 @@ namespace dynaman {
 				Eigen::Vector3f pos = _quo.inverse() * (objPtr->getPosition() - _pos);
 				cv::Point p(pos.x() * 365.6 / pos.z() + 0.5 * _depthManager.width()
 					, -pos.y() * 367.2 / pos.z() + 0.5 * _depthManager.height()); //get pixel corresponding to the latest position of the object
-				cv::circle(mask, p, 1.5f *objPtr->Radius() * 365.6 / pos.z(), cv::Scalar(255), -1, 8);
+				cv::circle(mask, p, 1.5f *objPtr->Radius() * 365.6f / pos.z(), cv::Scalar(255), -1, 8);
 			}
 			else
 			{
@@ -101,7 +103,7 @@ namespace dynaman {
 					float detectR = 1000.f * sqrt(detectPos.X * detectPos.X + detectPos.Y * detectPos.Y + detectPos.Z * detectPos.Z);
 					float outpor = (detectR + objPtr->Radius()) / detectR;
 					time = observationTime;
-					pos = _quo * (1000.f * outpor * Eigen::Vector3f(detectPos.X, detectPos.Y, detectPos.Z)) + _pos;
+					pos = _quo * (1000.f * outpor * Eigen::Vector3f(detectPos.X, detectPos.Y, detectPos.Z) + _bias) + _pos;
 					isValid = true;
 				}
 			}

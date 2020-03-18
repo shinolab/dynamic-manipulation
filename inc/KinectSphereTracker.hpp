@@ -12,7 +12,8 @@ namespace dynaman {
 	public:
 		KinectDepthSphereTracker(Eigen::Vector3f const &pos,
 			Eigen::Quaternionf const &quo,
-			bool useROI = true);
+			bool useROI = true,
+			Eigen::Vector3f bias = Eigen::Vector3f::Zero());
 		bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) override;
 		Eigen::Quaternionf rot_sensor();
 		Eigen::Vector3f pos_sensor();
@@ -22,6 +23,7 @@ namespace dynaman {
 		std::vector<UINT16> _depthBuffer;
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;
+		Eigen::Vector3f _bias;
 		bool _useROI;
 		void maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const & upperbound, cv::Mat& mask);
 	};

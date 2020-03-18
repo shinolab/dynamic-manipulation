@@ -39,14 +39,16 @@ namespace dynaman {
 			std::shared_ptr<stereoCamera> stereoCamPtr,
 			std::shared_ptr<imgProc::extractor> extractorPtr,
 			const Eigen::Vector3f& pos,
-			const Eigen::Quaternionf& quo
+			const Eigen::Quaternionf& quo,
+			Eigen::Vector3f bias = Eigen::Vector3f::Zero()
 		);
 
 		static std::shared_ptr<stereoTracker> create(
 			std::shared_ptr<stereoCamera> stereoCamPtr,
 			std::shared_ptr<imgProc::extractor> extractorPtr,
 			const Eigen::Vector3f &pos,
-			const Eigen::Quaternionf &quo
+			const Eigen::Quaternionf &quo,
+			Eigen::Vector3f bias = Eigen::Vector3f::Zero()
 		);
 
 		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;
@@ -56,6 +58,7 @@ namespace dynaman {
 		std::shared_ptr<stereoCamera> _stereoCamPtr;
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;
+		Eigen::Vector3f _bias; //bias in sensor coordinate
 	};
 
 }

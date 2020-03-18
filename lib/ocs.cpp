@@ -3,7 +3,7 @@
 #include "arfModel.hpp"
 #include "additionalGain.hpp"
 #include "QPSolver.h"
-#include <Eigen\Geometry>
+#include <Eigen/Geometry>
 #include <boost/math/common_factor_rt.hpp>
 #include <algorithm>
 #include <vector>

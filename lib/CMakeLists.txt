@@ -61,8 +61,6 @@ add_library(DynamicManipulation STATIC
 	additionalGain.cpp
 	ocs.cpp
 	FloatingObject.cpp
-	../inc/read-csv-to-eigen.hpp
-	read-csv-to-eigen.cpp
 	../inc/arfModel.hpp
 	arfModel.cpp
 	../inc/kalmanFilter.hpp

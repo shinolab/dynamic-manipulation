@@ -8,7 +8,7 @@
 
 namespace dynaman {
 
-	class KinectDepthSphereTracker : public dynaman::PositionSensor {
+	class KinectDepthSphereTracker : public PositionSensor {
 	public:
 		KinectDepthSphereTracker(Eigen::Vector3f const &pos,
 			Eigen::Quaternionf const &quo,

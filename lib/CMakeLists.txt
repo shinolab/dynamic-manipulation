@@ -35,6 +35,13 @@ target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
 add_library(KinectSphereTracker ../inc/KinectSphereTracker.hpp KinectSphereTracker.cpp)
 target_link_libraries(KinectSphereTracker ${OpenCV_LIBS} KinectUtility)
 
+add_library(LinearArfModel ../inc/arfModel.hpp arfModel.cpp)
+
+add_library(GeometryUtil ../inc/geometryUtil.hpp geometryUtil.cpp)
+
+add_library(AdditionalGain ../inc/additionalGain.hpp additionalGain.cpp)
+target_link_libraries(AdditionalGain autd3)
+
 option(USE_XIMEA "USE XIMEA CAMERA" ON)
 if(USE_XIMEA)
 	find_package( XIMEA REQUIRED )
@@ -57,18 +64,12 @@ endif()
 add_library(DynamicManipulation STATIC
 	../inc/odcs.hpp
 	odcs.cpp
-	../inc/additionalGain.hpp
-	additionalGain.cpp
 	ocs.cpp
 	FloatingObject.cpp
-	../inc/arfModel.hpp
-	arfModel.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
 	 Trajectory.cpp
 	../inc/EigenTools.hpp
-	../inc/geometryUtil.hpp
-	geometryUtil.cpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
@@ -90,12 +91,16 @@ add_library(QPSolver
 	QPSolver.cpp
 )
 target_link_libraries(QPSolver CGAL::CGAL)
-target_link_libraries(DynamicManipulation autd3
+target_link_libraries(DynamicManipulation
+	autd3
+	AdditionalGain
 	${Boost_LIBRARIES}
 	${OpenCV_LIBS}
+	LinearArfModel
 	KinectSphereTracker
 	QPSolver
 	winMultiplexer
+	GeometryUtil
 )
 
 add_library(dynaman_dll SHARED

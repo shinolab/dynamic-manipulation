@@ -17,10 +17,13 @@ namespace imgProc {
 	}
 
 	cv::Point2f threshold_extractor::extract_center(const cv::Mat& img) {
-		cv::Mat img_bin;
-		cv::inRange(img, _lowerBound, _upperBound, img_bin);
-		cv::Moments mu = cv::moments(img_bin, true);
+		cv::inRange(img, _lowerBound, _upperBound, _img_processed);
+		cv::Moments mu = cv::moments(_img_processed, true);
 		return cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+	}
+
+	cv::Mat threshold_extractor::img_debug() {
+		return _img_processed;
 	}
 
 	hue_backproject_extractor::hue_backproject_extractor(
@@ -64,26 +67,29 @@ namespace imgProc {
 		std::vector<int> channels = { 0 };
 		std::vector<float> ranges = { 0, 180 };
 		cv::calcBackProject(imgs_hsv, channels, _hist_target, backProjection, ranges, 1.0);
-		cv::Mat extracted;
-		cv::inRange(backProjection, _lowerBound, _upperBound, extracted);
-		cv::Mat morph1;
-		cv::morphologyEx(extracted,
-			morph1,
+		cv::inRange(backProjection, _lowerBound, _upperBound, _img_backProject);
+		cv::Mat img_closed;
+		cv::morphologyEx(_img_backProject,
+			img_closed,
 			cv::MORPH_CLOSE,
 			cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)),
 			cv::Point(-1, -1),
 			1
 		);
-		cv::Mat morph2;
-		cv::morphologyEx(morph1,
-			morph2,
+		cv::morphologyEx(img_closed,
+			_img_result,
 			cv::MORPH_OPEN,
 			cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)),
 			cv::Point(-1, -1),
 			1
 		);
-		cv::Moments mu = cv::moments(morph2, true);
+		cv::Moments mu = cv::moments(_img_result, true);
 		return cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+	}
+
+	cv::Mat hue_backproject_extractor::img_debug() {
+		//return _img_backProject;
+		return _img_result;
 	}
 }
 

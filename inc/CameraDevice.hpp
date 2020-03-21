@@ -16,6 +16,7 @@ public:
 	void getIntrinsic(cv::Mat& intrinsic) const;
 	void setDistCoeff(const cv::Mat& distCoeff);
 	void getDistCoeff(cv::Mat& distCoeff) const;
+	virtual std::string id() = 0;
 
 private:
 	cv::Mat _intrinsic;
@@ -30,7 +31,7 @@ public:
 	void open() override;
 	void close() override;
 	void fetch_frame(cv::Mat& img) override;
-
+	std::string id() override;
 private:
 	xiAPIplusCameraOcv _cam;
 	std::string _cam_id;
@@ -44,6 +45,7 @@ public:
 	void open() override;
 	void close() override;
 	void fetch_frame(cv::Mat& img) override;
+	std::string id() override;
 private:
 	std::string _filename;
 	cv::Mat _img;

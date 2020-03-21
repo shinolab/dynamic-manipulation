@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 
+
 CameraDevice::~CameraDevice() {};
 
 void CameraDevice::getIntrinsic(cv::Mat &intrinsic) const {
@@ -21,7 +22,7 @@ void CameraDevice::setDistCoeff(const cv::Mat& distCoeff) {
 	distCoeff.copyTo(this->_distCoeff);
 }
 
-ximeaCameraDevice::ximeaCameraDevice(const std::string& cam_id) :_cam_id(cam_id) {}
+ximeaCameraDevice::ximeaCameraDevice(const std::string& cam_id):_cam_id(cam_id) {}
 
 std::shared_ptr<ximeaCameraDevice> ximeaCameraDevice::create(const std::string& cam_id) {
 	return std::make_shared<ximeaCameraDevice>(cam_id);
@@ -41,18 +42,22 @@ void ximeaCameraDevice::close() {
 	_cam.Close();
 }
 
+std::string ximeaCameraDevice::id() {
+	return _cam_id;
+}
+
 void ximeaCameraDevice::fetch_frame(cv::Mat& img) {
 	img = _cam.GetNextImageOcvMat();
 }
 
-photoDevice::photoDevice(const std::string& filename) {
-	this->_filename = filename;
+photoDevice::photoDevice(const std::string& filename){
+	_filename = filename;
 }
 
 photoDevice::~photoDevice(){}
 
 void photoDevice::open() {
-	_img = cv::imread(this->_filename);
+	_img = cv::imread(_filename);
 }
 
 void photoDevice::close() {}
@@ -63,4 +68,8 @@ std::shared_ptr<photoDevice> photoDevice::create(const std::string& filename) {
 
 void photoDevice::fetch_frame(cv::Mat& img) {
 	_img.copyTo(img);
+}
+
+std::string photoDevice::id() {
+	return _filename;
 }

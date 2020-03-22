@@ -54,7 +54,10 @@ void odcs::ControlLoop(std::vector<FloatingObjectPtr> &objPtrs, int loopPeriod =
 		Eigen::Vector3f posObserved;
 		DWORD observationTime;
 		bool observed = sensor.observe(observationTime, posObserved, *itr);
+		//std::cout << "running" << std::endl;
+		//std::cout << observed << ", " << isInsideWorkspace(posObserved, (*itr)->lowerbound(), (*itr)->upperbound()) << std::endl;
 		if (observed && isInsideWorkspace(posObserved, (*itr)->lowerbound(), (*itr)->upperbound())) {
+			//std::cout << "observed." << std::endl;
 			(*itr)->updateStates(observationTime, posObserved);
 			(*itr)->SetTrackingStatus(true);
 			ocsPtr->_autd.AppendGainSync(ocsPtr->CreateBalanceGain((*itr), objPtrs.size()));

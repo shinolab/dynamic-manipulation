@@ -37,7 +37,8 @@ namespace dynaman {
 	public:
 		stereoTracker(
 			std::shared_ptr<stereoCamera> stereoCamPtr,
-			std::shared_ptr<imgProc::extractor> extractorPtr,
+			std::shared_ptr<imgProc::extractor> extractorPtrLeft,
+			std::shared_ptr<imgProc::extractor> extractorPtrRight,
 			const Eigen::Vector3f& pos,
 			const Eigen::Quaternionf& quo,
 			Eigen::Vector3f bias = Eigen::Vector3f::Zero()
@@ -45,7 +46,8 @@ namespace dynaman {
 
 		static std::shared_ptr<stereoTracker> create(
 			std::shared_ptr<stereoCamera> stereoCamPtr,
-			std::shared_ptr<imgProc::extractor> extractorPtr,
+			std::shared_ptr<imgProc::extractor> _extPtrLeft,
+			std::shared_ptr<imgProc::extractor> _extPtrRight,
 			const Eigen::Vector3f &pos,
 			const Eigen::Quaternionf &quo,
 			Eigen::Vector3f bias = Eigen::Vector3f::Zero()
@@ -54,7 +56,8 @@ namespace dynaman {
 		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;
 
 	private:
-		std::shared_ptr<imgProc::extractor> _extPtr;
+		std::shared_ptr<imgProc::extractor> _extPtrLeft;
+		std::shared_ptr<imgProc::extractor> _extPtrRight;
 		std::shared_ptr<stereoCamera> _stereoCamPtr;
 		Eigen::Vector3f _pos;
 		Eigen::Quaternionf _quo;

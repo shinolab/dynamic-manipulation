@@ -57,6 +57,24 @@ namespace haptic_icon {
 		manipulator.AddDevice(Polar2Position(theta0, phi0, isUpper0), Polar2Euler(theta0, phi0, isUpper0));
 
 	}
+
+	void InitializeLower(dynaman::odcs& manipulator) {
+		//middle autd
+		const float theta5 = pi / 2, phi5 = pi / 2; bool isUpper5 = true;
+		const float theta6 = pi / 2, phi6 = 3 * pi / 2; bool isUpper6 = true;
+		//lower autd
+		const float theta7 = 3 * pi / 4, phi7 = pi / 4; bool isUpper7 = false;
+		const float theta8 = 3 * pi / 4, phi8 = 3 * pi / 4; bool isUpper8 = false;
+		const float theta9 = 3 * pi / 4, phi9 = -3 * pi / 4; bool isUpper9 = false;
+		const float theta10 = 3 * pi / 4, phi10 = -pi / 4; bool isUpper10 = false;
+		manipulator.Initialize();
+		manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9));
+		manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));
+		manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8));
+		manipulator.AddDevice(Polar2Position(theta7, phi7, isUpper7), Polar2Euler(theta7, phi7, isUpper7));
+		manipulator.AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0));
+		manipulator.AddDevice(Polar2Position(theta10, phi10, isUpper10), Polar2Euler(theta10, phi10, isUpper10));
+	}
 }
 
 #endif // !_HAPTIC_ICON_HPP

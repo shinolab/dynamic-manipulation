@@ -80,23 +80,26 @@ namespace dynaman {
 
 	stereoTracker::stereoTracker(
 		std::shared_ptr<stereoCamera> stereoCamPtr,
-		std::shared_ptr<imgProc::extractor> extractorPtr,
+		std::shared_ptr<imgProc::extractor> extractorPtrLeft,
+		std::shared_ptr<imgProc::extractor> extractorPtrRight,
 		const Eigen::Vector3f &pos,
 		const Eigen::Quaternionf &quo,
 		Eigen::Vector3f bias) :
 		_stereoCamPtr(stereoCamPtr),
-		_extPtr(extractorPtr),
+		_extPtrLeft(extractorPtrLeft),
+		_extPtrRight(extractorPtrRight),
 		_pos(pos),
 		_quo(quo),
 		_bias(bias){}
 
 	std::shared_ptr<stereoTracker> stereoTracker::create(
 		std::shared_ptr<stereoCamera> stereoCamPtr,
-		std::shared_ptr<imgProc::extractor> extractorPtr,
+		std::shared_ptr<imgProc::extractor> extractorPtrLeft,
+		std::shared_ptr<imgProc::extractor> extractorPtrRight,
 		const Eigen::Vector3f& pos,
 		const Eigen::Quaternionf& quo,
 		Eigen::Vector3f bias) {
-		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtr, pos, quo, bias);
+		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtrLeft, extractorPtrRight, pos, quo, bias);
 	}
 
 	bool stereoTracker::observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) {
@@ -107,12 +110,14 @@ namespace dynaman {
 		_stereoCamPtr->imgLeftRect(img_left_rect);
 		_stereoCamPtr->imgRightRect(img_right_rect);
 
-		cv::Point2f point_left = _extPtr->extract_center(img_left_rect);
-		cv::Point2f point_right = _extPtr->extract_center(img_right_rect);
+		cv::Point2f point_left = _extPtrLeft->extract_center(img_left_rect);
+		cv::Point2f point_right = _extPtrRight->extract_center(img_right_rect);
 		cv::circle(img_left_rect, point_left, 1, cv::Scalar(0, 0, 255), -1);
 		cv::circle(img_right_rect, point_right, 1, cv::Scalar(0, 0, 255), -1);
 		cv::imshow("left view", img_left_rect);
 		cv::imshow("right view", img_right_rect);
+		cv::imshow("left (processed)", _extPtrLeft->img_debug());
+		cv::imshow("right (processed", _extPtrRight->img_debug());
 		cv::waitKey(3);
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
 		Eigen::Vector3f posObserved;

@@ -7,6 +7,11 @@ find_package( Eigen3 REQUIRED )
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package( OpenCV REQUIRED )
 
+# Find Kinect SDK v2
+find_package( KinectSDK2 REQUIRED )
+include_directories( ${KinectSDK2_INCLUDE_DIRS} )
+link_directories( ${KinectSDK2_LIBRARY_DIRS} )
+
 add_executable(LPTest
 	LPTest.cpp
 )
@@ -23,3 +28,6 @@ target_link_libraries(Vortex DynamicManipulation)
 
 add_executable(MultiplexDutyTest MultiplexDutyTest.cpp)
 target_link_libraries(MultiplexDutyTest DynamicManipulation)
+
+add_executable(MesArf MesArf.cpp)
+target_link_libraries(MesArf ImgProcUtil ${OpenCV_LIBS} KinectUtility)

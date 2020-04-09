@@ -60,6 +60,7 @@ namespace dynaman {
 			ofs << "t, x, y, z, vx, vy, vz, ix, iy, iz, xTgt, yTgt, zTgt,"
 				<< "axTgt, ayTgt, azTgt, fxTgt, fyTgt, fzTgt, fxRes, fyRes, fzRes, "
 				<< "u0(pxpy), u1(px), u2(pxmy), u3(mxmy), u4(mx), u5(mxpy)"
+				<< "u6(mxpy), u7(mxmy), u8(pxmy), u9(pxpy), u10(mz)"
 				<< std::endl;
 			DWORD initTime = timeGetTime();
 			while (timeGetTime() - initTime < duration) {
@@ -101,7 +102,8 @@ namespace dynaman {
 						<< accelTgt.x() << ", " << accelTgt.y() << ", " << accelTgt.z() << ","
 						<< forceToApply.x() << ", " << forceToApply.y() << ", " << forceToApply.z() << ", "
 						<< forceResult.x() << ", " << forceResult.y() << ", " << forceResult.z() << ", "
-						<< duties(0) << ", " << duties(1) << ", " << duties(2) << ", " << duties(3) << ", " << duties(4) << ", " << duties(5)
+						<< duties(0) << ", " << duties(1) << ", " << duties(2) << ", " << duties(3) << ", " << duties(4) << ", " << duties(5) << ", "
+						<< duties(6) << ", " << duties(7) << ", " << duties(8) << ", " << duties(9) << ", " << duties(10)
 						<< std::endl;
 				}
 				else if (loopInit - objPtr->lastDeterminationTime > 1000)
@@ -167,7 +169,8 @@ namespace dynaman {
 
 			ofs << "t, x, y, z, vx, vy, vz, ix, iy, iz, xTgt, yTgt, zTgt,"
 				<< "axTgt, ayTgt, azTgt, fxTgt, fyTgt, fzTgt, fxRes, fyRes, fzRes, "
-				<< "u0(pxpy), u1(px), u2(pxmy), u3(mxmy), u4(mx), u5(mxpy)"
+				<< "u0(pxpy), u1(px), u2(pxmy), u3(mxmy), u4(mx), u5(mxpy),"
+				<< "u6(mxpy), u7(mxmy), u8(pxmy), u9(pxpy), u10(mz)"
 				<< std::endl;
 			DWORD initTime = timeGetTime();
 			while (timeGetTime() - initTime < duration) {
@@ -213,6 +216,7 @@ namespace dynaman {
 					Eigen::MatrixXf focus = centersAutd + _focusBlur * (objPtr->getPosition().replicate(1, centersAutd.cols()) - centersAutd);
 					auto gain = autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
 					manipulator.Controller()->_autd.AppendGainSync(gain);
+					manipulator.Controller()->_autd.AppendModulationSync(autd::Modulation::Create(255));
 					ofs << observationTime << ", " << posObserved.x() << ", " << posObserved.y() << ", " << posObserved.z() << ", "
 						<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 						<< integ.z() << ", " << integ.y() << ", " << integ.z() << ", "
@@ -220,7 +224,8 @@ namespace dynaman {
 						<< accelTgt.x() << ", " << accelTgt.y() << ", " << accelTgt.z() << ","
 						<< forceToApply.x() << ", " << forceToApply.y() << ", " << forceToApply.z() << ", "
 						<< forceResult.x() << ", " << forceResult.y() << ", " << forceResult.z() << ", "
-						<< duties(0) << ", " << duties(1) << ", " << duties(2) << ", " << duties(3) << ", " << duties(4) << ", " << duties(5)
+						<< duties(0) << ", " << duties(1) << ", " << duties(2) << ", " << duties(3) << ", " << duties(4) << ", " << duties(5) << ", "
+						<< duties(6) << ", " << duties(7) << ", " << duties(8) << ", " << duties(9) << ", " << duties(10)
 						<< std::endl;
 				}
 				else if (loopInit - objPtr->lastDeterminationTime > 1000)
@@ -239,22 +244,14 @@ namespace dynaman {
 }
 
 int main(int argc, char** argv) {
-	/*Eigen::Vector3f pos_kinect(-95.7035, -1065.26, 426.932);
-	Eigen::Matrix3f rot_kinect;
-	rot_kinect <<
-		0.99999, 0.00128424, -0.00423281,
-		0.00355614, 0.335669, 0.941973,
-		0.00263054, 0.941979, -0.335661;
-	dynaman::KinectDepthSphereTracker kinectTracker(pos_kinect, Eigen::Quaternionf(rot_kinect), true);
-	*/
-	Eigen::Vector3f sensor_bias(0.0f, 0.0f, 0.0f);
-	std::string filename("20200322_blue_sequentia_allaupa_gain10i_fp");
 
+	std::string filename("20200408_balance_strategy_blurx1_2");
 	std::string target_image_name("blue_target_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
 	Eigen::Vector3f pos_sensor(-125.652, -871.712, 13.3176);
 	Eigen::Quaternionf quo_sensor(0.695684, -0.718283, -0.0089647, 0.00359883);
+	Eigen::Vector3f sensor_bias(0.0f, 0.0f, 0.0f);
 	int lowerb = 10, upperb = 255, hist_size = 30;
 	std::cout << "loading target images ..." << std::endl;
 	cv::Mat img_target = cv::imread(target_image_name);
@@ -281,24 +278,24 @@ int main(int argc, char** argv) {
 	haptic_icon::Initialize(manipulator);
 	//haptic_icon::InitializeLower(manipulator);
 	Eigen::Vector3f gainP = 10* Eigen::Vector3f::Constant(-1.6f);
-	Eigen::Vector3f gainD = 10*Eigen::Vector3f::Constant(-4.0f);
-	Eigen::Vector3f gainI = 5*Eigen::Vector3f::Constant(-0.05f);
+	Eigen::Vector3f gainD = 10* Eigen::Vector3f::Constant(-4.0f);
+	Eigen::Vector3f gainI = 1* Eigen::Vector3f::Constant(-0.05f);
 	manipulator.ocsPtr->SetGain(gainP, gainD, gainI);
 	auto objPtr = dynaman::FloatingObject::Create(
 		Eigen::Vector3f(0, 0, 0),
 		Eigen::Vector3f::Constant(-500),
 		Eigen::Vector3f::Constant(500),
-		1e-5f,
+		0,//4.0e-5f,
 		50.f);
 	std::cout << "workspace " << std::endl
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
 	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
 	int duration = 60000;
-	int loopPeriod = 33;
-	//dynaman::balance_control_strategy strategy(gainP, gainD, gainI, loopPeriod, filename);
-	float focusBlur = 100;
-	dynaman::simple_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
+	int loopPeriod = 10;
+	float focusBlur = 1;
+	dynaman::balance_control_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
+	//dynaman::simple_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
 	strategy.run(manipulator, objPtr, duration);
 	manipulator.Close();
 

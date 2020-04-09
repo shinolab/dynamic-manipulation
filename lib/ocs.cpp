@@ -125,9 +125,7 @@ std::vector<autd::GainPtr> ocs::CreateBalanceGainMulti(std::vector<FloatingObjec
 			+ (*itrObj)->getAccelTarget();
 		forcesToApply.col(index) = (*itrObj)->totalMass() * accel + (*itrObj)->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 	}
-	std::cout << "programming duties..." << std::endl;
 	const Eigen::VectorXf duties = FindDutyQPMulti(forcesToApply, positions);
-	std::cout << "constructing duties matrix..." << std::endl;
 	const Eigen::Map<const Eigen::Matrix<float, -1, -1, Eigen::RowMajor>> duties_mat(duties.data(), num_object, num_autd);
 	Eigen::Array<bool, -1, -1> nonzero = duties_mat.array().abs() > 1.0e-3f;
 	Eigen::RowVectorXi count_nonzero = nonzero.matrix().cast<int>().colwise().sum();

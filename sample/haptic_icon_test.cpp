@@ -309,7 +309,8 @@ namespace dynaman {
 						+ _gainI.asDiagonal() * objPtr->getIntegral()
 						+ objPtr->getAccelTarget();
 					Eigen::Vector3f forceToApply = objPtr->totalMass() * accelTgt + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-					Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 1.0e-1f);
+					//Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 1.0e-1f);
+					Eigen::VectorXf duties(11); duties.setZero(); duties(10) = 1.0f;
 					std::vector<float> dutiesStl(duties.size());
 					Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
 					//count non-zero elements
@@ -317,8 +318,6 @@ namespace dynaman {
 
 					if (num_active == 0)
 					{
-						std::cout << "Appending NullGain" << std::endl;
-						
 						manipulator.Controller()->_autd.AppendGainSync(autd::NullGain::Create());
 					}
 					else {
@@ -330,17 +329,16 @@ namespace dynaman {
 							id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
 							for (int i_autd = 0; i_autd < num_autd; i_autd++) {
 								if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
-									uint8_t amplitude = static_cast<uint8_t>(std::max(0.f, (std::min(255.f, (*itr_duties) * 255))));
+									int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
+									//std::cout << amplitude << std::endl;
 									gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(posObserved, amplitude)));
 								}
 								else {
 									gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
 								}
 							}
-							std::cout << "build gain map" << std::endl;
 							*itr_list = autd::GroupedGain::Create(gain_map);
 						}
-						std::cout << "Appending LM" << std::endl;
 						manipulator.Controller()->_autd.ResetLateralGain();
 						manipulator.Controller()->_autd.AppendLateralGain(gain_list);
 						manipulator.Controller()->_autd.StartLateralModulation(_freq);
@@ -378,7 +376,8 @@ namespace dynaman {
 
 int main(int argc, char** argv) {
 
-	std::string filename("20200409_multiplex_strategy_2");
+	std::string filename("20200410_dummy");
+	//std::string filename("20200410_multiplex_strategy");//_tikhonov2
 	std::string target_image_name("blue_target_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
@@ -424,10 +423,61 @@ int main(int argc, char** argv) {
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
 	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
-	int duration = 60000;
-	int loopPeriod = 100;
+	int duration = 30000;
+	int loopPeriod = 10;
 	float focusBlur = 1;
 	int freq = 1000;
+
+	Eigen::VectorXf duties(11); duties.setZero(); duties(10) = 1.0f;
+	std::vector<float> dutiesStl(duties.size());
+	Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
+	//count non-zero elements
+	int num_active = (duties.array() > 1.0e-3f).count();
+
+	std::vector<autd::GainPtr> gain_list(num_active);
+	int id_begin_search = 0;
+	for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
+		std::map<int, autd::GainPtr> gain_map;
+		auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
+		id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
+		for (int i_autd = 0; i_autd < 11; i_autd++) {
+			if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
+				int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
+				std::cout << "added FocalPointGain" << std::endl;
+				gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(Eigen::Vector3f::Zero(), amplitude)));
+			}
+			else {
+				std::cout << "added NullGain" << std::endl;
+				gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
+			}
+		}
+		*itr_list = autd::GroupedGain::Create(gain_map);
+
+		std::vector<autd::GainPtr> gain_list;
+		std::map<int, autd::GainPtr> gain_map_test;
+		gain_map_test.insert(std::make_pair(0, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(2, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(10, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(3, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(4, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(5, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(6, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(7, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(8, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(9, autd::NullGain::Create()));
+		gain_map_test.insert(std::make_pair(1, autd::FocalPointGain::Create(Eigen::Vector3f::Zero())));
+		std::cout << "gain_map_test.size() : " << gain_map_test.size() << std::endl;
+		auto group_gain = autd::GroupedGain::Create(gain_map_test);
+		
+
+		//manipulator.Controller()->_autd.ResetLateralGain();
+		//manipulator.Controller()->_autd.AppendLateralGain(gain_list);
+		//manipulator.Controller()->_autd.StartLateralModulation(1000);
+		manipulator.Controller()->_autd.AppendGainSync(group_gain);
+	}
+	Sleep(10000);
+	manipulator.Close();
+	return 0;
 
 	//manipulator.Controller()->_autd.AppendLateralGain(autd::FocalPointGain::Create(Eigen::Vector3f(0, 0, -50)));
 	//manipulator.Controller()->_autd.AppendLateralGain(autd::FocalPointGain::Create(Eigen::Vector3f(0, 0, -50)));

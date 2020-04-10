@@ -208,8 +208,8 @@ Eigen::VectorXf ocs::FindDutyQpMultiplex(
 	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
 	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
 	Eigen::MatrixXf FF = F.transpose() * F;
-	Eigen::VectorXf condEq(_autd.geometry()->numDevices()+1);
-	condEq << Eigen::VectorXf::Ones(_autd.geometry()->numDevices()), -1;
+	Eigen::VectorXi condEq(_autd.geometry()->numDevices()+1);
+	condEq << Eigen::VectorXi::Ones(_autd.geometry()->numDevices()), -1;
 	Eigen::MatrixXf A(_autd.geometry()->numDevices() + 1, _autd.geometry()->numDevices());
 	A << 
 		Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
@@ -218,7 +218,7 @@ Eigen::VectorXf ocs::FindDutyQpMultiplex(
 	b(_autd.geometry()->numDevices()) = 1;
 	EigenCgalQpSolver(result,
 		A,
-		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		b,
 		F.transpose() * F + lambda * Eigen::MatrixXf::Identity(
 			_autd.geometry()->numDevices(),	_autd.geometry()->numDevices()),
 		-F.transpose() * force,

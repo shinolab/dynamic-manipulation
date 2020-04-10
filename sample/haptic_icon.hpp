@@ -44,17 +44,17 @@ namespace haptic_icon {
 		const float theta9 = 3 * pi / 4, phi9 = -3 * pi / 4; bool isUpper9 = false;
 		const float theta10 = 3 * pi / 4, phi10 = -pi / 4; bool isUpper10 = false;
 		manipulator.Initialize();
-		manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9));
-		manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));
-		manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8));
-		manipulator.AddDevice(Polar2Position(theta7, phi7, isUpper7), Polar2Euler(theta7, phi7, isUpper7));
-		manipulator.AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0));
-		manipulator.AddDevice(Polar2Position(theta10, phi10, isUpper10), Polar2Euler(theta10, phi10, isUpper10));
-		manipulator.AddDevice(Polar2Position(theta4, phi4, isUpper4), Polar2Euler(theta4, phi4, isUpper4));
-		manipulator.AddDevice(Polar2Position(theta1, phi1, isUpper1), Polar2Euler(theta1, phi1, isUpper1));
-		manipulator.AddDevice(Polar2Position(theta2, phi2, isUpper2), Polar2Euler(theta2, phi2, isUpper2));
-		manipulator.AddDevice(Polar2Position(theta3, phi3, isUpper3), Polar2Euler(theta3, phi3, isUpper3));
-		manipulator.AddDevice(Polar2Position(theta0, phi0, isUpper0), Polar2Euler(theta0, phi0, isUpper0));
+		manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9), 0);
+		manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi), 1);
+		manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8), 2);
+		manipulator.AddDevice(Polar2Position(theta7, phi7, isUpper7), Polar2Euler(theta7, phi7, isUpper7), 3);
+		manipulator.AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0), 4);
+		manipulator.AddDevice(Polar2Position(theta10, phi10, isUpper10), Polar2Euler(theta10, phi10, isUpper10), 5);
+		manipulator.AddDevice(Polar2Position(theta4, phi4, isUpper4), Polar2Euler(theta4, phi4, isUpper4), 6);
+		manipulator.AddDevice(Polar2Position(theta1, phi1, isUpper1), Polar2Euler(theta1, phi1, isUpper1), 7);
+		manipulator.AddDevice(Polar2Position(theta2, phi2, isUpper2), Polar2Euler(theta2, phi2, isUpper2), 8);
+		manipulator.AddDevice(Polar2Position(theta3, phi3, isUpper3), Polar2Euler(theta3, phi3, isUpper3), 9);
+		manipulator.AddDevice(Polar2Position(theta0, phi0, isUpper0), Polar2Euler(theta0, phi0, isUpper0), 10);
 
 	}
 
@@ -68,12 +68,12 @@ namespace haptic_icon {
 		const float theta9 = 3 * pi / 4, phi9 = -3 * pi / 4; bool isUpper9 = false;
 		const float theta10 = 3 * pi / 4, phi10 = -pi / 4; bool isUpper10 = false;
 		manipulator.Initialize();
-		manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9));
-		manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi));
-		manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8));
-		manipulator.AddDevice(Polar2Position(theta7, phi7, isUpper7), Polar2Euler(theta7, phi7, isUpper7));
-		manipulator.AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0));
-		manipulator.AddDevice(Polar2Position(theta10, phi10, isUpper10), Polar2Euler(theta10, phi10, isUpper10));
+		manipulator.AddDevice(Polar2Position(theta9, phi9, isUpper9), Polar2Euler(theta9, phi9, isUpper9), 0);
+		manipulator.AddDevice(Eigen::Vector3f(-528.f, 10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, pi / 2, pi), 1);
+		manipulator.AddDevice(Polar2Position(theta8, phi8, isUpper8), Polar2Euler(theta8, phi8, isUpper8), 2);
+		manipulator.AddDevice(Polar2Position(theta7, phi7, isUpper7), Polar2Euler(theta7, phi7, isUpper7), 3);
+		manipulator.AddDevice(Eigen::Vector3f(528.f, -10.16f * 6.5f, -10.16f * 8.5f), Eigen::Vector3f(0, -pi / 2, 0), 4);
+		manipulator.AddDevice(Polar2Position(theta10, phi10, isUpper10), Polar2Euler(theta10, phi10, isUpper10), 5);
 	}
 }
 

@@ -105,8 +105,8 @@ void odcs::Close()
 	ocsPtr->Close();
 }
 
-int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles) {
-	return ocsPtr->AddDevice(position, eulerAngles);
+int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles, int groupId = 0) {
+	return ocsPtr->AddDevice(position, eulerAngles, groupId);
 }
 
 void odcs::DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f &observe, const DWORD observationTime)

@@ -29,7 +29,7 @@ void ocs::Close()
 	//engClose(ep);
 }
 
-int ocs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles) {
+int ocs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles, int groupid) {
 	Eigen::MatrixXf positionsAutdNew(3, _autd.geometry()->numDevices() + 1);
 	Eigen::MatrixXf eulerAnglesAutdNew(3, _autd.geometry()->numDevices() + 1);
 	if (_autd.geometry()->numDevices() == 0) {
@@ -42,7 +42,7 @@ int ocs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &euler
 	}
 	positionsAUTD = positionsAutdNew;
 	eulerAnglesAUTD = eulerAnglesAutdNew;
-	return _autd.geometry()->AddDevice(position, eulerAngles);
+	return _autd.geometry()->AddDevice(position, eulerAngles, groupid);
 }
 
 Eigen::MatrixXf ocs::CentersAUTD() {

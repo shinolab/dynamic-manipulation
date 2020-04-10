@@ -129,12 +129,14 @@ namespace dynaman {
 		Eigen::Vector3f gainP = -1.6 * Eigen::Vector3f::Ones();
 		Eigen::Vector3f gainD = -4.0 * Eigen::Vector3f::Ones();
 		Eigen::Vector3f gainI = -0.04 * Eigen::Vector3f::Ones();
-		//Engine *ep;
 
 	public:
 		int Initialize();
 		void Close();
-		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
+		int AddDevice(
+			Eigen::Vector3f const &position,
+			Eigen::Vector3f const &eulerAngles,
+			int groupid = 0);
 		Eigen::MatrixXf CentersAUTD();
 		Eigen::MatrixXf DirectionsAUTD();
 

@@ -143,6 +143,10 @@ namespace dynaman {
 
 		Eigen::VectorXf FindDutySVD(FloatingObjectPtr objPtr);
 		Eigen::VectorXf FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3f const &position);
+		Eigen::VectorXf FindDutyQpMultiplex(
+			const Eigen::Vector3f& force,
+			const Eigen::Vector3f& position
+		);
 		Eigen::VectorXf FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold = 0.7071f);
 		Eigen::VectorXf FindDutyMaximizeForce(Eigen::Vector3f const &direction,
 			Eigen::MatrixXf const &constrainedDirections,

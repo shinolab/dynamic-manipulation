@@ -269,7 +269,7 @@ namespace dynaman {
 				return 1;
 			}
 			ofs_config
-				<< "simple_strategy config" << std::endl
+				<< "multiplex_strategy config" << std::endl
 				<< "gainP: " << _gainP.transpose() << std::endl
 				<< "gainD: " << _gainD.transpose() << std::endl
 				<< "gainI: " << _gainI.transpose() << std::endl
@@ -309,7 +309,7 @@ namespace dynaman {
 						+ _gainI.asDiagonal() * objPtr->getIntegral()
 						+ objPtr->getAccelTarget();
 					Eigen::Vector3f forceToApply = objPtr->totalMass() * accelTgt + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-					Eigen::VectorXf duties = manipulator.Controller()->FindDutyQPCGAL(forceToApply, objPtr->getPosition());
+					Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 1.0e-1f);
 					std::vector<float> dutiesStl(duties.size());
 					Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
 					//count non-zero elements

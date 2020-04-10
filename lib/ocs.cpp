@@ -200,6 +200,36 @@ Eigen::VectorXf ocs::FindDutyQPCGAL(Eigen::Vector3f const &force, Eigen::Vector3
 	return std::move(result);
 }
 
+Eigen::VectorXf ocs::FindDutyQpMultiplex(
+	Eigen::Vector3f const& force,
+	Eigen::Vector3f const& position) {
+	Eigen::VectorXf result;
+	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
+	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
+	Eigen::MatrixXf FF = F.transpose() * F;
+	Eigen::VectorXf condEq(_autd.geometry()->numDevices()+1);
+	condEq <<
+		Eigen::VectorXf::Ones(_autd.geometry()->numDevices()), -1;
+	Eigen::MatrixXf A(_autd.geometry()->numDevices() + 1, _autd.geometry()->numDevices());
+	A << Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
+		Eigen::RowVectorXf::Ones(_autd.geometry()->numDevices());
+	Eigen::VectorXf b = Eigen::VectorXf::Zero(_autd.geometry()->numDevices() + 1);
+	b(_autd.geometry()->numDevices()) = 1;
+	float lambda = FF.trace() / _autd.geometry()->numDevices();
+	EigenCgalQpSolver(result,
+		A,
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		F.transpose() * F + lambda * Eigen::MatrixXf::Identity(
+			_autd.geometry()->numDevices(),	_autd.geometry()->numDevices()),
+		-F.transpose() * force,
+		condEq,
+		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
+		Eigen::VectorXf::Ones(_autd.geometry()->numDevices())
+	);
+	return std::move(result);
+}
+
+
 Eigen::VectorXf ocs::FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold) {
 	Eigen::MatrixXf posRel = (position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD());
 	//Choose effective autds based on their radiation angle to avoid modelling errors and undesirable reflections.

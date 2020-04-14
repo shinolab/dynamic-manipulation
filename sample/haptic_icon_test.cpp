@@ -315,7 +315,6 @@ namespace dynaman {
 					Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), _lambda);
 					std::vector<float> dutiesStl(duties.size());
 					Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-					//count non-zero elements
 					int num_active = (duties.array() > 1.0e-3f).count();
 
 					if (num_active == 0)
@@ -378,8 +377,8 @@ namespace dynaman {
 
 int main(int argc, char** argv) {
 
-	//std::string filename("20200410_dummy");
-	std::string filename("20200414_multiplex_strategy_6");//_tikhonov2
+	std::string filename("20200414_dummy");
+	//std::string filename("20200414_multiplex_strategy_4");//_tikhonov2
 	std::string target_image_name("blue_target_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
@@ -410,7 +409,7 @@ int main(int argc, char** argv) {
 
 	dynaman::odcs manipulator(tracker);
 	haptic_icon::Initialize(manipulator);
-	Eigen::Vector3f gainP = 10* Eigen::Vector3f::Constant(-1.6f);
+	Eigen::Vector3f gainP = 20* Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = 1* Eigen::Vector3f::Constant(-4.0f);
 	Eigen::Vector3f gainI = 1* Eigen::Vector3f::Constant(-0.05f);
 	manipulator.ocsPtr->SetGain(gainP, gainD, gainI);
@@ -418,12 +417,32 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f(0, 0, 0),
 		Eigen::Vector3f::Constant(-500),
 		Eigen::Vector3f::Constant(500),
-		1.0e-4f,
+		-0.5e-5f,
 		50.f);
 	std::cout << "workspace " << std::endl
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
 	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
+
+	const int num_autd = manipulator.Controller()->_autd.geometry()->numDevices();
+
+	//Eigen::Vector3f posObserved(0, 0, 0);
+	//Eigen::Vector3f forceToApply(0, 0, -0.01f);
+	//Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 0);
+	//std::vector<float> dutiesStl(duties.size());
+	//Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
+	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
+	//Eigen::Vector3f forceResult = manipulator.Controller()->arfModelPtr->arf(
+	//	posObserved.replicate(1, manipulator.Controller()->_autd.geometry()->numDevices()) - centersAutd,
+	//	manipulator.Controller()->eulerAnglesAUTD)
+	//	* duties;
+	//std::cout << "forceToApply: " << forceToApply.transpose() << std::endl;
+	//std::cout << "duties: " << duties.transpose() << std::endl;
+	//std::cout << "forceResult: " << forceResult.transpose() << std::endl;
+
+	//manipulator.Close();
+	//return 0;
+
 	int duration = 60000;
 	int loopPeriod = 10;
 	float focusBlur = 1;

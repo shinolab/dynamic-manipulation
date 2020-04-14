@@ -212,14 +212,16 @@ Eigen::VectorXf ocs::FindDutyQpMultiplex(
 	}
 	int numAupaActive = isActive.count();
 	Eigen::MatrixXf posRelActive(3, isActive.count());
+	Eigen::MatrixXf eulerAnglesActive(3, isActive.count());
 	int iAupaActive = 0;
 	for (int iAupa = 0; iAupa < posRel.cols(); iAupa++) {
 		if (isActive(iAupa)) {
-			posRelActive.col(iAupaActive) << posRel.col(iAupaActive);
+			posRelActive.col(iAupaActive) << posRel.col(iAupa);
+			eulerAnglesActive.col(iAupaActive) << eulerAnglesAUTD.col(iAupa);
 			iAupaActive++;
 		}
 	}
-	Eigen::MatrixXf F = arfModelPtr->arf(posRelActive, eulerAnglesAUTD);
+	Eigen::MatrixXf F = arfModelPtr->arf(posRelActive, eulerAnglesActive);
 	Eigen::VectorXi condEq(1);
 	condEq << -1;
 	Eigen::MatrixXf A(1, numAupaActive);

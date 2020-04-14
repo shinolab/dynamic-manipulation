@@ -171,7 +171,7 @@ namespace dynaman {
 		void Initialize();
 		//std::shared_ptr<ods> Sensor();
 		std::shared_ptr<ocs> Controller();
-		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles);
+		int AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles, int groupId = 0);
 		void RegisterObject(FloatingObjectPtr objPtr);
 		void SetSensor(PositionSensor &new_sensor);
 		const FloatingObjectPtr GetFloatingObject(int i);

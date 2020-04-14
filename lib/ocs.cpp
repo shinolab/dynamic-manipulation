@@ -204,31 +204,53 @@ Eigen::VectorXf ocs::FindDutyQpMultiplex(
 	Eigen::Vector3f const& force,
 	Eigen::Vector3f const& position,
 	float lambda) {
-	Eigen::VectorXf result;
 	Eigen::MatrixXf posRel = position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD();
-	Eigen::MatrixXf F = arfModelPtr->arf(posRel, eulerAnglesAUTD);
-	Eigen::MatrixXf FF = F.transpose() * F;
-	Eigen::VectorXf condEq(_autd.geometry()->numDevices()+1);
-	condEq << Eigen::VectorXf::Ones(_autd.geometry()->numDevices()), -1;
-	Eigen::MatrixXf A(_autd.geometry()->numDevices() + 1, _autd.geometry()->numDevices());
+	Eigen::MatrixXf directions = posRel.colwise().normalized();
+	Eigen::Array<bool, -1, -1> isActive = ((force.normalized() * posRel).array() > 100.f);
+	if (isActive.count() == 0) {
+		return Eigen::VectorXf::Zero(posRel.cols());
+	}
+	int numAupaActive = isActive.count();
+	Eigen::MatrixXf posRelActive(3, isActive.count());
+	int iAupaActive = 0;
+	for (int iAupa = 0; iAupa < posRel.cols(); iAupa++) {
+		if (isActive(iAupa)) {
+			posRelActive.col(iAupaActive) << posRel.col(iAupaActive);
+			iAupaActive++;
+		}
+	}
+	Eigen::MatrixXf F = arfModelPtr->arf(posRelActive, eulerAnglesAUTD);
+	Eigen::VectorXf condEq(numAupaActive+1);
+	condEq << Eigen::VectorXf::Ones(numAupaActive), -1;
+	Eigen::MatrixXf A(numAupaActive + 1, numAupaActive);
 	A << 
-		Eigen::MatrixXf::Identity(_autd.geometry()->numDevices(), _autd.geometry()->numDevices()),
-		Eigen::RowVectorXf::Ones(_autd.geometry()->numDevices());
-	Eigen::VectorXf b = Eigen::VectorXf::Zero(_autd.geometry()->numDevices() + 1);
-	b(_autd.geometry()->numDevices()) = 1;
-	EigenCgalQpSolver(result,
+		Eigen::MatrixXf::Identity(numAupaActive, numAupaActive),
+		Eigen::RowVectorXf::Ones(numAupaActive);
+	Eigen::VectorXf b = Eigen::VectorXf::Zero(numAupaActive + 1);
+	b(numAupaActive) = 1;
+	Eigen::VectorXf resultActive;
+	EigenCgalQpSolver(resultActive,
 		A,
-		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
-		F.transpose() * F + lambda * Eigen::MatrixXf::Identity(
-			_autd.geometry()->numDevices(),	_autd.geometry()->numDevices()),
+		b,
+		F.transpose() * F + lambda * Eigen::MatrixXf::Identity(numAupaActive, numAupaActive),
 		-F.transpose() * force,
 		condEq,
-		Eigen::VectorXf::Zero(_autd.geometry()->numDevices()),
-		Eigen::VectorXf::Ones(_autd.geometry()->numDevices())
+		Eigen::VectorXf::Zero(numAupaActive),
+		Eigen::VectorXf::Ones(numAupaActive)
 	);
-	return std::move(result);
+	iAupaActive = 0;
+	Eigen::VectorXf resultFull(posRel.cols());
+	for (int iAupa = 0; iAupa < posRel.cols(); iAupa++){
+		if (isActive(iAupa)) {
+			resultFull(iAupa) = resultActive(iAupaActive);
+			iAupaActive++;
+		}
+		else {
+			resultFull(iAupa) = 0;
+		}
+	}
+	return std::move(resultFull);
 }
-
 
 Eigen::VectorXf ocs::FindDutySelectiveQP(Eigen::Vector3f const &force, Eigen::Vector3f const &position, float const threshold) {
 	Eigen::MatrixXf posRel = (position.replicate(1, _autd.geometry()->numDevices()) - CentersAUTD());

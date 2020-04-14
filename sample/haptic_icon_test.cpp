@@ -245,6 +245,7 @@ namespace dynaman {
 		std::string _fileName;
 		int _loopPeriod;
 		float _freq;
+		float _lambda;
 	public:
 		multiplex_strategy(
 			const Eigen::Vector3f& gainP,
@@ -252,13 +253,15 @@ namespace dynaman {
 			const Eigen::Vector3f& gainI,
 			int loopPeriod,
 			const std::string& fileName,
-			int freq)
+			int freq,
+			float lambda)
 			:_gainP(gainP),
 			_gainD(gainD),
 			_gainI(gainI),
 			_loopPeriod(loopPeriod),
 			_fileName(fileName),
-			_freq(freq) {}
+			_freq(freq),
+			_lambda(lambda){}
 		
 		~multiplex_strategy() {}
 
@@ -309,8 +312,7 @@ namespace dynaman {
 						+ _gainI.asDiagonal() * objPtr->getIntegral()
 						+ objPtr->getAccelTarget();
 					Eigen::Vector3f forceToApply = objPtr->totalMass() * accelTgt + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-					//Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 1.0e-1f);
-					Eigen::VectorXf duties(11); duties.setZero(); duties(10) = 1.0f;
+					Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), _lambda);
 					std::vector<float> dutiesStl(duties.size());
 					Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
 					//count non-zero elements
@@ -376,13 +378,13 @@ namespace dynaman {
 
 int main(int argc, char** argv) {
 
-	std::string filename("20200410_dummy");
-	//std::string filename("20200410_multiplex_strategy");//_tikhonov2
+	//std::string filename("20200410_dummy");
+	std::string filename("20200414_multiplex_strategy_6");//_tikhonov2
 	std::string target_image_name("blue_target_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
-	Eigen::Vector3f pos_sensor(-125.652, -871.712, 13.3176);
-	Eigen::Quaternionf quo_sensor(0.695684, -0.718283, -0.0089647, 0.00359883);
+	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
+	Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
 	Eigen::Vector3f sensor_bias(0.0f, 0.0f, 0.0f);
 	int lowerb = 10, upperb = 255, hist_size = 30;
 	std::cout << "loading target images ..." << std::endl;
@@ -408,7 +410,6 @@ int main(int argc, char** argv) {
 
 	dynaman::odcs manipulator(tracker);
 	haptic_icon::Initialize(manipulator);
-	//haptic_icon::InitializeLower(manipulator);
 	Eigen::Vector3f gainP = 10* Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = 1* Eigen::Vector3f::Constant(-4.0f);
 	Eigen::Vector3f gainI = 1* Eigen::Vector3f::Constant(-0.05f);
@@ -417,82 +418,20 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f(0, 0, 0),
 		Eigen::Vector3f::Constant(-500),
 		Eigen::Vector3f::Constant(500),
-		2.0e-5f,
+		1.0e-4f,
 		50.f);
 	std::cout << "workspace " << std::endl
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
 	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
-	int duration = 30000;
+	int duration = 60000;
 	int loopPeriod = 10;
 	float focusBlur = 1;
-	int freq = 1000;
-
-	Eigen::VectorXf duties(11); duties.setZero(); duties(10) = 1.0f;
-	std::vector<float> dutiesStl(duties.size());
-	Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-	//count non-zero elements
-	int num_active = (duties.array() > 1.0e-3f).count();
-
-	std::vector<autd::GainPtr> gain_list(num_active);
-	int id_begin_search = 0;
-	for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
-		std::map<int, autd::GainPtr> gain_map;
-		auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
-		id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
-		for (int i_autd = 0; i_autd < 11; i_autd++) {
-			if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
-				int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
-				std::cout << "added FocalPointGain" << std::endl;
-				gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(Eigen::Vector3f::Zero(), amplitude)));
-			}
-			else {
-				std::cout << "added NullGain" << std::endl;
-				gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
-			}
-		}
-		*itr_list = autd::GroupedGain::Create(gain_map);
-
-		std::vector<autd::GainPtr> gain_list;
-		std::map<int, autd::GainPtr> gain_map_test;
-		gain_map_test.insert(std::make_pair(0, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(2, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(10, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(3, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(4, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(5, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(6, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(7, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(8, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(9, autd::NullGain::Create()));
-		gain_map_test.insert(std::make_pair(1, autd::FocalPointGain::Create(Eigen::Vector3f::Zero())));
-		std::cout << "gain_map_test.size() : " << gain_map_test.size() << std::endl;
-		auto group_gain = autd::GroupedGain::Create(gain_map_test);
-		
-
-		//manipulator.Controller()->_autd.ResetLateralGain();
-		//manipulator.Controller()->_autd.AppendLateralGain(gain_list);
-		//manipulator.Controller()->_autd.StartLateralModulation(1000);
-		manipulator.Controller()->_autd.AppendGainSync(group_gain);
-	}
-	Sleep(10000);
-	manipulator.Close();
-	return 0;
-
-	//manipulator.Controller()->_autd.AppendLateralGain(autd::FocalPointGain::Create(Eigen::Vector3f(0, 0, -50)));
-	//manipulator.Controller()->_autd.AppendLateralGain(autd::FocalPointGain::Create(Eigen::Vector3f(0, 0, -50)));
-	//manipulator.Controller()->_autd.StartLateralModulation(1000);
-	//Sleep(5000);
-	//manipulator.Controller()->_autd.ResetLateralGain();
-
-	//manipulator.Controller()->_autd.AppendLateralGain(autd::NullGain::Create());
-	//manipulator.Controller()->_autd.AppendLateralGain(autd::NullGain::Create());
-	//manipulator.Controller()->_autd.StartLateralModulation(1000);
-	//Sleep(5000);
-	//return 0;
+	int freq = 100;
+	float lambda = 0;
 	//dynaman::balance_control_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
 	//dynaman::simple_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
-	dynaman::multiplex_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, freq);
+	dynaman::multiplex_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, freq, lambda);
 	strategy.run(manipulator, objPtr, duration);
 	manipulator.Close();
 

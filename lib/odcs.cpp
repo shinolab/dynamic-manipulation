@@ -105,7 +105,7 @@ void odcs::Close()
 	ocsPtr->Close();
 }
 
-int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles, int groupId = 0) {
+int odcs::AddDevice(Eigen::Vector3f const &position, Eigen::Vector3f const &eulerAngles, int groupId) {
 	return ocsPtr->AddDevice(position, eulerAngles, groupId);
 }
 

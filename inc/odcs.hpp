@@ -313,16 +313,38 @@ namespace dynaman {
 	};
 
 	class TrajectoryCircle : public Trajectory {
-		float radius;
-		float omega;
-		float timeInit;
-		float phaseInit;
-		Eigen::Vector3f center;
+		Eigen::Vector3f _center;
+		float _radius;
+		float _inclination;
+		float _raan;
+		float _omega;
+		float _phaseInit;
+		float _timeInit;
+
 	public:
-		TrajectoryCircle(Eigen::Vector3f &center, float radius, float period, float timeInit, float phaseInit = 0.f) :radius(radius), omega(2 * M_PI / period), phaseInit(phaseInit), timeInit(timeInit), center(center) {}
+		TrajectoryCircle(
+			const Eigen::Vector3f& center,
+			float radius,
+			float inclination,
+			float raan,
+			float period,
+			float phaseInit,
+			float timeInit
+		);
+		static std::shared_ptr<TrajectoryCircle> Create(
+			const Eigen::Vector3f& center,
+			float radius,
+			float inclination,
+			float raan,
+			float period,
+			float phaseInit,
+			float timeInit
+		);
 		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
 		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
 		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+		float Radius();
+		float Phase(float t);
 	};
 
 }

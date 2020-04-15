@@ -422,26 +422,6 @@ int main(int argc, char** argv) {
 	std::cout << "workspace " << std::endl
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
-	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
-
-	const int num_autd = manipulator.Controller()->_autd.geometry()->numDevices();
-
-	//Eigen::Vector3f posObserved(0, 0, 0);
-	//Eigen::Vector3f forceToApply(0, 0, -0.01f);
-	//Eigen::VectorXf duties = manipulator.Controller()->FindDutyQpMultiplex(forceToApply, objPtr->getPosition(), 0);
-	//std::vector<float> dutiesStl(duties.size());
-	//Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-	//Eigen::MatrixXf centersAutd = manipulator.Controller()->CentersAUTD();
-	//Eigen::Vector3f forceResult = manipulator.Controller()->arfModelPtr->arf(
-	//	posObserved.replicate(1, manipulator.Controller()->_autd.geometry()->numDevices()) - centersAutd,
-	//	manipulator.Controller()->eulerAnglesAUTD)
-	//	* duties;
-	//std::cout << "forceToApply: " << forceToApply.transpose() << std::endl;
-	//std::cout << "duties: " << duties.transpose() << std::endl;
-	//std::cout << "forceResult: " << forceResult.transpose() << std::endl;
-
-	//manipulator.Close();
-	//return 0;
 
 	int duration = 60000;
 	int loopPeriod = 10;
@@ -451,7 +431,10 @@ int main(int argc, char** argv) {
 	//dynaman::balance_control_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
 	//dynaman::simple_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, focusBlur);
 	dynaman::multiplex_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, freq, lambda);
-	strategy.run(manipulator, objPtr, duration);
+	std::thread th_control([&manipulator, &strategy, &objPtr, &duration]() {
+		strategy.run(manipulator, objPtr, duration);
+		}
+	);
 	manipulator.Close();
 
 	return 0;

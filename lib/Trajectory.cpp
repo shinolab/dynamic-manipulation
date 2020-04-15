@@ -180,17 +180,59 @@ Eigen::Vector3f TrajectoryMaxAccel::posInit() {
 	return *pathPos.rbegin();
 }
 
+TrajectoryCircle::TrajectoryCircle(
+	const Eigen::Vector3f& center,
+	float radius,
+	float inclination,
+	float raan,
+	float period,
+	float phaseInit,
+	float timeInit)
+	:_center(center),
+	_radius(radius),
+	_inclination(inclination),
+	_raan(raan),
+	_omega(2 * M_PI / period),
+	_phaseInit(phaseInit),
+	_timeInit(timeInit) {}
+
+std::shared_ptr<TrajectoryCircle> TrajectoryCircle::Create(
+	const Eigen::Vector3f& center,
+	float radius,
+	float inclination,
+	float raan,
+	float period,
+	float phaseInit,
+	float timeInit) {
+	return std::make_shared<TrajectoryCircle>(center, radius, inclination, raan, period, phaseInit, timeInit);
+}
+
+float TrajectoryCircle::Radius() {
+	return _radius;
+}
+
+float TrajectoryCircle::Phase(float t) {
+	return _phaseInit + (t - _timeInit) * _omega;
+}
+
 Eigen::Vector3f TrajectoryCircle::pos(float const &t) {
-	float phase = phaseInit + (t - timeInit) * omega;
-	return center + radius * Eigen::Vector3f(cosf(phase), sinf(phase), 0.f);
+	return Eigen::AngleAxisf(_raan, Eigen::Vector3f::UnitZ())
+		* Eigen::AngleAxisf(_inclination, Eigen::Vector3f::UnitX())
+		* Eigen::AngleAxisf(Phase(t), Eigen::Vector3f::UnitZ())
+		* (_radius * Eigen::Vector3f::UnitX())
+		+ _center;
 }
 
 Eigen::Vector3f TrajectoryCircle::vel(float const &t) {
-	float phase = phaseInit + (t - timeInit) * omega;
-	return radius * omega * Eigen::Vector3f(-sinf(phase), cosf(phase), 0.f);
+	return Eigen::AngleAxisf(_raan, Eigen::Vector3f::UnitZ())
+		* Eigen::AngleAxisf(_inclination, Eigen::Vector3f::UnitX())
+		* Eigen::AngleAxisf(Phase(t), Eigen::Vector3f::UnitZ())
+		* (_omega * _radius * Eigen::Vector3f::UnitY());
 }
 
 Eigen::Vector3f TrajectoryCircle::accel(float const &t) {
-	float phase = phaseInit + (t - timeInit) * omega;
-	return radius * omega * omega * Eigen::Vector3f(-cosf(phase), -sinf(phase), 0.f);
+	return Eigen::AngleAxisf(_raan, Eigen::Vector3f::UnitZ())
+		* Eigen::AngleAxisf(_inclination, Eigen::Vector3f::UnitX())
+		* Eigen::AngleAxisf(Phase(t), Eigen::Vector3f::UnitZ())
+		* (- _omega * _omega * _radius * Eigen::Vector3f::UnitX());
 }

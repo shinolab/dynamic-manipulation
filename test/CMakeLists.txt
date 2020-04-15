@@ -29,5 +29,5 @@ target_link_libraries(Vortex DynamicManipulation)
 add_executable(MultiplexDutyTest MultiplexDutyTest.cpp)
 target_link_libraries(MultiplexDutyTest DynamicManipulation)
 
-add_executable(MesArf MesArf.cpp)
-target_link_libraries(MesArf ImgProcUtil ${OpenCV_LIBS} KinectUtility)
+add_executable(TrajectoryTest TrajectoryTest.cpp)
+target_link_libraries(TrajectoryTest DynamicManipulation)

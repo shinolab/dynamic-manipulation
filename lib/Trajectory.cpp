@@ -242,7 +242,12 @@ TrajectorySinusoid::TrajectorySinusoid(
 	float amplitude,
 	float period,
 	const Eigen::Vector3f& center,
-	float timeInit) :_direction(direction), _amplitude(amplitude), _period(period), _center(center) {}
+	float timeInit)
+	:_direction(direction),
+	_amplitude(amplitude),
+	_period(period),
+	_center(center),
+	_timeInit(timeInit) {}
 
 std::shared_ptr<TrajectorySinusoid> TrajectorySinusoid::Create(
 	const Eigen::Vector3f& direction,
@@ -267,7 +272,7 @@ Eigen::Vector3f TrajectorySinusoid::accel(const float& time) {
 }
 
 float TrajectorySinusoid::Phase(float const& time) {
-	return fmodf(time - timeInit, _period) * M_PI * 2.0f;
+	return fmodf(time - _timeInit, _period) / _period * M_PI * 2.0f;
 }
 
 float TrajectorySinusoid::Omega(float const& time) {

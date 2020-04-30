@@ -352,7 +352,7 @@ namespace dynaman {
 		float _amplitude;
 		float _period;
 		Eigen::Vector3f _center;
-		float timeInit;
+		float _timeInit;
 
 	public:
 		TrajectorySinusoid(
@@ -363,7 +363,7 @@ namespace dynaman {
 			float timeInit
 		);
 
-		std::shared_ptr<TrajectorySinusoid> Create(
+		static std::shared_ptr<TrajectorySinusoid> Create(
 			const Eigen::Vector3f& direction,
 			float amplitude,
 			float period,

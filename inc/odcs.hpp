@@ -347,6 +347,37 @@ namespace dynaman {
 		float Phase(float t);
 	};
 
+	class TrajectorySinusoid : public Trajectory {
+		Eigen::Vector3f _direction;
+		float _amplitude;
+		float _period;
+		Eigen::Vector3f _center;
+		float timeInit;
+
+	public:
+		TrajectorySinusoid(
+			const Eigen::Vector3f& direction,
+			float amplitude,
+			float period,
+			const Eigen::Vector3f& center,
+			float timeInit
+		);
+
+		std::shared_ptr<TrajectorySinusoid> Create(
+			const Eigen::Vector3f& direction,
+			float amplitude,
+			float period,
+			const Eigen::Vector3f& center,
+			float timeInit
+		);
+		
+		Eigen::Vector3f pos(float const& time = timeGetTime() / 1000.f) override;
+		Eigen::Vector3f vel(float const& time = timeGetTime() / 1000.f) override;
+		Eigen::Vector3f accel(float const& time = timeGetTime() / 1000.f) override;
+		float Phase(float const& time);
+		float Omega(float const& time);
+	};
+
 }
 
 #endif

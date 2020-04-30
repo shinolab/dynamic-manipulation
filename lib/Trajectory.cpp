@@ -236,3 +236,40 @@ Eigen::Vector3f TrajectoryCircle::accel(float const &t) {
 		* Eigen::AngleAxisf(Phase(t), Eigen::Vector3f::UnitZ())
 		* (- _omega * _omega * _radius * Eigen::Vector3f::UnitX());
 }
+
+TrajectorySinusoid::TrajectorySinusoid(
+	const Eigen::Vector3f& direction,
+	float amplitude,
+	float period,
+	const Eigen::Vector3f& center,
+	float timeInit) :_direction(direction), _amplitude(amplitude), _period(period), _center(center) {}
+
+std::shared_ptr<TrajectorySinusoid> TrajectorySinusoid::Create(
+	const Eigen::Vector3f& direction,
+	float amplitude,
+	float period,
+	const Eigen::Vector3f& center,
+	float timeInit
+) {
+	return std::make_shared<TrajectorySinusoid>(direction, amplitude, period, center, timeInit);
+}
+
+Eigen::Vector3f TrajectorySinusoid::pos(const float& time) {
+	return _center + _direction * _amplitude * sinf((Phase(time)));
+}
+
+Eigen::Vector3f TrajectorySinusoid::vel(const float& time) {
+	return _direction * _amplitude * Omega(time) * cosf(Phase(time));
+}
+
+Eigen::Vector3f TrajectorySinusoid::accel(const float& time) {
+	return -_direction * _amplitude * Omega(time) * Omega(time) * sinf(Phase(time));
+}
+
+float TrajectorySinusoid::Phase(float const& time) {
+	return fmodf(time - timeInit, _period) * M_PI * 2.0f;
+}
+
+float TrajectorySinusoid::Omega(float const& time) {
+	return 2.0f * M_PI / _period;
+}

@@ -133,6 +133,11 @@ void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &posi
 	velocityBuffer.pop_front();
 }
 
+void FloatingObject::resetIntegral() {
+	std::lock_guard<std::mutex> lock(mtxState);
+	integral << 0, 0, 0;
+}
+
 void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
 	auto constTrajPtr = std::make_shared<TrajectoryConstantState>(_positionTarget, _velocityTarget, _accelTarget);

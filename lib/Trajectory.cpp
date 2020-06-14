@@ -264,7 +264,7 @@ Eigen::Vector3f TrajectorySinusoid::pos(const float& time) {
 }
 
 Eigen::Vector3f TrajectorySinusoid::vel(const float& time) {
-	return _direction * _amplitude * Omega(time) * cosf(Phase(time));
+	return (time < _timeInit) ? Eigen::Vector3f(0, 0, 0) : _direction * _amplitude * Omega(time) * cosf(Phase(time));
 }
 
 Eigen::Vector3f TrajectorySinusoid::accel(const float& time) {
@@ -272,7 +272,7 @@ Eigen::Vector3f TrajectorySinusoid::accel(const float& time) {
 }
 
 float TrajectorySinusoid::Phase(float const& time) {
-	return fmodf(time - _timeInit, _period) / _period * M_PI * 2.0f;
+	return (time < _timeInit) ? 0.f : fmodf(time - _timeInit, _period) / _period * M_PI * 2.0f;
 }
 
 float TrajectorySinusoid::Omega(float const& time) {

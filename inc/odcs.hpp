@@ -79,9 +79,12 @@ namespace dynaman {
 
 		void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew, Eigen::Vector3f &velocitynew);
+		void resetIntegral();
 
 		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
-		void updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
+		void updateStatesTarget(Eigen::Vector3f &_positionTarget,
+			Eigen::Vector3f &_velocityTarget = Eigen::Vector3f(0, 0, 0),
+			Eigen::Vector3f &_accelTarget = Eigen::Vector3f(0, 0, 0));
 
 		bool isConverged(float tolPos, float tolVel);
 		bool IsTracked();

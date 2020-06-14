@@ -9,6 +9,11 @@ find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 include_directories( ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include )
 include_directories(${PROJECT_SOURCE_DIR}/inc)
+
+# OpenCV
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 # Find Kinect SDK v2
 find_package( KinectSDK2 REQUIRED )
 include_directories( ${KinectSDK2_INCLUDE_DIRS} )
@@ -66,5 +71,17 @@ target_link_libraries(sequential DynamicManipulation)
 add_executable(haptic_icon haptic_icon.hpp haptic_icon.cpp)
 target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice ImgProcUtil)
 
+add_library(MonitorInfoManager STATIC MonitorInfoManager.hpp MonitorInfoManager.cpp)
+
+add_library(DrawUtil DrawUtil.hpp DrawUtil.cpp)
+target_link_libraries(DrawUtil ${OpenCV_LIBS})
+
 add_executable(haptic_icon_test haptic_icon.hpp haptic_icon_test.cpp)
-target_link_libraries(haptic_icon_test DynamicManipulation StereoTracker CameraDevice ImgProcUtil)
+target_link_libraries(haptic_icon_test 
+    DynamicManipulation
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DrawUtil
+    MonitorInfoManager
+)

@@ -97,7 +97,6 @@ target_link_libraries(DynamicManipulation
 	${Boost_LIBRARIES}
 	${OpenCV_LIBS}
 	LinearArfModel
-	KinectSphereTracker
 	QPSolver
 	winMultiplexer
 	GeometryUtil

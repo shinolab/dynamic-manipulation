@@ -76,6 +76,16 @@ add_library(MonitorInfoManager STATIC MonitorInfoManager.hpp MonitorInfoManager.
 add_library(DrawUtil DrawUtil.hpp DrawUtil.cpp)
 target_link_libraries(DrawUtil ${OpenCV_LIBS})
 
+include_directories(haptic_icon_strategies)
+add_library(Strategies 
+    haptic_icon_strategies/simple_strategy.hpp
+    haptic_icon_strategies/simple_strategy.cpp
+    haptic_icon_strategies/balance_strategy.hpp
+    haptic_icon_strategies/balance_strategy.cpp
+    haptic_icon_strategies/multiplex_strategy.hpp
+    haptic_icon_strategies/multiplex_strategy.cpp
+)
+
 add_executable(haptic_icon_test haptic_icon.hpp haptic_icon_test.cpp)
 target_link_libraries(haptic_icon_test 
     DynamicManipulation
@@ -84,4 +94,17 @@ target_link_libraries(haptic_icon_test
     ImgProcUtil
     DrawUtil
     MonitorInfoManager
+    Strategies
+)
+
+add_executable(demo_sa2020_mobility
+    demo_sa2020_mobility.cpp
+    haptic_icon.hpp
+)
+target_link_libraries(demo_sa2020_mobility
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    Strategies
+    DynamicManipulation
 )

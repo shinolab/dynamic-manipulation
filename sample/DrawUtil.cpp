@@ -1,5 +1,6 @@
 #include "DrawUtil.hpp"
 #include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui_c.h>
 #define NOMINMAX
 #include <Windows.h>
 #include <vector>

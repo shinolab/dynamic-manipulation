@@ -23,6 +23,8 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 find_package(XIMEA REQUIRED)
 include_directories(${XIMEA_INCLUDE_DIR})
 
+include_directories(maneuvers)
+
 add_executable(simple simple.cpp)
 target_link_libraries(simple DynamicManipulation)
 
@@ -86,6 +88,8 @@ add_library(Strategies
     haptic_icon_strategies/multiplex_strategy.cpp
 )
 
+add_library(maneuvers maneuvers/maneuvers.cpp maneuvers/maneuvers.hpp)
+
 add_executable(haptic_icon_test haptic_icon.hpp haptic_icon_test.cpp)
 target_link_libraries(haptic_icon_test 
     DynamicManipulation
@@ -96,6 +100,8 @@ target_link_libraries(haptic_icon_test
     MonitorInfoManager
     Strategies
 )
+
+
 
 add_executable(demo_sa2020_mobility
     demo_sa2020_mobility.cpp
@@ -108,3 +114,4 @@ target_link_libraries(demo_sa2020_mobility
     Strategies
     DynamicManipulation
 )
+

@@ -32,7 +32,7 @@ ximeaCameraDevice::~ximeaCameraDevice() {}
 
 void ximeaCameraDevice::open() {
 	_cam.OpenBySN(&_cam_id[0]);
-	_cam.SetExposureTime(10000);
+	_cam.SetExposureTime(5000);
 	_cam.StartAcquisition();
 	_cam.SetImageDataFormat(XI_IMG_FORMAT::XI_RGB24);
 	//_cam.EnableWhiteBalanceAuto();

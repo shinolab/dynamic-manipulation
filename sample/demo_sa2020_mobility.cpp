@@ -4,6 +4,7 @@
 #include "haptic_icon.hpp"
 #include "geometryUtil.hpp"
 #include "haptic_icon_strategies/multiplex_strategy.hpp"
+#include "haptic_icon_strategies/simple_strategy.hpp"
 #include "odcs.hpp"
 #include <fstream>
 #include <chrono>
@@ -15,7 +16,7 @@ int main(int argc, char** argv) {
 	std::string filename;
 	std::getline(std::cin, filename);
 	//std::string target_image_name("blue_target_cover.png");
-	std::string target_image_name("blue_target_wo_cover.png");
+	std::string target_image_name("blue_target_no_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
 	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
@@ -43,25 +44,27 @@ int main(int argc, char** argv) {
 
 	dynaman::odcs manipulator(tracker);
 	haptic_icon::Initialize(manipulator);
-	Eigen::Vector3f gainP = 10 * Eigen::Vector3f::Constant(-1.6f);
+	Eigen::Vector3f gainP = 20 * Eigen::Vector3f::Constant(-1.6f);
 	Eigen::Vector3f gainD = 5 * Eigen::Vector3f::Constant(-4.0f);
-	Eigen::Vector3f gainI = 5 * Eigen::Vector3f::Constant(-0.05f);
-	Eigen::Vector3f pos_init(0, 0, 0);
+	Eigen::Vector3f gainI = 1 * Eigen::Vector3f::Constant(-0.05f);
+	Eigen::Vector3f pos_init(0, -50.f, 0);
 	manipulator.ocsPtr->SetGain(gainP, gainD, gainI);
 	auto objPtr = dynaman::FloatingObject::Create(
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
-		-0.038e-3f,
+		-0.036e-3f,
 		50.f);
 	std::cout << "workspace " << std::endl
 		<< "lower bound: " << objPtr->lowerbound().transpose() << std::endl
 		<< "upper bound: " << objPtr->upperbound().transpose() << std::endl;
 
-	int duration = 180000;//1800000; //30min
+	int duration = 60000;//1800000; 
 	int loopPeriod = 10;
 	int freq = 100;
 	float lambda = 0;
+	
+	//dynaman::simple_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, 1.0f);
 	dynaman::multiplex_strategy strategy(gainP, gainD, gainI, loopPeriod, filename, freq, lambda);
 
 	std::thread th_control([&manipulator, &strategy, &objPtr, &duration]() {
@@ -70,32 +73,33 @@ int main(int argc, char** argv) {
 	);
 	
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
-	Eigen::Vector3f posRight(300.f, 0.f, 0.f);
+	Eigen::Vector3f posRight(0.f, 0.f, 0.f);
 	Eigen::Vector3f posLeft(-300.f, 0.f, 0.f);
 	Eigen::Vector3f posHigh(0.f, 0.f, 300.f);
 	Eigen::Vector3f posLow(0.f, 0.f, -300.f);
 	// params for circular trajectory
 	float orbit_radius = 150;
-	float orbit_period = 3.6f;
+	float orbit_period = 4.f;
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 	float timeTrans = 2.0f;
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, posCenter, posRight));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime() / 1000.f, posRight, posLeft));
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, posLeft, posCenter));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, posCenter, posHigh));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime() / 1000.f, posHigh, posLow));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
+	std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posRight, posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, posLow, posCenter));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, posCenter, posCircleInit));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime() / 1000.f));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posHigh));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posHigh, posLow));
+	std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	std::this_thread::sleep_for(std::chrono::milliseconds(8000));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime() / 1000.f, objPtr->getPosition(), posCenter));
+	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 	th_control.join();
 	manipulator.Close();

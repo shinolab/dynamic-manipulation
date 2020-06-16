@@ -101,8 +101,6 @@ target_link_libraries(haptic_icon_test
     Strategies
 )
 
-
-
 add_executable(demo_sa2020_mobility
     demo_sa2020_mobility.cpp
     haptic_icon.hpp

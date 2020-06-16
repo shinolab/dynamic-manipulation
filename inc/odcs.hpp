@@ -200,9 +200,9 @@ namespace dynaman {
 	{
 	public:
 		virtual ~Trajectory() {};
-		virtual Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) = 0;
-		virtual Eigen::Vector3f vel(float const & time = timeGetTime() / 1000.f) = 0;
-		virtual Eigen::Vector3f accel(float const & time = timeGetTime() / 1000.f) = 0;
+		virtual Eigen::Vector3f pos(DWORD time = timeGetTime()) = 0;
+		virtual Eigen::Vector3f vel(DWORD time = timeGetTime()) = 0;
+		virtual Eigen::Vector3f accel(DWORD time = timeGetTime()) = 0;
 	};
 
 	class TrajectoryConstantState : public Trajectory
@@ -215,9 +215,9 @@ namespace dynaman {
 		TrajectoryConstantState(Eigen::Vector3f const &positionTarget,
 			Eigen::Vector3f const &velocityTarget = Eigen::Vector3f::Constant(0.f),
 			Eigen::Vector3f const &accelTarget = Eigen::Vector3f::Constant(0.f));
-		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+		Eigen::Vector3f pos(DWORD time = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD time = timeGetTime()) override;
 		static std::shared_ptr<Trajectory> Create(Eigen::Vector3f const &positionTarget,
 			Eigen::Vector3f const &velocityTarget,
 			Eigen::Vector3f const &accelTarget);
@@ -226,29 +226,28 @@ namespace dynaman {
 	class TrajectoryBangBang : public Trajectory
 	{
 	private:
-		float timeTotal;
-		float timeInit;
-		Eigen::Vector3f posInit;
-		Eigen::Vector3f posEnd;
-		Eigen::Vector3f velInit;
-		Eigen::Vector3f velEnd;
+		float _timeTotal;
+		DWORD _sys_time_init;
+		Eigen::Vector3f _posInit;
+		Eigen::Vector3f _posEnd;
+		Eigen::Vector3f _velInit;
+		Eigen::Vector3f _velEnd;
 
 	public:
-		TrajectoryBangBang(float const &timeTotal,
-			float const &timeInit,
+		TrajectoryBangBang(float timeTotal,
+			DWORD sys_time_init,
 			Eigen::Vector3f const &posInit,
 			Eigen::Vector3f const &posEnd)
-		{
-			this->timeInit = timeInit;
-			this->timeTotal = timeTotal;
-			this->posInit = posInit;
-			this->posEnd = posEnd;
-		}
-		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
-		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
-		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
-		static std::shared_ptr<Trajectory> Create(float const &timeTotal,
-			float const &timeInit,
+			:_timeTotal(timeTotal),
+			_sys_time_init(sys_time_init),
+			_posInit(posInit),
+			_posEnd(posEnd){}
+
+		Eigen::Vector3f pos(DWORD time) override;
+		Eigen::Vector3f vel(DWORD time) override;
+		Eigen::Vector3f accel(DWORD time) override;
+		static std::shared_ptr<Trajectory> Create(float timeTotal,
+			DWORD sys_time_init,
 			Eigen::Vector3f const &posInit,
 			Eigen::Vector3f const &posEnd);
 	};
@@ -271,9 +270,9 @@ namespace dynaman {
 			this->posInit = posInit;
 			this->posEnd = posEnd;
 		}
-		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.0f) override;
-		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.0f) override;
-		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.0f) override;
+		Eigen::Vector3f pos(DWORD const time = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD const time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD const time = timeGetTime()) override;
 		static std::shared_ptr<Trajectory> Create(float const &timeToGo,
 			float const &timeInit,
 			Eigen::Vector3f const &posInit,
@@ -309,9 +308,9 @@ namespace dynaman {
 			std::shared_ptr<ocs> ocsPtr,
 			FloatingObjectPtr objPtr,
 			float dt = 0.1f);
-		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+		Eigen::Vector3f pos(DWORD const time = timeGetTime())override;
+		Eigen::Vector3f vel(DWORD const time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD const time = timeGetTime()) override;
 		Eigen::Vector3f posInit();
 	};
 
@@ -322,17 +321,17 @@ namespace dynaman {
 		float _raan;
 		float _omega;
 		float _phaseInit;
-		float _timeInit;
+		float _sys_time_init;
 
 	public:
 		TrajectoryCircle(
-			const Eigen::Vector3f& center,
-			float radius,
-			float inclination,
-			float raan,
-			float period,
-			float phaseInit,
-			float timeInit
+			const Eigen::Vector3f& _center,
+			float _radius,
+			float _inclination,
+			float _raan,
+			float _period,
+			float _phaseInit,
+			DWORD _sys_time_init
 		);
 		static std::shared_ptr<TrajectoryCircle> Create(
 			const Eigen::Vector3f& center,
@@ -341,13 +340,13 @@ namespace dynaman {
 			float raan,
 			float period,
 			float phaseInit,
-			float timeInit
+			DWORD sys_time_init
 		);
-		Eigen::Vector3f pos(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f vel(float const &time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f accel(float const &time = timeGetTime() / 1000.f) override;
+		Eigen::Vector3f pos(DWORD sys_time = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD sys_time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD sys_time = timeGetTime()) override;
 		float Radius();
-		float Phase(float t);
+		float Phase(DWORD sys_time);
 	};
 
 	class TrajectorySinusoid : public Trajectory {
@@ -355,7 +354,7 @@ namespace dynaman {
 		float _amplitude;
 		float _period;
 		Eigen::Vector3f _center;
-		float _timeInit;
+		DWORD _sys_time_init;
 
 	public:
 		TrajectorySinusoid(
@@ -363,7 +362,7 @@ namespace dynaman {
 			float amplitude,
 			float period,
 			const Eigen::Vector3f& center,
-			float timeInit
+			DWORD sys_time_init
 		);
 
 		static std::shared_ptr<TrajectorySinusoid> Create(
@@ -371,14 +370,14 @@ namespace dynaman {
 			float amplitude,
 			float period,
 			const Eigen::Vector3f& center,
-			float timeInit
+			DWORD sys_time_init
 		);
 		
-		Eigen::Vector3f pos(float const& time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f vel(float const& time = timeGetTime() / 1000.f) override;
-		Eigen::Vector3f accel(float const& time = timeGetTime() / 1000.f) override;
-		float Phase(float const& time);
-		float Omega(float const& time);
+		Eigen::Vector3f pos(DWORD time = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD time = timeGetTime()) override;
+		float Phase(DWORD sys_time);
+		float Omega(DWORD sys_time);
 	};
 
 }

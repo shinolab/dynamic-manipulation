@@ -380,14 +380,14 @@ namespace dynaman {
 		float Omega(DWORD sys_time);
 	};
 
-	class TrajectoryInf: public Trajectory {
+	class TrajectoryInfShape: public Trajectory {
 		Eigen::Vector3f _center;
 		float _height;
 		float _width;
 		float _omega;
 		DWORD _sys_time_init;
 	public:
-		TrajectoryInf(
+		TrajectoryInfShape(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,
@@ -395,9 +395,9 @@ namespace dynaman {
 			DWORD sys_time_init
 		);
 
-		~TrajectoryInf() = default;
+		~TrajectoryInfShape() = default;
 
-		std::shared_ptr<TrajectoryInf> Create(
+		std::shared_ptr<TrajectoryInfShape> Create(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,
@@ -411,10 +411,41 @@ namespace dynaman {
 		Eigen::Vector3f accel(DWORD sys_time) override;
 
 		float Phase(DWORD sys_time);
-
 	};
 
+	class TrajectoryHeart : public Trajectory {
+		Eigen::Vector3f _center;
+		float _height;
+		float _width;
+		float _omega;
+		DWORD _sys_time_init;
+	public:
+		TrajectoryHeart(
+			const Eigen::Vector3f& center,
+			float height,
+			float width,
+			float period,
+			DWORD sys_time_init
+		);
 
+		std::shared_ptr<TrajectoryHeart> Create(
+			const Eigen::Vector3f& center,
+			float height,
+			float width,
+			float period,
+			DWORD sys_time_init
+		);
+
+		~TrajectoryHeart() = default;
+
+		float Phase(DWORD sys_time);
+
+		Eigen::Vector3f pos(DWORD sys_time) override;
+
+		Eigen::Vector3f vel(DWORD sys_time) override;
+
+		Eigen::Vector3f accel(DWORD sys_time)override;
+	};
 }
 
 #endif

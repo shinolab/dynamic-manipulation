@@ -157,3 +157,46 @@ float TrajectorySinusoid::Phase(DWORD sys_time) {
 float TrajectorySinusoid::Omega(DWORD sys_time) {
 	return 2.0f * M_PI / _period;
 }
+
+TrajectoryInfShape::TrajectoryInfShape(
+	const Eigen::Vector3f& center,
+	float period,
+	float height,
+	float width,
+	DWORD sys_time_init)
+	:_center(center),
+	_omega(2.0f * M_PI / period),
+	_height(height),
+	_width(width),
+	_sys_time_init(sys_time_init) {}
+
+std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(const Eigen::Vector3f& center,
+	float period,
+	float height,
+	float width,
+	DWORD sys_time_init) {
+	return std::make_shared<TrajectoryInfShape>(center, period, height, width, sys_time_init);
+}
+
+float TrajectoryInfShape::Phase(DWORD sys_time) {
+	return (sys_time - _sys_time_init) / 1000.f * _omega;
+}
+
+Eigen::Vector3f TrajectoryInfShape::pos(DWORD sys_time) {
+	return Eigen::Vector3f(_width * sinf(Phase(sys_time)) / 2.0f, 0.f, _height * sinf(2.f * Phase(sys_time)));
+}
+
+Eigen::Vector3f TrajectoryInfShape::vel(DWORD sys_time) {
+	return _omega * Eigen::Vector3f(
+		_width * cosf(Phase(sys_time)),
+		0.0f,
+		2.0f * _height * cosf(Phase(sys_time))
+	);
+}
+
+Eigen::Vector3f TrajectoryInfShape::accel(DWORD sys_time) {
+	return -_omega * _omega * pos(sys_time);
+}
+
+
+

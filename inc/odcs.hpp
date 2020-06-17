@@ -380,6 +380,41 @@ namespace dynaman {
 		float Omega(DWORD sys_time);
 	};
 
+	class TrajectoryInf: public Trajectory {
+		Eigen::Vector3f _center;
+		float _height;
+		float _width;
+		float _omega;
+		DWORD _sys_time_init;
+	public:
+		TrajectoryInf(
+			const Eigen::Vector3f& center,
+			float height,
+			float width,
+			float period,
+			DWORD sys_time_init
+		);
+
+		~TrajectoryInf() = default;
+
+		std::shared_ptr<TrajectoryInf> Create(
+			const Eigen::Vector3f& center,
+			float height,
+			float width,
+			float period,
+			DWORD sys_time_init);
+
+		Eigen::Vector3f pos(DWORD sys_time) override;
+
+		Eigen::Vector3f vel(DWORD sys_time) override;
+
+		Eigen::Vector3f accel(DWORD sys_time) override;
+
+		float Phase(DWORD sys_time);
+
+	};
+
+
 }
 
 #endif

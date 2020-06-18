@@ -160,15 +160,16 @@ float TrajectorySinusoid::Omega(DWORD sys_time) {
 
 TrajectoryInfShape::TrajectoryInfShape(
 	const Eigen::Vector3f& center,
-	float period,
 	float height,
 	float width,
+	float period,
 	DWORD sys_time_init)
 	:_center(center),
 	_omega(2.0f * M_PI / period),
 	_height(height),
 	_width(width),
-	_sys_time_init(sys_time_init) {}
+	_sys_time_init(sys_time_init) {
+}
 
 std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(
 	const Eigen::Vector3f& center,
@@ -184,20 +185,27 @@ float TrajectoryInfShape::Phase(DWORD sys_time) {
 }
 
 Eigen::Vector3f TrajectoryInfShape::pos(DWORD sys_time) {
-	return 0.5f * Eigen::Vector3f(_width * sinf(Phase(sys_time)), 0.f, _height * sinf(2.f * Phase(sys_time)))
-		+ _center;
+	return 0.5f * Eigen::Vector3f(
+		_width * sinf(Phase(sys_time)),
+		0.f,
+		_height * sinf(2.f * Phase(sys_time))
+	) + _center;
 }
 
 Eigen::Vector3f TrajectoryInfShape::vel(DWORD sys_time) {
 	return 0.5f * _omega * Eigen::Vector3f(
 		_width * cosf(Phase(sys_time)),
 		0.0f,
-		2.0f * _height * cosf(Phase(sys_time))
+		2.0f * _height * cosf(2.0f * Phase(sys_time))
 	);
 }
 
 Eigen::Vector3f TrajectoryInfShape::accel(DWORD sys_time) {
-	return -_omega * _omega * pos(sys_time);
+	return -0.5f * _omega * _omega * Eigen::Vector3f(
+		_width * sinf(Phase(sys_time)),
+		0.f,
+		4.0f * _height * sinf(2.f * Phase(sys_time))
+	);
 }
 
 TrajectoryHeart::TrajectoryHeart(
@@ -235,13 +243,13 @@ Eigen::Vector3f TrajectoryHeart::pos(DWORD sys_time) {
 			- cosf(2.f * Phase(sys_time))
 			- 0.4f * cosf(3.f * Phase(sys_time))
 			- 0.2f * cosf(4.f * Phase(sys_time))
-			)
+			+ 0.508f)
 	) + _center;
 }
 
 Eigen::Vector3f TrajectoryHeart::vel(DWORD sys_time) {
 	return _omega * Eigen::Vector3f(
-		1.5f * _width * sinf(Phase(sys_time)) * sinf(Phase(sys_time)) * cosf(sys_time),
+		1.5f * _width * sinf(Phase(sys_time)) * sinf(Phase(sys_time)) * cosf(Phase(sys_time)),
 		0.f,
 		0.5f * _height * (
 			- 2.6f * sinf(Phase(sys_time))
@@ -254,7 +262,7 @@ Eigen::Vector3f TrajectoryHeart::vel(DWORD sys_time) {
 
 Eigen::Vector3f TrajectoryHeart::accel(DWORD sys_time) {
 	return _omega * _omega * Eigen::Vector3f(
-		0.5f * _width * (
+		1.5f * _width * (
 			2.f * sinf(Phase(sys_time)) * cosf(Phase(sys_time)) * cosf(Phase(sys_time))
 			- sinf(Phase(sys_time)) * sinf(Phase(sys_time)) * sinf(Phase(sys_time))
 			),
@@ -263,7 +271,7 @@ Eigen::Vector3f TrajectoryHeart::accel(DWORD sys_time) {
 			-2.6f * cosf(Phase(sys_time))
 			+ 4.f * cosf(2.f * Phase(sys_time))
 			+ 3.6f * cosf(3.f * Phase(sys_time))
-			+ 3.2f * sinf(4.f * Phase(sys_time))
+			+ 3.2f * cosf(4.f * Phase(sys_time))
 			)
 	);
 }

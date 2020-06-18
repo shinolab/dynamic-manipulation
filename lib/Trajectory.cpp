@@ -10,15 +10,15 @@ TrajectoryConstantState::TrajectoryConstantState(Eigen::Vector3f const &position
 	Eigen::Vector3f const &velocityTarget,
 	Eigen::Vector3f const &accelTarget) :posTgt(positionTarget), velTgt(velocityTarget), accelTgt(accelTarget) {}
 
-Eigen::Vector3f TrajectoryConstantState::pos(DWORD time) {
+Eigen::Vector3f TrajectoryConstantState::pos(DWORD sys_time) {
 	return posTgt;
 }
 
-Eigen::Vector3f TrajectoryConstantState::vel(DWORD time) {
+Eigen::Vector3f TrajectoryConstantState::vel(DWORD sys_time) {
 	return velTgt;
 }
 
-Eigen::Vector3f TrajectoryConstantState::accel(DWORD time) {
+Eigen::Vector3f TrajectoryConstantState::accel(DWORD sys_time) {
 	return accelTgt;
 }
 

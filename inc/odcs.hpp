@@ -215,9 +215,9 @@ namespace dynaman {
 		TrajectoryConstantState(Eigen::Vector3f const &positionTarget,
 			Eigen::Vector3f const &velocityTarget = Eigen::Vector3f::Constant(0.f),
 			Eigen::Vector3f const &accelTarget = Eigen::Vector3f::Constant(0.f));
-		Eigen::Vector3f pos(DWORD time = timeGetTime()) override;
-		Eigen::Vector3f vel(DWORD time = timeGetTime()) override;
-		Eigen::Vector3f accel(DWORD time = timeGetTime()) override;
+		Eigen::Vector3f pos(DWORD sys_time = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD sys_time = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD sys_time = timeGetTime()) override;
 		static std::shared_ptr<Trajectory> Create(Eigen::Vector3f const &positionTarget,
 			Eigen::Vector3f const &velocityTarget,
 			Eigen::Vector3f const &accelTarget);

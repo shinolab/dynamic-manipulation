@@ -98,7 +98,7 @@ Eigen::Vector3f FloatingObject::getAccelTarget()
 void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f &positionNew)
 {
 	std::lock_guard<std::mutex> lock(mtxState);
-	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0; // [sec]
+	float dt = (float)(determinationTime - lastDeterminationTime) / 1000.f; // [sec]
 	velocity = (positionNew - position) / dt;
 	dTBuffer.push_back(dt);
 	dTBuffer.pop_front();
@@ -140,7 +140,7 @@ void FloatingObject::resetIntegral() {
 
 void FloatingObject::updateStatesTarget(Eigen::Vector3f &_positionTarget, Eigen::Vector3f &_velocityTarget, Eigen::Vector3f &_accelTarget)
 {
-	auto constTrajPtr = std::make_shared<TrajectoryConstantState>(_positionTarget, _velocityTarget, _accelTarget);
+	auto constTrajPtr = TrajectoryConstantState::Create(_positionTarget, _velocityTarget, _accelTarget);
 	SetTrajectory(constTrajPtr);
 }
 

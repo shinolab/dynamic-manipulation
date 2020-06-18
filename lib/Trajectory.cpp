@@ -170,7 +170,8 @@ TrajectoryInfShape::TrajectoryInfShape(
 	_width(width),
 	_sys_time_init(sys_time_init) {}
 
-std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(const Eigen::Vector3f& center,
+std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(
+	const Eigen::Vector3f& center,
 	float period,
 	float height,
 	float width,

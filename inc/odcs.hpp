@@ -397,7 +397,7 @@ namespace dynaman {
 
 		~TrajectoryInfShape() = default;
 
-		std::shared_ptr<TrajectoryInfShape> Create(
+		static std::shared_ptr<TrajectoryInfShape> Create(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,
@@ -428,7 +428,7 @@ namespace dynaman {
 			DWORD sys_time_init
 		);
 
-		std::shared_ptr<TrajectoryHeart> Create(
+		static std::shared_ptr<TrajectoryHeart> Create(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,

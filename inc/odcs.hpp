@@ -402,7 +402,8 @@ namespace dynaman {
 			float height,
 			float width,
 			float period,
-			DWORD sys_time_init);
+			DWORD sys_time_init
+		);
 
 		Eigen::Vector3f pos(DWORD sys_time) override;
 

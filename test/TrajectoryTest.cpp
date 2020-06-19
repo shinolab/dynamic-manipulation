@@ -6,11 +6,11 @@
 #pragma comment (lib, "winmm")
 
 int main(int argc, char** argv) {
-	std::string trajName("heartShape_3");
+	std::string trajName("EightShape_1");
 	Eigen::Vector3f center(0, 0, 0);
 	float height = 1;
-	float width = 1;
-	float period = 2.0f;
+	float width = 2;
+	float period = 1.0f;
 	DWORD timeInit = timeGetTime();
 	std::ofstream ofs_config(trajName + "_config.txt");
 	ofs_config << "center: " << center.transpose() << std::endl
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 		<< "period: " << period << std::endl;
 	ofs_config.close();
 	std::ofstream ofs_log(trajName + "_log.csv");
-	auto traj = dynaman::TrajectoryHeart::Create(
+	auto traj = dynaman::TrajectoryInfShape::Create(
 		center,
 		height,
 		width,
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vt)dt" << std::endl;
 	while (timeGetTime() - timeStart < 5000) {
 		DWORD currentTime = timeGetTime();
-		float phase = traj->Phase(currentTime);
+		float phase = fmodf(traj->Phase(currentTime), 2.f * M_PI);
 		Eigen::Vector3f pos = traj->pos(currentTime);
 		Eigen::Vector3f vel = traj->vel(currentTime);
 		Eigen::Vector3f accel = traj->accel(currentTime);

@@ -165,7 +165,7 @@ TrajectoryInfShape::TrajectoryInfShape(
 	float period,
 	DWORD sys_time_init)
 	:_center(center),
-	_omega(2.0f * M_PI / period),
+	_omega(4.0f * M_PI / period),
 	_height(height),
 	_width(width),
 	_sys_time_init(sys_time_init) {
@@ -177,7 +177,12 @@ std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(
 	float height,
 	float width,
 	DWORD sys_time_init) {
-	return std::make_shared<TrajectoryInfShape>(center, period, height, width, sys_time_init);
+	return std::make_shared<TrajectoryInfShape>(
+		center,
+		period,
+		height,
+		width,
+		sys_time_init);
 }
 
 float TrajectoryInfShape::Phase(DWORD sys_time) {
@@ -185,27 +190,54 @@ float TrajectoryInfShape::Phase(DWORD sys_time) {
 }
 
 Eigen::Vector3f TrajectoryInfShape::pos(DWORD sys_time) {
-	return 0.5f * Eigen::Vector3f(
-		_width * sinf(Phase(sys_time)),
-		0.f,
-		_height * sinf(2.f * Phase(sys_time))
-	) + _center;
+	if (fmodf(Phase(sys_time), 4.f * M_PI) < 2.f * M_PI) {
+		return Eigen::Vector3f(
+			0.25f * _width * (1 - cosf(Phase(sys_time))),
+			0.f,
+			0.5f * _height * sinf(Phase(sys_time))
+		) + _center;
+	}
+	else {
+		return Eigen::Vector3f(
+			0.25f * _width * (-1 + cosf(Phase(sys_time))),
+			0.f,
+			0.5f * _height * sinf(Phase(sys_time))
+		) + _center;
+	}
 }
 
 Eigen::Vector3f TrajectoryInfShape::vel(DWORD sys_time) {
-	return 0.5f * _omega * Eigen::Vector3f(
-		_width * cosf(Phase(sys_time)),
-		0.0f,
-		2.0f * _height * cosf(2.0f * Phase(sys_time))
-	);
+	if (fmodf(Phase(sys_time), 4.f * M_PI) < 2.f * M_PI) {
+		return _omega * Eigen::Vector3f(
+			0.25f * _width * (sinf(Phase(sys_time))),
+			0.f,
+			0.5f * _height * cosf(Phase(sys_time))
+		);
+	}
+	else {
+		return _omega * Eigen::Vector3f(
+			-0.25f * _width * (sinf(Phase(sys_time))),
+			0.f,
+			0.5f * _height * cosf(Phase(sys_time))
+		);
+	}
 }
 
 Eigen::Vector3f TrajectoryInfShape::accel(DWORD sys_time) {
-	return -0.5f * _omega * _omega * Eigen::Vector3f(
-		_width * sinf(Phase(sys_time)),
-		0.f,
-		4.0f * _height * sinf(2.f * Phase(sys_time))
-	);
+	if (fmodf(Phase(sys_time), 4.f * M_PI) < 2.f * M_PI) {
+		return _omega * _omega * Eigen::Vector3f(
+			0.25f * _width * (cosf(Phase(sys_time))),
+			0.f,
+			-0.5f * _height * sinf(Phase(sys_time))
+		);
+	}
+	else {
+		return _omega * _omega * Eigen::Vector3f(
+			-0.25f * _width * (cosf(Phase(sys_time))),
+			0.f,
+			-0.5f * _height * sinf(Phase(sys_time))
+		);
+	}
 }
 
 TrajectoryHeart::TrajectoryHeart(

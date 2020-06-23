@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f posBefore = traj->pos(timeStart);
 	Eigen::Vector3f velBefore = traj->vel(timeStart);
 	ofs_log << "t, phase, x, y, z, vx, vy, vz, ax, ay, az"
-		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vt)dt" << std::endl;
+		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vz)dt" << std::endl;
 	while (timeGetTime() - timeStart < 5000) {
 		DWORD currentTime = timeGetTime();
 		float phase = fmodf(traj->Phase(currentTime), 2.f * M_PI);
@@ -63,5 +63,4 @@ int main(int argc, char** argv) {
 	}
 	ofs_log.close();
 	return 0;
-
 }

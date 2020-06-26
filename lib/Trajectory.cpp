@@ -28,7 +28,11 @@ Eigen::Vector3f TrajectoryConstantState::accel(DWORD sys_time_ms) {
 std::shared_ptr<Trajectory> TrajectoryConstantState::Create(Eigen::Vector3f const &positionTarget,
 	Eigen::Vector3f const &velocityTarget,
 	Eigen::Vector3f const &accelTarget) {
-	return std::shared_ptr<Trajectory>(new TrajectoryConstantState(positionTarget, velocityTarget, accelTarget));
+	return std::make_shared<TrajectoryConstantState>(
+		positionTarget,
+		velocityTarget,
+		accelTarget
+		);
 }
 
 Eigen::Vector3f TrajectoryBangBang::pos(DWORD sys_time_ms)
@@ -59,7 +63,12 @@ std::shared_ptr<Trajectory> TrajectoryBangBang::Create(float timeTotal,
 	DWORD sys_time_init,
 	Eigen::Vector3f const &posInit,
 	Eigen::Vector3f const &posEnd) {
-	return std::shared_ptr<Trajectory>(new TrajectoryBangBang(timeTotal, sys_time_init, posInit, posEnd));
+	return std::make_shared<TrajectoryBangBang>(
+		timeTotal,
+		sys_time_init,
+		posInit,
+		posEnd
+		);
 }
 
 TrajectoryCircle::TrajectoryCircle(
@@ -78,7 +87,7 @@ TrajectoryCircle::TrajectoryCircle(
 	_phaseInit(phaseInit),
 	_sys_time_init(sys_time_init) {}
 
-std::shared_ptr<TrajectoryCircle> TrajectoryCircle::Create(
+std::shared_ptr<Trajectory> TrajectoryCircle::Create(
 	const Eigen::Vector3f& center,
 	float radius,
 	float inclination,
@@ -131,7 +140,7 @@ TrajectorySinusoid::TrajectorySinusoid(
 	_center(center),
 	_sys_time_init(sys_time_init) {}
 
-std::shared_ptr<TrajectorySinusoid> TrajectorySinusoid::Create(
+std::shared_ptr<Trajectory> TrajectorySinusoid::Create(
 	const Eigen::Vector3f& direction,
 	float amplitude,
 	float period,
@@ -174,7 +183,7 @@ TrajectoryInfShape::TrajectoryInfShape(
 	_sys_time_init(sys_time_init) {
 }
 
-std::shared_ptr<TrajectoryInfShape> TrajectoryInfShape::Create(
+std::shared_ptr<Trajectory> TrajectoryInfShape::Create(
 	const Eigen::Vector3f& center,
 	float period_sec,
 	float height,
@@ -255,7 +264,7 @@ TrajectoryHeart::TrajectoryHeart(
 	_omega(2.f * M_PI / period_sec),
 	_sys_time_init(sys_time_init) {}
 
-std::shared_ptr<TrajectoryHeart> TrajectoryHeart::Create(
+std::shared_ptr<Trajectory> TrajectoryHeart::Create(
 	const Eigen::Vector3f& center,
 	float height,
 	float width,

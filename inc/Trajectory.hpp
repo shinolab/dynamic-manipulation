@@ -108,7 +108,7 @@ namespace dynaman {
 			float _phaseInit,
 			DWORD _sys_time_init
 		);
-		static std::shared_ptr<TrajectoryCircle> Create(
+		static std::shared_ptr<Trajectory> Create(
 			const Eigen::Vector3f& center,
 			float radius,
 			float inclination,
@@ -140,7 +140,7 @@ namespace dynaman {
 			DWORD sys_time_init
 		);
 
-		static std::shared_ptr<TrajectorySinusoid> Create(
+		static std::shared_ptr<Trajectory> Create(
 			const Eigen::Vector3f& direction,
 			float amplitude,
 			float period,
@@ -172,7 +172,7 @@ namespace dynaman {
 
 		~TrajectoryInfShape() = default;
 
-		static std::shared_ptr<TrajectoryInfShape> Create(
+		static std::shared_ptr<Trajectory> Create(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,
@@ -204,7 +204,7 @@ namespace dynaman {
 			DWORD sys_time_init_ms
 		);
 
-		static std::shared_ptr<TrajectoryHeart> Create(
+		static std::shared_ptr<Trajectory> Create(
 			const Eigen::Vector3f& center,
 			float height,
 			float width,

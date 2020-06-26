@@ -1,8 +1,11 @@
-#include "odcs.hpp"
-#include <Eigen/Dense>
-#include <Windows.h>
 #include <vector>
 #include <memory>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include "Trajectory.hpp"
+#include <Eigen/Dense>
+#define NOMINMAX
+#include <Windows.h>
 
 using namespace dynaman;
 

@@ -1,7 +1,9 @@
-#include "odcs.hpp"
+#include "Trajectory.hpp"
 #include <string>
 #include <fstream>
 #include <thread>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #pragma comment (lib, "winmm")
 

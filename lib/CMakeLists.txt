@@ -29,6 +29,8 @@ find_package( KinectSDK2 REQUIRED )
 include_directories( ${KinectSDK2_INCLUDE_DIRS} )
 link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 
+add_library(Trajectory ../inc/Trajectory.hpp Trajectory.cpp)
+
 add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
 target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
 
@@ -68,7 +70,6 @@ add_library(DynamicManipulation STATIC
 	FloatingObject.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
-	 Trajectory.cpp
 	../inc/EigenTools.hpp
 )
 
@@ -100,6 +101,7 @@ target_link_libraries(DynamicManipulation
 	QPSolver
 	winMultiplexer
 	GeometryUtil
+	Trajectory
 )
 
 add_library(dynaman_dll SHARED

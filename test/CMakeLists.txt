@@ -30,4 +30,4 @@ add_executable(MultiplexDutyTest MultiplexDutyTest.cpp)
 target_link_libraries(MultiplexDutyTest DynamicManipulation)
 
 add_executable(TrajectoryTest TrajectoryTest.cpp)
-target_link_libraries(TrajectoryTest DynamicManipulation)
+target_link_libraries(TrajectoryTest Trajectory)

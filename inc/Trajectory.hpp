@@ -4,6 +4,7 @@
 #include <Eigen/Geometry>
 #define NOMINMAX
 #include <Windows.h>
+#pragma comment (lib, "winmm")
 
 namespace dynaman {
 	class Trajectory

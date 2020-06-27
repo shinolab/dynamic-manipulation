@@ -64,10 +64,11 @@ if(USE_XIMEA)
 endif()
 
 add_library(DynamicManipulation STATIC
+	../inc/FloatingObject.hpp
+	FloatingObject.cpp
 	../inc/odcs.hpp
 	odcs.cpp
 	ocs.cpp
-	FloatingObject.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
 	../inc/EigenTools.hpp

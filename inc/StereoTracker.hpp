@@ -33,7 +33,7 @@ namespace dynaman {
 		cv::Mat _mapx_left, _mapy_left, _mapx_right, _mapy_right;
 	};
 
-	class stereoTracker : public dynaman::PositionSensor {
+	class stereoTracker : public dynaman::Tracker {
 	public:
 		stereoTracker(
 			std::shared_ptr<stereoCamera> stereoCamPtr,

@@ -4,7 +4,6 @@
 #include "Trajectory.hpp"
 #include "FloatingObject.hpp"
 #include "autd3.hpp"
-#include <opencv2/core.hpp>
 #include "arfModel.hpp"
 #include <queue>
 #include <vector>
@@ -22,13 +21,11 @@
 #pragma comment (lib, "winmm")
 
 namespace dynaman {
-	class PositionSensor;
 	class ocs;
 
-
-	class PositionSensor {
+	class Tracker {
 	public:
-		virtual ~PositionSensor() {};
+		virtual ~Tracker() {};
 		virtual bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) = 0;
 	};
 
@@ -83,19 +80,19 @@ namespace dynaman {
 	class odcs
 	{
 	public:
-		odcs(PositionSensor& sensor);
+		odcs(Tracker& tracker);
 		void Initialize();
 		//std::shared_ptr<ods> Sensor();
 		std::shared_ptr<ocs> Controller();
 		int AddDevice(Eigen::Vector3f const& position, Eigen::Vector3f const& eulerAngles, int groupId = 0);
 		void RegisterObject(FloatingObjectPtr objPtr);
-		void SetSensor(PositionSensor& new_sensor);
+		void SetSensor(Tracker& new_tracker);
 		const FloatingObjectPtr GetFloatingObject(int i);
 		void StartControl();
 		void ControlLoop(std::vector<FloatingObjectPtr>& objPtrs, int loopPeriod);
 		void Close();
 		void DetermineStateKF(FloatingObjectPtr objPtr, const Eigen::Vector3f& observe, const DWORD determinationTime);
-		PositionSensor& sensor;
+		Tracker& m_tracker;
 
 		//std::shared_ptr<ods> odsPtr;
 		std::shared_ptr<ocs> ocsPtr;

@@ -13,7 +13,8 @@ find_package( CGAL REQUIRED )
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/inc 
-    ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include 
+	${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include    
+	${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/lib 
     ${Boost_INCLUDE_DIR} 
     ${EIGEN3_INCLUDE_DIR}
     )
@@ -69,6 +70,9 @@ add_library(DynamicManipulation STATIC
 	../inc/odcs.hpp
 	odcs.cpp
 	ocs.cpp
+	../inc/GainPlan.hpp
+	GainPlan.cpp
+	Strategy.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
 	../inc/EigenTools.hpp

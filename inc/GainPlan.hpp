@@ -7,7 +7,9 @@
 
 namespace dynaman {
 
-	Eigen::Matrix3f rotForDeviceId(int device_id, autd::GeometryPtr geo);
+	Eigen::Matrix3f rotForDeviceId(int deviceId, autd::GeometryPtr geo);
+
+	Eigen::Vector3f centerForDeviceId(int deviceId, autd::GeometryPtr geo);
 
 	void centersAutd(autd::GeometryPtr geo, Eigen::Matrix3f& posRel);
 

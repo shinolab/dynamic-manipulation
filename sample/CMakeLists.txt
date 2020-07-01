@@ -113,3 +113,14 @@ target_link_libraries(demo_sa2020_mobility
     DynamicManipulation
 )
 
+add_executable(demo_arf
+    demo_arf.cpp
+    haptic_icon.hpp
+)
+target_link_libraries(demo_arf
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    Strategies
+    DynamicManipulation
+)

@@ -82,8 +82,16 @@ int main(int argc, char** argv) {
 	float orbit_period = 3.f;
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 	float timeTrans = 2.0f;
+	//manipulator.ocsPtr->SetGain(gainP, 1 * 5 * Eigen::Vector3f::Constant(-4.0f), gainI);
+
 	std::this_thread::sleep_for(std::chrono::seconds(5));
-	//traslation maneuver:
+
+	//std::getline(std::cin, std::string());
+	//objPtr->updateStatesTarget(objPtr->getPosition());
+	//std::getline(std::cin, std::string());
+	//objPtr->updateStatesTarget(objPtr->getPosition());
+
+	//traslation maneuver #1:
 	objPtr->updateStatesTarget(posLeft);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	objPtr->updateStatesTarget(posRight);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
@@ -96,13 +104,70 @@ int main(int argc, char** argv) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	objPtr->updateStatesTarget(posCenter);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	//circular maneuver:
+	manipulator.ocsPtr->SetGain(gainP, 1 * 5 * Eigen::Vector3f::Constant(-4.0f), gainI);
 	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	//circular maneuver:
 	objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	std::this_thread::sleep_for(std::chrono::milliseconds(6000));
 	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+	////traslation maneuver #2:
+	//float triangle_length = 300;
+	//float x_tri = 0.5 * triangle_length;
+	//float bottom_tri = triangle_length * cosf(M_PI / 3) / 3;
+	//float top_tri = triangle_length * cosf(M_PI / 3) * 2 / 3;
+	//Eigen::Vector3f pt = Eigen::Vector3f(0, 0, top_tri) + posCenter;
+	//Eigen::Vector3f ptr = Eigen::Vector3f(x_tri, 0, bottom_tri) + posCenter;
+	//Eigen::Vector3f ptl = Eigen::Vector3f(-x_tri, 0, bottom_tri) + posCenter;
+	//Eigen::Vector3f pb = Eigen::Vector3f(0, 0, -top_tri) + posCenter;
+	//Eigen::Vector3f pbr = Eigen::Vector3f(x_tri, 0, -bottom_tri) + posCenter;
+	//Eigen::Vector3f pbl = Eigen::Vector3f(-x_tri, 0, -bottom_tri) + posCenter;
+	//Eigen::Vector3f posCenter2(0.f, -50.f, 0.f);
+	//Eigen::Vector3f posRight2(200.f, -50.f, 0.f);
+	//Eigen::Vector3f posLeft2(-200.f, -50.f, 0.f);
+	//Eigen::Vector3f posHigh2(0.f, -50.f, 200.f);
+	//Eigen::Vector3f posLow2(0.f, -50.f, -250.f);
+
+	////first triangle
+	//manipulator.ocsPtr->SetGain(gainP, 10 * Eigen::Vector3f::Constant(-4.0f), gainI);
+
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter2, 0.8*posLeft2));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), 0.8*posLeft2, posCenter2));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter2, Eigen::Vector3f(0, 100, 0)));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), Eigen::Vector3f(0, 100, 0), posCenter2));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter2, posHigh2));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posHigh2, posCenter2));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//objPtr->updateStatesTarget(posCenter);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	//circular maneuver:
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+	//std::cout << "Applying InfShapeTrajectory" << std::endl;
+	//manipulator.ocsPtr->SetGain(gainP, 5 * Eigen::Vector3f::Constant(-4.0f), gainI);
+	////objPtr->updateStatesTarget(Eigen::Vector3f(0, 0, 150));//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+	////objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter+ Eigen::Vector3f(-100, 0, 0), orbit_radius/2, pi / 2.f, 0.f, 1.5*orbit_period, 0.f, timeGetTime()));
+	//objPtr->SetTrajectory(dynaman::TrajectoryInfShape::Create(posCenter, 200, 400, 6*orbit_period, timeGetTime()));
+	////objPtr->SetTrajectory(dynaman::TrajectoryHeart::Create(posCenter, 100, 300, 5*orbit_period, timeGetTime()));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+	//std::cout << "Eight finished." << std::endl;
+	//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
 	th_control.join();
 	manipulator.Close();
 

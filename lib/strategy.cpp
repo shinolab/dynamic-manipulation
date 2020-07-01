@@ -5,7 +5,9 @@
 #include "QPSolver.h"
 
 namespace dynaman {
+
 	MultiplexStrategy::MultiplexStrategy(
+
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
@@ -28,7 +30,14 @@ namespace dynaman {
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {
-		return std::make_shared<MultiplexStrategy>(gainP, gainD, gainI, freqLm, lambda, arfModelPtr);
+		return std::make_shared<MultiplexStrategy>(
+			gainP,
+			gainD,
+			gainI,
+			freqLm,
+			lambda,
+			arfModelPtr
+			);
 	}
 
 	int MultiplexStrategy::Initialize(
@@ -92,11 +101,11 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
-	std::vector<autd::GainPtr> MultiplexStrategy::CreateLateralGain(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus) {
-		std::vector<autd::GainPtr> gain_list;
+	std::vector<autd::GainPtr> MultiplexStrategy::CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus) {
 		std::vector<float> dutiesStl(duties.size());
 		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
 		int num_active = (duties.array() > 1.0e-3f).count();
+		std::vector<autd::GainPtr> gain_list(num_active);
 		int id_begin_search = 0;
 		for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
 			std::map<int, autd::GainPtr> gain_map;
@@ -144,7 +153,7 @@ namespace dynaman {
 				m_aupaPtr->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
-				auto gain_list = CreateLateralGain(duties, posObserved);
+				auto gain_list = CreateLateralGainList(duties, posObserved);
 				m_aupaPtr->ResetLateralGain();
 				m_aupaPtr->AppendLateralGain(gain_list);
 				m_aupaPtr->StartLateralModulation(m_freqLm);

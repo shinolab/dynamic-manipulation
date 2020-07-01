@@ -29,6 +29,8 @@ namespace dynaman {
 		}
 		if (!controller()->isOpen()) {
 			controller()->Open(linktype, location);
+			controller()->AppendGainSync(autd::NullGain::Create());
+			controller()->AppendModulationSync(autd::Modulation::Create(255));
 		}
 		{
 			std::lock_guard<std::shared_mutex> lock(m_mtxRunning);

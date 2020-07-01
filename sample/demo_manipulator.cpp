@@ -38,7 +38,7 @@ int main(int argc, char** argv ) {
 	auto leftCamPtr = ximeaCameraDevice::create(leftCamId);
 	auto rightCamPtr = ximeaCameraDevice::create(rightCamId);
 	auto stereoCamPtr = dynaman::stereoCamera::create(leftCamPtr, rightCamPtr);
-	stereoCamPtr->open();
+	//stereoCamPtr->open();
 	std::cout << "initializing a tracker..." << std::endl;
 	auto trackerPtr = std::make_shared<stereoTracker>(stereoCamPtr, extractorPtrLeft, extractorPtrRight, pos_sensor, quo_sensor, sensor_bias);
 	auto aupaPtr = std::make_shared<autd::Controller>();
@@ -50,18 +50,63 @@ int main(int argc, char** argv ) {
 		-0.036e-3f,
 		50.f
 	);
-
-	auto strategyPtr = MultiplexStrategy::Create(gainP, gainD, gainI);
-
-	Manipulator manipulator(
-		aupaPtr,
-		trackerPtr,
-		strategyPtr,
-		objPtr,
-		10
+	std::cout << "creating strategy ..." << std::endl;
+	auto strategyPtr = MultiplexStrategy::Create(
+		gainP,
+		gainD,
+		gainI
 	);
+	std::cout << "opening aupa ..." << std::endl;
+	aupaPtr->Open(autd::LinkType::ETHERCAT);
+	if (!aupaPtr->isOpen())
+		return ENXIO;
+	std::cout << "opening tracker ..." << std::endl;
+	trackerPtr->open();
+	std::cout << "executing strategy ... " << std::endl;
+	strategyPtr->Initialize(aupaPtr, trackerPtr, objPtr);
+	//for (int i = 0; i < 3; i++) {
+	//	std::cout << "execute: " << i << std::endl;
+	//	strategyPtr->Execute();
+	//}
+	//return 0;
+	//Manipulator manipulator(
+	//	aupaPtr,
+	//	trackerPtr,
+	//	strategyPtr,
+	//	objPtr,
+	//	10
+	//);
 
-	manipulator.StartControl();
+	//manipulator.StartControl();
+
+	/*initiate control*/
+	DWORD timeInit = timeGetTime();
+	strategyPtr->Initialize(aupaPtr, trackerPtr, objPtr);
+	if (!trackerPtr->isOpen()) {
+		trackerPtr->open();
+	}
+	if (!aupaPtr->isOpen()) {
+		aupaPtr->Open(autd::LinkType::ETHERCAT);
+		aupaPtr->AppendGainSync(autd::NullGain::Create());
+		aupaPtr->AppendModulationSync(autd::Modulation::Create(255));
+	}
+	std::thread thControl([&strategyPtr, &timeInit]() 
+		{
+			unsigned int loopPeriod = 10;
+			while (timeGetTime() - timeInit < 120000) {
+				{
+					DWORD timeLoopInit = timeGetTime();
+					strategyPtr->Execute();
+					int waitTime = loopPeriod - (timeGetTime() - timeLoopInit);
+					timeBeginPeriod(1);
+					Sleep(std::max(waitTime, 0));
+					timeEndPeriod(1);
+				}
+			}
+		}
+	);
+	/******************/
+
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(300.f, 0.f, 0.f);
 	Eigen::Vector3f posLeft(-300.f, 0.f, 0.f);
@@ -91,6 +136,6 @@ int main(int argc, char** argv ) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(6000));
 	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-	manipulator.Close();
+	//manipulator.Close();
 	return 0;
 }

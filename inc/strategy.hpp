@@ -58,7 +58,7 @@ namespace dynaman {
 
 		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& position);
 
-		std::vector<autd::GainPtr> CreateLateralGain(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
+		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 	};

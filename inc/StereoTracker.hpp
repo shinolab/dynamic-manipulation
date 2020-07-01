@@ -51,7 +51,7 @@ namespace dynaman {
 			std::shared_ptr<imgProc::extractor> _extPtrRight,
 			const Eigen::Vector3f &pos,
 			const Eigen::Quaternionf &quo,
-			Eigen::Vector3f bias = Eigen::Vector3f::Zero()
+			const Eigen::Vector3f& bias = Eigen::Vector3f::Zero()
 		);
 
 		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;

@@ -38,9 +38,16 @@ namespace imgProc {
 
 		static std::shared_ptr<hue_backproject_extractor> create(
 			const std::vector<cv::Mat>& imgs_target,
-			int lowerBound,
-			int upperBound,
+			int lowerBound = 10,
+			int upperBound = 255,
 			int size_hist = 30
+		);
+
+		static std::shared_ptr<hue_backproject_extractor> create(
+			const std::string& img_target_name,
+			int lowerBound = 10,
+			int upperBound = 255,
+			int sizeHist = 30
 		);
 
 		cv::Point2f extract_center(const cv::Mat& img) override;

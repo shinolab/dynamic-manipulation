@@ -55,7 +55,7 @@ namespace dynaman {
 			//----------Observation----------
 			Eigen::Vector3f posObserved;
 			DWORD observationTime;
-			bool observed = manipulator.sensor.observe(observationTime, posObserved, objPtr);
+			bool observed = manipulator.m_tracker.observe(observationTime, posObserved, objPtr);
 			//std::cout << "running" << std::endl;
 			//std::cout << observed << ", " << isInsideWorkspace(posObserved, (*itr)->lowerbound(), (*itr)->upperbound()) << std::endl;
 			if (observed && isInsideWorkspace(posObserved, objPtr->lowerbound(), objPtr->upperbound())) {

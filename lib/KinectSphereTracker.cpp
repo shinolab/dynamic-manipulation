@@ -29,7 +29,11 @@ namespace dynaman {
 		_useROI(useROI),
 		_bias(bias) {}
 
-	void KinectDepthSphereTracker::maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const &upperbound, cv::Mat &mask) {
+	void KinectDepthSphereTracker::maskWorkspace(
+		Eigen::Vector3f const &lowerbound,
+		Eigen::Vector3f const &upperbound,
+		cv::Mat &mask)
+	{
 		std::vector<cv::Point2i> cornerPixels;
 		std::vector<Eigen::Vector3f> corners;
 		corners = cornersWorkspaceAll(lowerbound, upperbound);
@@ -110,6 +114,10 @@ namespace dynaman {
 		}
 		return isValid;
 	}
+	
+	bool KinectDepthSphereTracker::isOpen() {
+	}
+
 #pragma endregion
 
 #pragma region ColorSphereTracker

@@ -124,3 +124,12 @@ target_link_libraries(demo_arf
     Strategies
     DynamicManipulation
 )
+
+add_executable(demo_manipulator demo_manipulator.cpp)
+target_link_libraries(
+    demo_manipulator
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)

@@ -1,6 +1,6 @@
 #ifndef _STEREO_TRACKER_HPP
 #define _STEREO_TRACKER_HPP
-#include "odcs.hpp"
+#include "tracker.hpp"
 #include "CameraDevice.hpp"
 #include "ImgProcUtil.hpp"
 #include <opencv2/core.hpp>
@@ -25,6 +25,7 @@ namespace dynaman {
 		cv::Point3f triangulate(const cv::Point2f point_left, const cv::Point2f point_right);
 		void imgRightRect(cv::Mat& img);
 		void imgLeftRect(cv::Mat& img);
+		bool isOpen();
 	private:
 		std::shared_ptr<CameraDevice> _leftCameraPtr;
 		std::shared_ptr<CameraDevice> _rightCameraPtr;
@@ -33,7 +34,7 @@ namespace dynaman {
 		cv::Mat _mapx_left, _mapy_left, _mapx_right, _mapy_right;
 	};
 
-	class stereoTracker : public dynaman::PositionSensor {
+	class stereoTracker : public dynaman::Tracker {
 	public:
 		stereoTracker(
 			std::shared_ptr<stereoCamera> stereoCamPtr,
@@ -54,7 +55,8 @@ namespace dynaman {
 		);
 
 		bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) override;
-
+		bool open() override;
+		bool isOpen() override;
 	private:
 		std::shared_ptr<imgProc::extractor> _extPtrLeft;
 		std::shared_ptr<imgProc::extractor> _extPtrRight;

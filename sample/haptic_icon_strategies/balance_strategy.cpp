@@ -53,7 +53,7 @@ namespace dynaman {
 			DWORD loopInit = timeGetTime();
 			Eigen::Vector3f posObserved;
 			DWORD observationTime;
-			bool observed = manipulator.sensor.observe(observationTime, posObserved, objPtr);
+			bool observed = manipulator.m_tracker.observe(observationTime, posObserved, objPtr);
 			if (observed && isInsideWorkspace(posObserved, objPtr->lowerbound(), objPtr->upperbound())) {
 				objPtr->updateStates(observationTime, posObserved);
 				objPtr->SetTrackingStatus(true);

@@ -1,7 +1,9 @@
-#include "odcs.hpp"
+#include "Trajectory.hpp"
 #include <string>
 #include <fstream>
 #include <thread>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #pragma comment (lib, "winmm")
 
@@ -38,10 +40,9 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f posBefore = traj->pos(timeStart);
 	Eigen::Vector3f velBefore = traj->vel(timeStart);
 	ofs_log << "t, phase, x, y, z, vx, vy, vz, ax, ay, az"
-		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vt)dt" << std::endl;
+		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vz)dt" << std::endl;
 	while (timeGetTime() - timeStart < 5000) {
 		DWORD currentTime = timeGetTime();
-		float phase = fmodf(traj->Phase(currentTime), 2.f * M_PI);
 		Eigen::Vector3f pos = traj->pos(currentTime);
 		Eigen::Vector3f vel = traj->vel(currentTime);
 		Eigen::Vector3f accel = traj->accel(currentTime);
@@ -53,7 +54,6 @@ int main(int argc, char** argv) {
 		posBefore = pos;
 		velBefore = vel;
 			ofs_log << currentTime - timeInit << ", "
-			<< phase << ", "
 			<< pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< accel.x() << ", " << accel.y() << ", " << accel.z() << ", "
@@ -63,5 +63,4 @@ int main(int argc, char** argv) {
 	}
 	ofs_log.close();
 	return 0;
-
 }

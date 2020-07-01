@@ -1,19 +1,21 @@
 #ifndef _KINECT_SPHERE_TRACKER_HPP
 #define _KINECT_SPHERE_TRACKER_HPP
 
-#include "odcs.hpp"
-#include "KinectUtility.hpp"
 #include <atlbase.h>
 #include <vector>
+#include <opencv2/core.hpp>
+#include "KinectUtility.hpp"
+#include "tracker.hpp"
 
 namespace dynaman {
 
-	class KinectDepthSphereTracker : public PositionSensor {
+	class KinectDepthSphereTracker : public Tracker {
 	public:
 		KinectDepthSphereTracker(Eigen::Vector3f const &pos,
 			Eigen::Quaternionf const &quo,
 			bool useROI = true,
 			Eigen::Vector3f bias = Eigen::Vector3f::Zero());
+		bool isOpen() override;
 		bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) override;
 		Eigen::Quaternionf rot_sensor();
 		Eigen::Vector3f pos_sensor();
@@ -25,10 +27,13 @@ namespace dynaman {
 		Eigen::Quaternionf _quo;
 		Eigen::Vector3f _bias;
 		bool _useROI;
-		void maskWorkspace(Eigen::Vector3f const &lowerbound, Eigen::Vector3f const & upperbound, cv::Mat& mask);
+		void maskWorkspace(
+			Eigen::Vector3f const &lowerbound,
+			Eigen::Vector3f const &upperbound,
+			cv::Mat& mask);
 	};
 
-	class KinectColorSphereTracker : public PositionSensor {
+	class KinectColorSphereTracker : public Tracker {
 	public:
 		enum ColorSpace { RGB = 0, HSV = 1 };
 		KinectColorSphereTracker(Eigen::Vector3f const &pos,
@@ -36,6 +41,7 @@ namespace dynaman {
 			const cv::Scalar &lowerbound,
 			const cv::Scalar &upperbound,
 			ColorSpace colorSpace);
+		bool isOpen() override;
 		bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) override;
 		Eigen::Vector3f pos_sensor();
 		Eigen::Quaternionf rot_sensor();

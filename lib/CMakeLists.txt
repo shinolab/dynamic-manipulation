@@ -13,7 +13,8 @@ find_package( CGAL REQUIRED )
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/inc 
-    ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include 
+	${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include    
+	${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/lib 
     ${Boost_INCLUDE_DIR} 
     ${EIGEN3_INCLUDE_DIR}
     )
@@ -28,6 +29,8 @@ find_package( KinectSDK2 REQUIRED )
 # Settings Kinect SDK v2
 include_directories( ${KinectSDK2_INCLUDE_DIRS} )
 link_directories( ${KinectSDK2_LIBRARY_DIRS} )
+
+add_library(Trajectory ../inc/Trajectory.hpp Trajectory.cpp)
 
 add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
 target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
@@ -62,13 +65,20 @@ if(USE_XIMEA)
 endif()
 
 add_library(DynamicManipulation STATIC
+	../inc/FloatingObject.hpp
+	FloatingObject.cpp
+	../inc/tracker.hpp
 	../inc/odcs.hpp
 	odcs.cpp
+	../inc/manipulator.hpp
+	manipulator.cpp
 	ocs.cpp
-	FloatingObject.cpp
+	../inc/GainPlan.hpp
+	GainPlan.cpp
+	../inc/strategy.hpp
+	strategy.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
-	 Trajectory.cpp
 	../inc/EigenTools.hpp
 )
 
@@ -100,6 +110,7 @@ target_link_libraries(DynamicManipulation
 	QPSolver
 	winMultiplexer
 	GeometryUtil
+	Trajectory
 )
 
 add_library(dynaman_dll SHARED

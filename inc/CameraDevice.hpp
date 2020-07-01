@@ -17,6 +17,7 @@ public:
 	void setDistCoeff(const cv::Mat& distCoeff);
 	void getDistCoeff(cv::Mat& distCoeff) const;
 	virtual std::string id() = 0;
+	virtual bool isOpen() = 0;
 
 private:
 	cv::Mat _intrinsic;
@@ -32,9 +33,11 @@ public:
 	void close() override;
 	void fetch_frame(cv::Mat& img) override;
 	std::string id() override;
+	bool isOpen() override;
 private:
 	xiAPIplusCameraOcv _cam;
 	std::string _cam_id;
+	bool m_isOpen;
 };
 
 class photoDevice : public CameraDevice {
@@ -46,9 +49,11 @@ public:
 	void close() override;
 	void fetch_frame(cv::Mat& img) override;
 	std::string id() override;
+	bool isOpen() override;
 private:
 	std::string _filename;
 	cv::Mat _img;
+	bool m_isOpen;
 };
 
 #endif // !_CAMERA_DEVICE_HPP

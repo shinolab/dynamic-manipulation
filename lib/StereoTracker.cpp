@@ -63,6 +63,10 @@ namespace dynaman {
 		cv::remap(img_raw, img, _mapx_right, _mapy_right, cv::INTER_LINEAR);
 	}
 
+	bool stereoCamera::isOpen() {
+		return _rightCameraPtr->isOpen() && _leftCameraPtr->isOpen();
+	}
+
 	std::shared_ptr<stereoCamera> stereoCamera::create(
 		std::shared_ptr<CameraDevice> leftCamPtr,
 		std::shared_ptr<CameraDevice> rightCamPtr
@@ -126,4 +130,12 @@ namespace dynaman {
 		return true;
 	}
 
+	bool stereoTracker::open() {
+		_stereoCamPtr->open();
+		return _stereoCamPtr->isOpen();
+	}
+
+	bool stereoTracker::isOpen() {
+		return _stereoCamPtr->isOpen();
+	}
 }

@@ -32,5 +32,4 @@ bool isInsideWorkspace(Eigen::Vector3f const& pos, Eigen::Vector3f const& lowerb
 	Eigen::Vector3f v0 = pos - lowerbound;
 	Eigen::Vector3f v1 = pos - upperbound;
 	return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
-
 }

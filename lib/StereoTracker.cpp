@@ -42,13 +42,21 @@ namespace dynaman {
 	}
 
 	void stereoCamera::open() {
-		_leftCameraPtr->open();
-		_rightCameraPtr->open();
+		if (!_leftCameraPtr->isOpen()) {
+			_leftCameraPtr->open();
+		}
+		if (!_rightCameraPtr->isOpen()) {
+			_rightCameraPtr->open();
+		}
 	}
 
 	void stereoCamera::close() {
-		_leftCameraPtr->close();
-		_rightCameraPtr->close();
+		if (_leftCameraPtr->isOpen()) {
+			_leftCameraPtr->close();
+		}
+		if (_rightCameraPtr->isOpen()) {
+			_rightCameraPtr->close();
+		}
 	}
 
 	void stereoCamera::imgLeftRect(cv::Mat& img) {

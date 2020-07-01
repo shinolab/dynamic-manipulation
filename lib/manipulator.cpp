@@ -40,15 +40,10 @@ namespace dynaman {
 			= std::thread([this](){
 				while (this->IsRunning()){
 					{
-						DWORD timeLoopInit = timeGetTime();
 						{
 							std::lock_guard<std::shared_mutex> lock(this->m_mtxStrategy);
 							this->strategy()->Execute();
 						}
-						int waitTime = m_loopPeriod - (timeGetTime() - timeLoopInit);
-						timeBeginPeriod(1);
-						Sleep(std::max(waitTime, 0));
-						timeEndPeriod(1);
 					}
 				}
 			}

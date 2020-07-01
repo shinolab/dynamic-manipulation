@@ -7,11 +7,11 @@
 namespace dynaman {
 
 	MultiplexStrategy::MultiplexStrategy(
-
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		unsigned int freqLm,
+		unsigned int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr)
 		:m_gainP(gainP),
@@ -19,6 +19,7 @@ namespace dynaman {
 		m_gainI(gainI),
 		m_freqLm(freqLm),
 		m_lambda(lambda),
+		m_loopPeriod(loopPeriod),
 		m_arfModelPtr(arfModelPtr)
 	{}
 
@@ -27,6 +28,7 @@ namespace dynaman {
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		unsigned int freqLm,
+		unsigned int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {
@@ -35,6 +37,7 @@ namespace dynaman {
 			gainD,
 			gainI,
 			freqLm,
+			loopPeriod,
 			lambda,
 			arfModelPtr
 			);
@@ -128,6 +131,7 @@ namespace dynaman {
 
 	void MultiplexStrategy::Execute()
 	{
+		DWORD timeLoopInit = timeGetTime();
 		Eigen::Vector3f posObserved;
 		DWORD observeTime;
 		bool observed = m_trackerPtr->observe(observeTime, posObserved, m_objPtr);
@@ -144,11 +148,7 @@ namespace dynaman {
 				= m_objPtr->totalMass() * accel
 				+ m_objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);			
 			auto duties = ComputeDuty(forceToApply, posObserved);
-
-			std::vector<float> dutiesStl(duties.size());
-			Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-			int num_active = (duties.array() > 1.0e-3f).count();
-			
+			int num_active = (duties.array() > 1.0e-3f).count();		
 			if (num_active == 0) {
 				m_aupaPtr->AppendGainSync(autd::NullGain::Create());
 			}
@@ -158,6 +158,10 @@ namespace dynaman {
 				m_aupaPtr->AppendLateralGain(gain_list);
 				m_aupaPtr->StartLateralModulation(m_freqLm);
 			}
+			int waitTime = m_loopPeriod - (timeGetTime() - timeLoopInit);
+			timeBeginPeriod(1);
+			Sleep(std::max(waitTime, 0));
+			timeEndPeriod(1);
 		}
 		else if (observeTime - m_objPtr->lastDeterminationTime > 1000)
 		{

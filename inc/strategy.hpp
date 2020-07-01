@@ -27,6 +27,7 @@ namespace dynaman {
 		Eigen::Vector3f m_gainD;
 		Eigen::Vector3f m_gainI;
 		unsigned int m_freqLm;
+		unsigned int m_loopPeriod;
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 
@@ -36,6 +37,7 @@ namespace dynaman {
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
 			unsigned int freqLm,
+			unsigned int loopPeriod,
 			float lambda,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr
 		);
@@ -45,6 +47,7 @@ namespace dynaman {
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
 			unsigned int freqLm = 100,
+			unsigned int loopPeriod = 10,
 			float lambda = 0.f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusOnSphereExperimental>()
 		);

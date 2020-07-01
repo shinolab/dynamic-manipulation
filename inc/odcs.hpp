@@ -3,8 +3,10 @@
 
 #include "Trajectory.hpp"
 #include "FloatingObject.hpp"
+#include "tracker.hpp"
 #include "autd3.hpp"
 #include "arfModel.hpp"
+#include "strategy.hpp"
 #include <queue>
 #include <vector>
 #include <memory>
@@ -21,13 +23,6 @@
 #pragma comment (lib, "winmm")
 
 namespace dynaman {
-	class ocs;
-
-	class Tracker {
-	public:
-		virtual ~Tracker() {};
-		virtual bool observe(DWORD& time, Eigen::Vector3f& pos, FloatingObjectPtr objPtr) = 0;
-	};
 
 	class ocs
 	{

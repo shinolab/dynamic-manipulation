@@ -7,18 +7,28 @@
 
 namespace dynaman {
 
-	Eigen::Matrix3f rotForDeviceId(int deviceId, autd::GeometryPtr geo);
+	class Geometry : public autd::Geometry {
+	public:
+		Eigen::Matrix3f RotForDeviceId(int deviceId);
 
-	Eigen::Vector3f centerForDeviceId(int deviceId, autd::GeometryPtr geo);
+		std::vector<Eigen::Matrix3f> RotsAutd();
 
-	void centersAutd(autd::GeometryPtr geo, Eigen::Matrix3f& posRel);
+		Eigen::Vector3f CenterForDeviceId(int deviceId);
 
-	void directionsAutd(autd::GeometryPtr geo, Eigen::Matrix3f& directions);
-	
-	Eigen::VectorXf FindDutyQpMultiplex(
-		const Eigen::Matrix3Xf& forceMat,
-		const Eigen::Vector3f& forceTarget
-	);
+		Eigen::Matrix3Xf CentersAutd();
+
+		Eigen::Matrix3Xf DirectionsAutd();
+	};
+
+	Eigen::Matrix3f RotForDeviceId(int deviceId, autd::GeometryPtr geo);
+
+	std::vector<Eigen::Matrix3f> RotsAutd(autd::GeometryPtr geo);
+
+	Eigen::Vector3f CenterForDeviceId(int deviceId, autd::GeometryPtr geo);
+
+	Eigen::Matrix3Xf CentersAutd(autd::GeometryPtr geo);
+
+	Eigen::Matrix3Xf DirectionsAutd(autd::GeometryPtr geo);
 
 }
 

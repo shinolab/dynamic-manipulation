@@ -67,12 +67,16 @@ endif()
 add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
 	FloatingObject.cpp
+	../inc/tracker.hpp
 	../inc/odcs.hpp
 	odcs.cpp
+	../inc/manipulator.hpp
+	manipulator.cpp
 	ocs.cpp
 	../inc/GainPlan.hpp
 	GainPlan.cpp
-	Strategy.cpp
+	../inc/strategy.hpp
+	strategy.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
 	../inc/EigenTools.hpp

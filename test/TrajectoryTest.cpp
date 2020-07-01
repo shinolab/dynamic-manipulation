@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
 		<< ", dxdt, dydt, dzdt, d(vx)dt, d(vy)dt, d(vz)dt" << std::endl;
 	while (timeGetTime() - timeStart < 5000) {
 		DWORD currentTime = timeGetTime();
-		float phase = fmodf(traj->Phase(currentTime), 2.f * M_PI);
 		Eigen::Vector3f pos = traj->pos(currentTime);
 		Eigen::Vector3f vel = traj->vel(currentTime);
 		Eigen::Vector3f accel = traj->accel(currentTime);
@@ -55,7 +54,6 @@ int main(int argc, char** argv) {
 		posBefore = pos;
 		velBefore = vel;
 			ofs_log << currentTime - timeInit << ", "
-			<< phase << ", "
 			<< pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
 			<< vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
 			<< accel.x() << ", " << accel.y() << ", " << accel.z() << ", "

@@ -5,7 +5,7 @@
 #include <vector>
 #include <opencv2/core.hpp>
 #include "KinectUtility.hpp"
-#include "odcs.hpp"
+#include "tracker.hpp"
 
 namespace dynaman {
 
@@ -15,6 +15,7 @@ namespace dynaman {
 			Eigen::Quaternionf const &quo,
 			bool useROI = true,
 			Eigen::Vector3f bias = Eigen::Vector3f::Zero());
+		bool isOpen() override;
 		bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) override;
 		Eigen::Quaternionf rot_sensor();
 		Eigen::Vector3f pos_sensor();
@@ -40,6 +41,7 @@ namespace dynaman {
 			const cv::Scalar &lowerbound,
 			const cv::Scalar &upperbound,
 			ColorSpace colorSpace);
+		bool isOpen() override;
 		bool observe(DWORD &time, Eigen::Vector3f &pos, FloatingObjectPtr objPtr) override;
 		Eigen::Vector3f pos_sensor();
 		Eigen::Quaternionf rot_sensor();

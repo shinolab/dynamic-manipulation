@@ -8,12 +8,18 @@
 #include <math.h>
 #include <iostream>
 
-Eigen::MatrixXf arfModelConstant::arf(Eigen::MatrixXf const &posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+arfModelConstant::arfModelConstant(float intensity) :m_intensity(intensity) {}
+
+Eigen::MatrixXf arfModelConstant::arf(const Eigen::MatrixXf &posRel, const Eigen::MatrixXf &eulerAnglesAUTD)
 {
-	return 5.012 * posRel.colwise().normalized();
+	return m_intensity * posRel.colwise().normalized();
 }
 
-Eigen::MatrixXf arfModelExperimentalPoly::arf(Eigen::MatrixXf const &_posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+Eigen::MatrixXf arfModelConstant::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
+	return arf(posRel, Eigen::MatrixXf());
+}
+
+Eigen::MatrixXf arfModelExperimentalPoly::arf(const Eigen::MatrixXf& _posRel, const Eigen::MatrixXf& eulerAnglesAUTD)
 {
 	Eigen::MatrixXf posRel = _posRel / 1000;
 	Eigen::RowVector4f arfCoefficient;
@@ -24,6 +30,10 @@ Eigen::MatrixXf arfModelExperimentalPoly::arf(Eigen::MatrixXf const &_posRel, Ei
 	Eigen::MatrixXf dists(arfCoefficient.cols(), dist.cols());
 	dists << Eigen::RowVectorXf::Ones(dist.cols()), dist, dist2, dist3;
 	return posRel.colwise().normalized() * (arfCoefficient * dists).asDiagonal();
+}
+
+Eigen::MatrixXf arfModelExperimentalPoly::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
+	return arf(posRel, Eigen::MatrixXf());
 }
 
 arfModelTheoreticalTable::arfModelTheoreticalTable()
@@ -42,19 +52,9 @@ arfModelTheoreticalTable::arfModelTheoreticalTable()
 	this->tableARF *= 5.012;
 }
 
-Eigen::MatrixXf arfModelTheoreticalTable::arf(Eigen::MatrixXf const &_posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
-{
-	Eigen::MatrixXf posRel = _posRel/1000.f;
-	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
-	for (int i = 0; i < directionsAUTD.cols(); i++)
-	{
-		directionsAUTD.col(i) << 
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
-	}
+Eigen::MatrixXf arfModelTheoreticalTable::arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd) {
 	Eigen::RowVectorXf dists = posRel.colwise().norm();
-	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAUTD.colwise().normalized()).colwise().sum();
+	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum();
 	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).array().acos().matrix();
 	Eigen::RowVectorXi indexesDist = (dists.replicate(tableDistance.rows(), 1) - tableDistance.replicate(1, dists.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
 	indexesDist = (indexesDist.array() - 1).cwiseMax(0).cwiseMin(tableDistance.rows() - 2); // correct index outside the table
@@ -74,10 +74,32 @@ Eigen::MatrixXf arfModelTheoreticalTable::arf(Eigen::MatrixXf const &_posRel, Ei
 		float t1 = tableAngle[indexesAngle[i] + 1];
 		float dr = (dists[i] - r0) / (r1 - r0);
 		float dt = (angles[i] - t0) / (t1 - t0);
-		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr)*dt + f11 * dr*dt;
+		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr) * dt + f11 * dr * dt;
 		forces[i] = f;
 	}
 	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
+}
+
+Eigen::MatrixXf arfModelTheoreticalTable::arf(Eigen::MatrixXf const &_posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+{
+	Eigen::MatrixXf posRel = _posRel/1000.f;
+	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
+	for (int i = 0; i < directionsAUTD.cols(); i++)
+	{
+		directionsAUTD.col(i) << 
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
+	}
+	return arfFromDirections(_posRel, directionsAUTD);
+}
+
+Eigen::MatrixXf arfModelTheoreticalTable::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
+	Eigen::Matrix3Xf directionsAutd(3, posRel.cols());
+	for (int i_autd = 0; i_autd < posRel.cols(); i_autd++) {
+		directionsAutd.col(i_autd) = rots[i_autd] * Eigen::Vector3f::UnitZ();
+	}
+	return arfFromDirections(posRel, directionsAutd);
 }
 
 arfModelFocusOnSphereExperimental::arfModelFocusOnSphereExperimental()
@@ -92,20 +114,9 @@ arfModelFocusOnSphereExperimental::arfModelFocusOnSphereExperimental()
 		1.67693715, 1.36312435, 1.1964113, 0.9414384, 0.7649187, 0.61781895, 0.4903325, 0.40207265, 0.36284605, 0.28439285;
 }
 
-Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(Eigen::MatrixXf const &posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
-{
-	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
-	for (int i = 0; i < directionsAUTD.cols(); i++)
-	{
-		directionsAUTD.col(i) <<
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
-	}
-	//std::cout << "directionsAUTD\n" << directionsAUTD << std::endl;
-
+Eigen::MatrixXf arfModelFocusOnSphereExperimental::arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd) {
 	Eigen::RowVectorXf dists = posRel.colwise().norm();
-	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAUTD.colwise().normalized()).colwise().sum();
+	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum();
 	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).array().acos().matrix();
 	Eigen::RowVectorXi indexesDist = (dists.replicate(tableDistance.rows(), 1) - tableDistance.replicate(1, dists.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
 	indexesDist = (indexesDist.array() - 1).cwiseMax(0).cwiseMin(tableDistance.rows() - 2); // correct index outside the table
@@ -125,10 +136,34 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(Eigen::MatrixXf const &po
 		float t1 = tableAngle[indexesAngle[i] + 1];
 		float dr = (dists[i] - r0) / (r1 - r0);
 		float dt = (angles[i] - t0) / (t1 - t0);
-		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr)*dt + f11 * dr*dt;
+		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr) * dt + f11 * dr * dt;
 		forces[i] = f;
 	}
 	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
+}
+
+Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(Eigen::MatrixXf const &posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+{
+	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
+	for (int i = 0; i < directionsAUTD.cols(); i++)
+	{
+		directionsAUTD.col(i) <<
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
+			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
+	}
+	//std::cout << "directionsAUTD\n" << directionsAUTD << std::endl;
+
+	return arfFromDirections(posRel, directionsAUTD);
+	
+}
+
+Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
+	Eigen::Matrix3Xf directionsAutd(3, posRel.cols());
+	for (int i_autd = 0; i_autd < posRel.cols(); i_autd++) {
+		directionsAutd.col(i_autd) = rots[i_autd] * Eigen::Vector3f::UnitZ();
+	}
+	return arfFromDirections(posRel, directionsAutd);
 }
 
 //Return 3-by-(numAUTD) matrix where each column represents ARF by AUTD at muximum duty. 

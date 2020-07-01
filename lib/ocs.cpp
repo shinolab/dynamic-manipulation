@@ -1,4 +1,5 @@
 #include "odcs.hpp"
+#include "GainPlan.hpp"
 #include "autd3.hpp"
 #include "arfModel.hpp"
 #include "additionalGain.hpp"
@@ -100,7 +101,7 @@ autd::GainPtr ocs::CreateBalanceGain(FloatingObjectPtr objPtr, int numObj)
 	Eigen::Vector3f forceToApply = objPtr->totalMass() * accel + objPtr->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
 	Eigen::VectorXf duties = numObj * FindDutyQPCGAL(forceToApply, objPtr->getPosition());
 	Eigen::VectorXi amplitudes = (510.f / M_PI * duties.array().max(0.f).min(1.f).sqrt().asin().matrix()).cast<int>();
-	Eigen::MatrixXf focus = CentersAUTD() + 100*(objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
+	Eigen::MatrixXf focus = CentersAUTD() + (objPtr->getPosition().replicate(1, CentersAUTD().cols()) - CentersAUTD());
 	return autd::DeviceSpecificFocalPointGain::Create(focus, amplitudes);
 }
 

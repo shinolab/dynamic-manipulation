@@ -114,6 +114,10 @@ namespace dynaman {
 		}
 		return isValid;
 	}
+	
+	bool KinectDepthSphereTracker::isOpen() {
+	}
+
 #pragma endregion
 
 #pragma region ColorSphereTracker

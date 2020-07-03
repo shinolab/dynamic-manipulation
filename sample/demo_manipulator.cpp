@@ -31,7 +31,7 @@ int main(int argc, char** argv ) {
 		quo_sensor
 	);
 	auto aupaPtr = std::make_shared<autd::Controller>();
-	haptic_icon::Initialize(aupaPtr);
+
 	auto objPtr = dynaman::FloatingObject::Create(
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
@@ -50,6 +50,7 @@ int main(int argc, char** argv ) {
 	aupaPtr->Open(autd::LinkType::ETHERCAT);
 	if (!aupaPtr->isOpen())
 		return ENXIO;
+	haptic_icon::SetGeometry(aupaPtr);
 	std::cout << "opening tracker ..." << std::endl;
 	trackerPtr->open();
 	std::cout << "executing strategy ... " << std::endl;

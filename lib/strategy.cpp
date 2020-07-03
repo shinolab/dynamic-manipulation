@@ -134,6 +134,7 @@ namespace dynaman {
 
 	void MultiplexStrategy::Execute()
 	{
+		std::cout << "execute: ";
 		DWORD timeLoopInit = timeGetTime();
 		Eigen::Vector3f posObserved;
 		DWORD observeTime;
@@ -160,6 +161,7 @@ namespace dynaman {
 				m_aupaPtr->ResetLateralGain();
 				m_aupaPtr->AppendLateralGain(gain_list);
 				m_aupaPtr->StartLateralModulation(m_freqLm);
+				std::cout << "num=active: " << num_active << std::endl;
 			}
 		}
 		else if (observeTime - m_objPtr->lastDeterminationTime > 1000)

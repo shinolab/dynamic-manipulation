@@ -19,8 +19,6 @@ int main(int argc, char** argv ) {
 	std::string rightCamId("43435351");
 	/*end of user-defined configurations*/
 
-	auto pAupa = std::make_shared<autd::Controller>();
-
 	auto pObject = dynaman::FloatingObject::Create(
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
@@ -30,6 +28,7 @@ int main(int argc, char** argv ) {
 	);
 
 	std::cout << "opening aupa ..." << std::endl;
+	auto pAupa = std::make_shared<autd::Controller>();
 	pAupa->Open(autd::LinkType::ETHERCAT);
 	if (!pAupa->isOpen())
 		return ENXIO;
@@ -43,7 +42,6 @@ int main(int argc, char** argv ) {
 		quo_sensor
 	);
 	pTracker->open();
-
 	/*initiate control*/
 	std::cout << "creating strategy ..." << std::endl;
 	auto pManipulator = MultiplexManipulator::Create(

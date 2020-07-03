@@ -1,3 +1,5 @@
+#include <iostream>
+#include <exception>
 #include "ImgProcUtil.hpp"
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -56,6 +58,24 @@ namespace imgProc {
 			lowerBound,
 			upperBound,
 			size_hist
+			);
+	}
+
+	std::shared_ptr<hue_backproject_extractor> hue_backproject_extractor::create(
+		const std::string& path_img_target,
+		int lowerBound = 10,
+		int upperBound = 255,
+		int sizeHist = 30
+	) {
+		cv::Mat img_target = cv::imread(path_img_target);
+		if (img_target.empty()) {
+			std::cerr << "Failed to open the target image." << std::endl;
+		}
+		return std::make_shared<hue_backproject_extractor>(
+			std::vector<cv::Mat>{img_target},
+			lowerBound,
+			upperBound,
+			sizeHist
 			);
 	}
 

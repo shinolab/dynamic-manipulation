@@ -68,15 +68,10 @@ add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
 	FloatingObject.cpp
 	../inc/tracker.hpp
-	../inc/odcs.hpp
-	odcs.cpp
-	ocs.cpp
 	../inc/GainPlan.hpp
 	GainPlan.cpp
 	../inc/manipulator.hpp
 	manipulator.cpp
-	../inc/kalmanFilter.hpp
-	kalmanFilter.cpp
 	../inc/EigenTools.hpp
 )
 

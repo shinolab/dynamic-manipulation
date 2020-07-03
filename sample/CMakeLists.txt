@@ -26,10 +26,17 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 find_package(XIMEA REQUIRED)
 include_directories(${XIMEA_INCLUDE_DIR})
 
-include_directories(maneuvers)
+add_executable(demo_manipulator demo_manipulator.cpp)
+target_link_libraries(
+    demo_manipulator
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
 
-add_executable(simple simple.cpp)
-target_link_libraries(simple DynamicManipulation)
+#add_executable(simple simple.cpp)
+#target_link_libraries(simple DynamicManipulation)
 
 #add_executable(pipeline pipeline.cpp)
 #include_directories(../inc)
@@ -39,9 +46,9 @@ target_link_libraries(simple DynamicManipulation)
 #include_directories(../inc)
 #target_link_libraries(projection DynamicManipulation Projector)
 
-add_executable(sequential sequential.cpp)
-include_directories(../inc)
-target_link_libraries(sequential DynamicManipulation)
+#add_executable(sequential sequential.cpp)
+#include_directories(../inc)
+#target_link_libraries(sequential DynamicManipulation)
 
 #add_executable(impactor impactor.cpp ../inc/rootFindingPoly.hpp)
 #target_link_libraries(impactor DynamicManipulation)
@@ -73,74 +80,42 @@ target_link_libraries(sequential DynamicManipulation)
 #add_executable(demo_innovative demo_innovative.cpp init_uist.hpp)
 #target_link_libraries(demo_innovative DynamicManipulation)
 
-add_executable(haptic_icon haptic_icon.hpp haptic_icon.cpp)
-target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice ImgProcUtil)
+#add_executable(haptic_icon haptic_icon.hpp haptic_icon.cpp)
+#target_link_libraries(haptic_icon DynamicManipulation StereoTracker CameraDevice ImgProcUtil)
 
 add_library(MonitorInfoManager STATIC MonitorInfoManager.hpp MonitorInfoManager.cpp)
 
 add_library(DrawUtil DrawUtil.hpp DrawUtil.cpp)
 target_link_libraries(DrawUtil ${OpenCV_LIBS})
 
-include_directories(haptic_icon_strategies)
-add_library(Strategies 
-    haptic_icon_strategies/simple_strategy.hpp
-    haptic_icon_strategies/simple_strategy.cpp
-    haptic_icon_strategies/balance_strategy.hpp
-    haptic_icon_strategies/balance_strategy.cpp
-    haptic_icon_strategies/multiplex_strategy.hpp
-    haptic_icon_strategies/multiplex_strategy.cpp
-)
+# add_executable(demo_sa2020_mobility
+#     demo_sa2020_mobility.cpp
+#     haptic_icon.hpp
+# )
+# target_link_libraries(demo_sa2020_mobility
+#     StereoTracker
+#     CameraDevice
+#     ImgProcUtil
+#     Strategies
+#     DynamicManipulation
+# )
 
-add_library(maneuvers maneuvers/maneuvers.cpp maneuvers/maneuvers.hpp)
+# add_executable(demo_arf
+#     demo_arf.cpp
+#     haptic_icon.hpp
+# )
+# target_link_libraries(demo_arf
+#     StereoTracker
+#     CameraDevice
+#     ImgProcUtil
+#     Strategies
+#     DynamicManipulation
+# )
 
-add_executable(haptic_icon_test haptic_icon.hpp haptic_icon_test.cpp)
-target_link_libraries(haptic_icon_test 
-    DynamicManipulation
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DrawUtil
-    MonitorInfoManager
-    Strategies
-)
-
-add_executable(demo_sa2020_mobility
-    demo_sa2020_mobility.cpp
-    haptic_icon.hpp
-)
-target_link_libraries(demo_sa2020_mobility
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    Strategies
-    DynamicManipulation
-)
-
-add_executable(demo_arf
-    demo_arf.cpp
-    haptic_icon.hpp
-)
-target_link_libraries(demo_arf
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    Strategies
-    DynamicManipulation
-)
-
-add_executable(demo_manipulator demo_manipulator.cpp)
-target_link_libraries(
-    demo_manipulator
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-
-add_executable(test_findDuty test_findDuty.cpp)
-target_link_libraries(test_findDuty
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
+# add_executable(test_findDuty test_findDuty.cpp)
+# target_link_libraries(test_findDuty
+#     StereoTracker
+#     CameraDevice
+#     ImgProcUtil
+#     DynamicManipulation
+# )

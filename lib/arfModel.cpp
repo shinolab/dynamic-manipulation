@@ -8,6 +8,8 @@
 #include <math.h>
 #include <iostream>
 
+arfModelLinearBase::~arfModelLinearBase() {}
+
 arfModelConstant::arfModelConstant(float intensity) :m_intensity(intensity) {}
 
 Eigen::MatrixXf arfModelConstant::arf(const Eigen::MatrixXf &posRel, const Eigen::MatrixXf &eulerAnglesAUTD)
@@ -41,7 +43,8 @@ arfModelTheoreticalTable::arfModelTheoreticalTable()
 	this->tableDistance = Eigen::VectorXf::LinSpaced(8, 0.4, 1.8);
 	this->tableAngle = Eigen::VectorXf::LinSpaced(6, 0, 5.0*M_PI / 9.0);
 	this->tableARF.resize(8, 6);
-	this->tableARF << 1, 1.025280603, 1.104517639, 1.249525661, 1.481451134, 1.849174802,
+	this->tableARF << 
+		1.000000000, 1.025280603, 1.104517639, 1.249525661, 1.481451134, 1.849174802,
 		0.986364501, 1.010438669, 1.085707808, 1.221311067, 1.437984013, 1.777854586,
 		0.972982686, 0.995547584, 1.066292486, 1.194949282, 1.398205465, 1.707827359,
 		0.953808427, 0.975389474, 1.042081835, 1.160212992, 1.344836418, 1.632654528,
@@ -80,7 +83,7 @@ Eigen::MatrixXf arfModelTheoreticalTable::arfFromDirections(const Eigen::MatrixX
 	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
 }
 
-Eigen::MatrixXf arfModelTheoreticalTable::arf(Eigen::MatrixXf const &_posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+Eigen::MatrixXf arfModelTheoreticalTable::arf(const Eigen::MatrixXf& _posRel, const Eigen::MatrixXf& eulerAnglesAUTD)
 {
 	Eigen::MatrixXf posRel = _posRel/1000.f;
 	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
@@ -142,7 +145,7 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arfFromDirections(const Eigen
 	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
 }
 
-Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(Eigen::MatrixXf const &posRel, Eigen::MatrixXf const &eulerAnglesAUTD)
+Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf &eulerAnglesAUTD)
 {
 	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
 	for (int i = 0; i < directionsAUTD.cols(); i++)
@@ -167,7 +170,7 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& po
 }
 
 //Return 3-by-(numAUTD) matrix where each column represents ARF by AUTD at muximum duty. 
-Eigen::MatrixXf arfModel::arf(Eigen::MatrixXf const &_posRel)
+Eigen::MatrixXf arfModel::arf(const Eigen::MatrixXf& _posRel)
 {
 	Eigen::MatrixXf posRel = _posRel / 1000;
 	Eigen::RowVector4f arfCoefficient;

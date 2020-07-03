@@ -23,13 +23,12 @@ namespace dynaman {
 	}
 
 	Eigen::Vector3f CenterForDeviceId(int deviceId, autd::GeometryPtr geo) {
-		Eigen::Vector3f center_local(TRANS_SIZE_MM * NUM_TRANS_X / 2, TRANS_SIZE_MM * NUM_TRANS_Y / 2, 0.f);
+		Eigen::Vector3f center_local(TRANS_SIZE_MM * (NUM_TRANS_X / 2 - 0.5f), TRANS_SIZE_MM * (NUM_TRANS_Y / 2 - 0.5f), 0.f);
 		return  RotForDeviceId(deviceId, geo) * center_local + geo->position(NUM_TRANS_IN_UNIT * deviceId);
 	}
 
 	Eigen::Matrix3Xf CentersAutd(autd::GeometryPtr geo) {
-		Eigen::Matrix3Xf centers;
-		centers.resize(3, geo->numDevices());
+		Eigen::Matrix3Xf centers(3, geo->numDevices());
 		for (int i_autd = 0; i_autd < geo->numDevices(); i_autd++){ 
 			centers.col(i_autd) = CenterForDeviceId(i_autd, geo);
 		}

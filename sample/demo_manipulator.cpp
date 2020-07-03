@@ -3,7 +3,6 @@
 #include <chrono>
 #include "autd3.hpp"
 #include "StereoTracker.hpp"
-#include "strategy.hpp"
 #include "manipulator.hpp"
 #include "haptic_icon.hpp"
 
@@ -13,9 +12,6 @@ int main(int argc, char** argv ) {
 
 	/*user-defined configurations*/
 	Eigen::Vector3f pos_init(0, 0, 0);
-	Eigen::Vector3f gainP = 20 * Eigen::Vector3f::Constant(-1.6f);
-	Eigen::Vector3f gainD = 5 * Eigen::Vector3f::Constant(-4.0f);
-	Eigen::Vector3f gainI = 1 * Eigen::Vector3f::Constant(-0.05f);
 	std::string target_image_name("blue_target_no_cover.png");
 	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
 	Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
@@ -23,61 +19,40 @@ int main(int argc, char** argv ) {
 	std::string rightCamId("43435351");
 	/*end of user-defined configurations*/
 
-	auto trackerPtr = stereoTracker::create(
-		stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
-		imgProc::hue_backproject_extractor::create(target_image_name),
-		imgProc::hue_backproject_extractor::create(target_image_name),
-		pos_sensor,
-		quo_sensor
-	);
-	auto aupaPtr = std::make_shared<autd::Controller>();
+	auto pAupa = std::make_shared<autd::Controller>();
 
-	auto objPtr = dynaman::FloatingObject::Create(
+	auto pObject = dynaman::FloatingObject::Create(
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
 		-0.036e-3f,
 		50.f
 	);
-	std::cout << "creating strategy ..." << std::endl;
-	auto strategyPtr = MultiplexStrategy::Create(
-		gainP,
-		gainD,
-		gainI,
-		100
-	);
+
 	std::cout << "opening aupa ..." << std::endl;
-	aupaPtr->Open(autd::LinkType::ETHERCAT);
-	if (!aupaPtr->isOpen())
+	pAupa->Open(autd::LinkType::ETHERCAT);
+	if (!pAupa->isOpen())
 		return ENXIO;
-	haptic_icon::SetGeometry(aupaPtr);
+	haptic_icon::SetGeometry(pAupa);
 	std::cout << "opening tracker ..." << std::endl;
-	trackerPtr->open();
-	std::cout << "executing strategy ... " << std::endl;
+	auto pTracker = stereoTracker::create(
+		stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
+		imgProc::hue_backproject_extractor::create(target_image_name),
+		imgProc::hue_backproject_extractor::create(target_image_name),
+		pos_sensor,
+		quo_sensor
+	);
+	pTracker->open();
 
 	/*initiate control*/
-
-	strategyPtr->Initialize(aupaPtr, trackerPtr, objPtr);
-	if (!trackerPtr->isOpen()) {
-		trackerPtr->open();
-	}
-	if (!aupaPtr->isOpen()) {
-		aupaPtr->Open(autd::LinkType::ETHERCAT);
-		aupaPtr->AppendGainSync(autd::NullGain::Create());
-		aupaPtr->AppendModulationSync(autd::Modulation::Create(255));
-	}
-	std::thread thControl([&strategyPtr]() 
-		{
-			DWORD timeInit = timeGetTime();
-			while (timeGetTime() - timeInit < 90000) {
-				{
-					strategyPtr->Execute();
-					//std::cout << "elapsed: " << timeGetTime() - loopInit << std::endl;
-				}
-			}
-		}
+	std::cout << "creating strategy ..." << std::endl;
+	auto pManipulator = MultiplexManipulator::Create(
+		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+		100 //freqLM
 	);
-	/******************/
+	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(300.f, 0.f, 0.f);
@@ -90,26 +65,26 @@ int main(int argc, char** argv ) {
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 	std::this_thread::sleep_for(std::chrono::seconds(5));
 	//traslation maneuver:
-	objPtr->updateStatesTarget(posLeft);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
+	pObject->updateStatesTarget(posLeft);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	objPtr->updateStatesTarget(posRight);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
+	pObject->updateStatesTarget(posRight);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->updateStatesTarget(posCenter);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posRight, posCenter));
+	pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posRight, posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	objPtr->updateStatesTarget(posHigh);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posHigh));
+	pObject->updateStatesTarget(posHigh);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posHigh));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	objPtr->updateStatesTarget(posLow);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posHigh, posLow));
+	pObject->updateStatesTarget(posLow);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posHigh, posLow));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	objPtr->updateStatesTarget(posCenter);//objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
+	pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
+	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	objPtr->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
+	pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	std::this_thread::sleep_for(std::chrono::milliseconds(6000));
-	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
+	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-	//manipulator.Close();
-	thControl.join();
-	aupaPtr->Close();
+
+	pManipulator->FinishManipulation();
+	pAupa->Close();
 	return 0;
 }

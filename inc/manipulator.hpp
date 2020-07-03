@@ -1,42 +1,85 @@
-#ifndef _DYNAMAN_MANIPULATOR_HPP
-#define _DYNAMAN_MANIPULATOR_HPP
+#ifndef _DYNAMAN_STRATEGY_HPP
+#define _DYNAMAN_STRATEGY_HPP
 
-#include <memory>
-#include "autd3.hpp"
+#include "arfModel.hpp"
 #include "FloatingObject.hpp"
 #include "tracker.hpp"
-#include "strategy.hpp"
+#include "autd3.hpp"
 
-namespace dynaman{
-		class Manipulator {
-		std::shared_ptr<autd::Controller> m_aupa;
-		std::shared_ptr<Tracker> m_tracker;
-		FloatingObjectPtr m_objPtr;
-		std::shared_ptr<Strategy> m_strategy;
-		unsigned int m_loopPeriod;
+namespace dynaman {
+	class Manipulator {
+	protected:
+		std::shared_ptr<autd::Controller> m_pAupa;
+		std::shared_ptr<Tracker> m_pTracker;
+		FloatingObjectPtr m_pObject;
+	public:
+		virtual ~Manipulator() {}
+		virtual int StartManipulation(
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<Tracker> pTracker,
+			FloatingObjectPtr pObject
+		) = 0;		
+		virtual void FinishManipulation() = 0;
+	};
+
+	class MultiplexManipulator : public Manipulator {
 	private:
-		std::thread m_thControl;
-		std::shared_mutex m_mtxStrategy;
-		std::shared_mutex m_mtxRunning;
+		Eigen::Vector3f m_gainP;
+		Eigen::Vector3f m_gainD;
+		Eigen::Vector3f m_gainI;
+		float m_freqLm;
+		int m_loopPeriod;
+		float m_lambda;
+		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
+		std::thread m_thr_control;
+		std::shared_mutex m_mtx_isRunning;
+		std::mutex m_mtx_gain;
 
 	public:
-		Manipulator(
-			std::shared_ptr<autd::Controller> aupaPtr,
-			std::shared_ptr<Tracker> tracker,
-			std::shared_ptr<Strategy> strategy,
-			FloatingObjectPtr objPtr,
-			unsigned int loopPeriod
+		MultiplexManipulator(
+			const Eigen::Vector3f& gainP,
+			const Eigen::Vector3f& gainD,
+			const Eigen::Vector3f& gainI,
+			float freqLm,
+			int loopPeriod,
+			float lambda,
+			std::shared_ptr<arfModelLinearBase> arfModelPtr
 		);
-		void StartControl(autd::LinkType linktype = autd::LinkType::ETHERCAT, const std::string& location = "");
-		void PauseControl();
-		void Close();
-		void ApplyStrategy(std::shared_ptr<Strategy> new_strategy);
+
+		static std::shared_ptr<Manipulator> Create(
+			const Eigen::Vector3f& gainP,
+			const Eigen::Vector3f& gainD,
+			const Eigen::Vector3f& gainI,
+			float freqLm = 100.f,
+			int loopPeriod = 10U,
+			float lambda = 0.f,
+			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusOnSphereExperimental>()
+		);
+
+		int StartManipulation(
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<Tracker> pTracker,
+			FloatingObjectPtr pObject
+		) override;
+
+		void FinishManipulation() override;
+
 		bool IsRunning();
 
-		std::shared_ptr<autd::Controller> controller();
-		std::shared_ptr<Tracker> tracker();
-		std::shared_ptr<Strategy> strategy();
+		void ExecuteSingleLoop(
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<Tracker> pTracker,
+			FloatingObjectPtr pObject
+		);
+
+		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& position);
+
+		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
+
+		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
+
+		std::shared_ptr<arfModelLinearBase> arfModel();
 	};
 }
-#endif // !_DYNAMAN_MANIPULATOR_HPP
+#endif // !_DYNAMAN_STRATEGY_HPP

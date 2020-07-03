@@ -6,7 +6,6 @@
 #include "tracker.hpp"
 #include "autd3.hpp"
 #include "arfModel.hpp"
-#include "strategy.hpp"
 #include <queue>
 #include <vector>
 #include <memory>

@@ -70,13 +70,11 @@ add_library(DynamicManipulation STATIC
 	../inc/tracker.hpp
 	../inc/odcs.hpp
 	odcs.cpp
-	../inc/manipulator.hpp
-	manipulator.cpp
 	ocs.cpp
 	../inc/GainPlan.hpp
 	GainPlan.cpp
-	../inc/strategy.hpp
-	strategy.cpp
+	../inc/manipulator.hpp
+	manipulator.cpp
 	../inc/kalmanFilter.hpp
 	kalmanFilter.cpp
 	../inc/EigenTools.hpp

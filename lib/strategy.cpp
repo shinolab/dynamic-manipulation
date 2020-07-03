@@ -10,7 +10,7 @@ namespace dynaman {
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
-		unsigned int freqLm,
+		float freqLm,
 		unsigned int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr)
@@ -27,7 +27,7 @@ namespace dynaman {
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
-		unsigned int freqLm,
+		float freqLm,
 		unsigned int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
@@ -161,15 +161,15 @@ namespace dynaman {
 				m_aupaPtr->AppendLateralGain(gain_list);
 				m_aupaPtr->StartLateralModulation(m_freqLm);
 			}
-			int waitTime = m_loopPeriod - (timeGetTime() - timeLoopInit);
-			timeBeginPeriod(1);
-			Sleep(std::max(waitTime, 0));
-			timeEndPeriod(1);
 		}
 		else if (observeTime - m_objPtr->lastDeterminationTime > 1000)
 		{
 			m_objPtr->SetTrackingStatus(false);
 		}
+		int waitTime = m_loopPeriod - (timeGetTime() - timeLoopInit);
+		timeBeginPeriod(1);
+		Sleep(std::max(waitTime, 0));
+		timeEndPeriod(1);
 	}
 
 	void MultiplexStrategy::SetGain(

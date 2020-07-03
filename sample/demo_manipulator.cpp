@@ -43,7 +43,8 @@ int main(int argc, char** argv ) {
 	auto strategyPtr = MultiplexStrategy::Create(
 		gainP,
 		gainD,
-		gainI
+		gainI,
+		100
 	);
 	std::cout << "opening aupa ..." << std::endl;
 	aupaPtr->Open(autd::LinkType::ETHERCAT);
@@ -52,24 +53,9 @@ int main(int argc, char** argv ) {
 	std::cout << "opening tracker ..." << std::endl;
 	trackerPtr->open();
 	std::cout << "executing strategy ... " << std::endl;
-	strategyPtr->Initialize(aupaPtr, trackerPtr, objPtr);
-	//for (int i = 0; i < 3; i++) {
-	//	std::cout << "execute: " << i << std::endl;
-	//	strategyPtr->Execute();
-	//}
-	//return 0;
-	//Manipulator manipulator(
-	//	aupaPtr,
-	//	trackerPtr,
-	//	strategyPtr,
-	//	objPtr,
-	//	10
-	//);
-
-	//manipulator.StartControl();
 
 	/*initiate control*/
-	DWORD timeInit = timeGetTime();
+
 	strategyPtr->Initialize(aupaPtr, trackerPtr, objPtr);
 	if (!trackerPtr->isOpen()) {
 		trackerPtr->open();
@@ -79,17 +65,13 @@ int main(int argc, char** argv ) {
 		aupaPtr->AppendGainSync(autd::NullGain::Create());
 		aupaPtr->AppendModulationSync(autd::Modulation::Create(255));
 	}
-	std::thread thControl([&strategyPtr, &timeInit]() 
+	std::thread thControl([&strategyPtr]() 
 		{
-			unsigned int loopPeriod = 10;
-			while (timeGetTime() - timeInit < 120000) {
+			DWORD timeInit = timeGetTime();
+			while (timeGetTime() - timeInit < 90000) {
 				{
-					DWORD timeLoopInit = timeGetTime();
 					strategyPtr->Execute();
-					int waitTime = loopPeriod - (timeGetTime() - timeLoopInit);
-					timeBeginPeriod(1);
-					Sleep(std::max(waitTime, 0));
-					timeEndPeriod(1);
+					//std::cout << "elapsed: " << timeGetTime() - loopInit << std::endl;
 				}
 			}
 		}
@@ -126,5 +108,7 @@ int main(int argc, char** argv ) {
 	objPtr->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), objPtr->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 	//manipulator.Close();
+	thControl.join();
+	aupaPtr->Close();
 	return 0;
 }

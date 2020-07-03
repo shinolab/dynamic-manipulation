@@ -10,6 +10,9 @@ include_directories( ${EIGEN3_INCLUDE_DIR} )
 include_directories( ${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/include )
 include_directories(${PROJECT_SOURCE_DIR}/inc)
 
+# autd
+include_directories(${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/lib)
+
 # OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -128,6 +131,14 @@ target_link_libraries(demo_arf
 add_executable(demo_manipulator demo_manipulator.cpp)
 target_link_libraries(
     demo_manipulator
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
+add_executable(test_findDuty test_findDuty.cpp)
+target_link_libraries(test_findDuty
     StereoTracker
     CameraDevice
     ImgProcUtil

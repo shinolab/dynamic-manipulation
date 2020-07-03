@@ -11,7 +11,7 @@ namespace dynaman {
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		float freqLm,
-		unsigned int loopPeriod,
+		int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr)
 		:m_gainP(gainP),
@@ -28,7 +28,7 @@ namespace dynaman {
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		float freqLm,
-		unsigned int loopPeriod,
+		int loopPeriod,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {

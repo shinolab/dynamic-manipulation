@@ -46,8 +46,8 @@ namespace dynaman {
 			const Eigen::Vector3f& gainP,
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
-			unsigned int freqLm = 100,
-			unsigned int loopPeriod = 10,
+			unsigned int freqLm = 100U,
+			unsigned int loopPeriod = 10U,
 			float lambda = 0.f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusOnSphereExperimental>()
 		);
@@ -64,6 +64,8 @@ namespace dynaman {
 		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
+
+		std::shared_ptr<arfModelLinearBase> arfModel();
 	};
 }
 #endif // !_DYNAMAN_STRATEGY_HPP

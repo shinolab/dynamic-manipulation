@@ -104,7 +104,10 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
-	std::vector<autd::GainPtr> MultiplexStrategy::CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus) {
+	std::vector<autd::GainPtr> MultiplexStrategy::CreateLateralGainList(
+		const Eigen::VectorXf& duties,
+		const Eigen::Vector3f& focus
+	) {
 		std::vector<float> dutiesStl(duties.size());
 		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
 		int num_active = (duties.array() > 1.0e-3f).count();
@@ -113,7 +116,6 @@ namespace dynaman {
 		for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
 			std::map<int, autd::GainPtr> gain_map;
 			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
-			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
 			for (int i_autd = 0; i_autd < m_aupaPtr->geometry()->numDevices(); i_autd++) {
 				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
 					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
@@ -125,6 +127,7 @@ namespace dynaman {
 				}
 			}
 			*itr_list = autd::GroupedGain::Create(gain_map);
+			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
 		}
 		return gain_list;
 	}
@@ -177,5 +180,9 @@ namespace dynaman {
 		m_gainP = gainP;
 		m_gainD = gainD;
 		m_gainI = gainI;
+	}
+
+	std::shared_ptr<arfModelLinearBase> MultiplexStrategy::arfModel() {
+		return m_arfModelPtr;
 	}
 }

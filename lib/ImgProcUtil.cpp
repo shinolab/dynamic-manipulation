@@ -63,9 +63,9 @@ namespace imgProc {
 
 	std::shared_ptr<hue_backproject_extractor> hue_backproject_extractor::create(
 		const std::string& path_img_target,
-		int lowerBound = 10,
-		int upperBound = 255,
-		int sizeHist = 30
+		int lowerBound,
+		int upperBound,
+		int sizeHist
 	) {
 		cv::Mat img_target = cv::imread(path_img_target);
 		if (img_target.empty()) {

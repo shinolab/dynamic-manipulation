@@ -110,7 +110,7 @@ namespace dynaman {
 		std::shared_ptr<imgProc::extractor> extractorPtrRight,
 		const Eigen::Vector3f& pos,
 		const Eigen::Quaternionf& quo,
-		Eigen::Vector3f bias) {
+		const Eigen::Vector3f& bias) {
 		return std::make_shared<stereoTracker>(stereoCamPtr, extractorPtrLeft, extractorPtrRight, pos, quo, bias);
 	}
 

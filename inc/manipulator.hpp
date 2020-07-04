@@ -28,11 +28,13 @@ namespace dynaman {
 		Eigen::Vector3f m_gainD;
 		Eigen::Vector3f m_gainI;
 		float m_freqLm;
-		int m_loopPeriod;
+		int m_loopPeriodAupa;
+		int m_loopPeriodTracker;
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
 		std::thread m_thr_control;
+		std::thread m_thr_track;
 		std::shared_mutex m_mtx_isRunning;
 		std::mutex m_mtx_gain;
 
@@ -42,7 +44,8 @@ namespace dynaman {
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
 			float freqLm,
-			int loopPeriod,
+			int loopPeriodAupa,
+			int loopPeriodTracker,
 			float lambda,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr
 		);
@@ -52,7 +55,8 @@ namespace dynaman {
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
 			float freqLm = 100.f,
-			int loopPeriod = 10U,
+			int loopPeriodAupa = 10,
+			int loopPeriodTracker = 5,
 			float lambda = 0.f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusOnSphereExperimental>()
 		);
@@ -67,9 +71,13 @@ namespace dynaman {
 
 		bool IsRunning();
 
-		void ExecuteSingleLoop(
-			std::shared_ptr<autd::Controller> pAupa,
+		void ExecuteSingleObservation(
 			std::shared_ptr<Tracker> pTracker,
+			FloatingObjectPtr pObject
+		);
+
+		void ExecuteSingleActuation(
+			std::shared_ptr<autd::Controller> pAupa,
 			FloatingObjectPtr pObject
 		);
 
@@ -81,5 +89,6 @@ namespace dynaman {
 
 		std::shared_ptr<arfModelLinearBase> arfModel();
 	};
+
 }
 #endif // !_DYNAMAN_STRATEGY_HPP

@@ -23,7 +23,8 @@ namespace dynaman {
 		m_loopPeriodAupa(loopPeriodAupa),
 		m_loopPeriodTracker(loopPeriodTracker),
 		m_arfModelPtr(arfModelPtr),
-		m_isRunning(false)
+		m_isRunning(false),
+		m_logEnabled(false)
 	{}
 
 	std::shared_ptr<Manipulator> MultiplexManipulator::Create(
@@ -141,6 +142,9 @@ namespace dynaman {
 		{
 			pObject->SetTrackingStatus(false);
 		}
+		if (m_logEnabled) {
+			m_logstream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
+		}
 		int waitTime = m_loopPeriodTracker - (timeGetTime() - observeTime);
 		Sleep(std::max(waitTime, 0));
 	}
@@ -197,6 +201,9 @@ namespace dynaman {
 			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
 			return 1;
 		}
+		if (m_logEnabled) {
+			m_logstream.open(m_logName);
+		}
 		timeBeginPeriod(1);
 		{
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
@@ -231,6 +238,9 @@ namespace dynaman {
 		if (m_thr_track.joinable()){
 			m_thr_track.join();
 		}
+		if (m_logstream.is_open()) {
+			m_logstream.close();
+		}
 		m_pAupa->AppendGainSync(autd::NullGain::Create());
 	}
 
@@ -252,5 +262,18 @@ namespace dynaman {
 	bool MultiplexManipulator::IsRunning() {
 		std::shared_lock<std::shared_mutex> lk(m_mtx_isRunning);
 		return m_isRunning;
+	}
+
+	void MultiplexManipulator::EnableLog(const std::string& logName) {
+		if (!IsRunning()) {
+			m_logName = logName;
+			m_logEnabled = true;
+		}
+	}
+
+	void MultiplexManipulator::DisableLog(const std::string& logName) {
+		if (!IsRunning()) {
+			m_logEnabled = false;
+		}
 	}
 }

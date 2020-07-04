@@ -1,6 +1,7 @@
 #ifndef _DYNAMAN_STRATEGY_HPP
 #define _DYNAMAN_STRATEGY_HPP
 
+#include <fstream>
 #include "arfModel.hpp"
 #include "FloatingObject.hpp"
 #include "tracker.hpp"
@@ -8,10 +9,6 @@
 
 namespace dynaman {
 	class Manipulator {
-	protected:
-		std::shared_ptr<autd::Controller> m_pAupa;
-		std::shared_ptr<Tracker> m_pTracker;
-		FloatingObjectPtr m_pObject;
 	public:
 		virtual ~Manipulator() {}
 		virtual int StartManipulation(
@@ -24,6 +21,9 @@ namespace dynaman {
 
 	class MultiplexManipulator : public Manipulator {
 	private:
+		std::shared_ptr<autd::Controller> m_pAupa;
+		std::shared_ptr<Tracker> m_pTracker;
+		FloatingObjectPtr m_pObject;
 		Eigen::Vector3f m_gainP;
 		Eigen::Vector3f m_gainD;
 		Eigen::Vector3f m_gainI;
@@ -33,10 +33,14 @@ namespace dynaman {
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
+		std::string m_logName;
+		bool m_logEnabled;
+
 		std::thread m_thr_control;
 		std::thread m_thr_track;
 		std::shared_mutex m_mtx_isRunning;
 		std::mutex m_mtx_gain;
+		std::ofstream m_logstream;
 
 	public:
 		MultiplexManipulator(
@@ -88,6 +92,10 @@ namespace dynaman {
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 
 		std::shared_ptr<arfModelLinearBase> arfModel();
+
+		void EnableLog(const std::string& logName);
+		
+		void DisableLog(const std::string& logName);
 	};
 
 }

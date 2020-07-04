@@ -15,14 +15,7 @@ namespace dynaman {
 
 	class FloatingObject {
 	public:
-		Eigen::Vector3f getPosition();
-		Eigen::Vector3f getVelocity();
-		Eigen::Vector3f getIntegral();
-		Eigen::Vector3f getPositionTarget();
-		Eigen::Vector3f getVelocityTarget();
-		Eigen::Vector3f getAccelTarget();
-		Eigen::VectorXf getLatestInput();
-		void setLatestInput(Eigen::VectorXf input);
+
 		Eigen::VectorXf inputLatest;
 
 		Eigen::MatrixXf covError;
@@ -63,7 +56,15 @@ namespace dynaman {
 		float AdditionalMass();
 		float Radius();
 		float totalMass();
-
+		Eigen::Vector3f getPosition();
+		Eigen::Vector3f getVelocity();
+		Eigen::Vector3f getIntegral();
+		Eigen::Vector3f getPositionTarget(DWORD systime_ms = timeGetTime());
+		Eigen::Vector3f getVelocityTarget(DWORD systime_ms = timeGetTime());
+		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
+		Eigen::VectorXf getLatestInput();
+		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
+		void setLatestInput(Eigen::VectorXf input);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew, Eigen::Vector3f& velocitynew);
 		void resetIntegral();

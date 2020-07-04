@@ -154,28 +154,32 @@ namespace dynaman {
 		FloatingObjectPtr pObject
 	) {
 		DWORD timeLoopInit = timeGetTime();
-		Eigen::Vector3f posObject = pObject->getPosition();
-		if (pObject->IsTracked() && isInsideWorkspace(posObject, pObject->lowerbound(), pObject->upperbound()))
+		Eigen::Vector3f pos, vel, integ;
+		pObject->getStates(pos, vel, integ);
+		auto posTgt = pObject->getPositionTarget(timeLoopInit);
+		auto velTgt = pObject->getVelocityTarget(timeLoopInit);
+		auto accelTgt = pObject->getAccelTarget(timeLoopInit);
+		if (pObject->IsTracked() && isInsideWorkspace(pos, pObject->lowerbound(), pObject->upperbound()))
 		{
 			Eigen::Vector3f accel;
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_gain);
 				accel
-					= m_gainP.asDiagonal() * (posObject - pObject->getPositionTarget())
-					+ m_gainD.asDiagonal() * (pObject->averageVelocity() - pObject->getVelocityTarget())
-					+ m_gainI.asDiagonal() * pObject->getIntegral()
-					+ pObject->getAccelTarget();
+					= m_gainP.asDiagonal() * (pos - posTgt)
+					+ m_gainD.asDiagonal() * (vel - velTgt)
+					+ m_gainI.asDiagonal() * integ
+					+ accelTgt;
 			}
 			Eigen::Vector3f forceToApply
 				= m_pObject->totalMass() * accel
 				+ m_pObject->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, 9.80665e3f);
-			auto duties = ComputeDuty(forceToApply, posObject);
+			auto duties = ComputeDuty(forceToApply, pos);
 			int num_active = (duties.array() > 1.0e-3f).count();
 			if (num_active == 0) {
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
-				auto gain_list = CreateLateralGainList(duties, posObject);
+				auto gain_list = CreateLateralGainList(duties, pos);
 				pAupa->ResetLateralGain();
 				pAupa->AppendLateralGain(gain_list);
 				pAupa->StartLateralModulation(m_freqLm);

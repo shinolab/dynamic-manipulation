@@ -77,22 +77,33 @@ namespace dynaman {
 		return integral;
 	}
 
-	Eigen::Vector3f FloatingObject::getPositionTarget()
+	Eigen::Vector3f FloatingObject::getPositionTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
-		return trajectoryPtr->pos();
+		return trajectoryPtr->pos(systime_ms);
 	}
 
-	Eigen::Vector3f FloatingObject::getVelocityTarget()
+	Eigen::Vector3f FloatingObject::getVelocityTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
-		return trajectoryPtr->vel();
+		return trajectoryPtr->vel(systime_ms);
 	}
 
-	Eigen::Vector3f FloatingObject::getAccelTarget()
+	Eigen::Vector3f FloatingObject::getAccelTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
-		return trajectoryPtr->accel();
+		return trajectoryPtr->accel(systime_ms);
+	}
+
+	void FloatingObject::getStates(
+		Eigen::Vector3f& pos,
+		Eigen::Vector3f& vel,
+		Eigen::Vector3f& integ
+	) {
+		std::lock_guard<std::mutex> lock(mtxState);
+		pos = position;
+		vel = velocity;
+		integ = integral;
 	}
 
 	void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew)

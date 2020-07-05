@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 
-
 CameraDevice::~CameraDevice() {};
 
 void CameraDevice::getIntrinsic(cv::Mat &intrinsic) const {

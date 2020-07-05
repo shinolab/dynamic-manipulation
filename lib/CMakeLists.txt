@@ -73,6 +73,8 @@ add_library(DynamicManipulation STATIC
 	../inc/manipulator.hpp
 	manipulator.cpp
 	../inc/EigenTools.hpp
+	../inc/recorder.hpp
+	recorder.cpp
 )
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)

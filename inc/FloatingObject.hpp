@@ -76,6 +76,7 @@ namespace dynaman {
 
 		bool isConverged(float tolPos, float tolVel);
 		bool IsTracked();
+		bool IsInsideWorkspace();
 		void SetTrackingStatus(bool _isTracked);
 		Eigen::Vector3f averageVelocity();
 		Eigen::Vector3f AverageVelocity(

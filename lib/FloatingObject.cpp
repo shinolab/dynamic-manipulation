@@ -224,6 +224,13 @@ namespace dynaman {
 		return ((getPosition() - getPositionTarget()).norm() < tolPos) && ((this->getVelocity() - this->getVelocityTarget()).norm() < tolVel);
 	}
 
+	bool FloatingObject::IsInsideWorkspace()
+	{
+		Eigen::Vector3f v0 = position - lowerbound();
+		Eigen::Vector3f v1 = position - upperbound();
+		return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
+	}
+
 	void FloatingObject::SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr)
 	{
 		std::lock_guard<std::shared_mutex> lock(mtxTrajectory);

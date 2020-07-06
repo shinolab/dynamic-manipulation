@@ -78,6 +78,10 @@ namespace dynaman {
 		bool IsTracked();
 		void SetTrackingStatus(bool _isTracked);
 		Eigen::Vector3f averageVelocity();
+		Eigen::Vector3f AverageVelocity(
+			std::deque<Eigen::Vector3f> velBuffer,
+			std::deque<float> intervalBuffer
+		);
 		Eigen::Vector3f AveragePosition();
 		Eigen::Vector3f lowerbound();
 		Eigen::Vector3f upperbound();

@@ -8,7 +8,6 @@
 #define NOMINMAX
 #include <Windows.h>
 
-
 namespace {
 	const float pi = 3.14159265359;
 }
@@ -68,7 +67,7 @@ namespace dynaman {
 	Eigen::Vector3f FloatingObject::getVelocity()
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
-		return velocity;
+		return AverageVelocity(this->velocityBuffer, this->dTBuffer);
 	}
 
 	Eigen::Vector3f FloatingObject::getIntegral()
@@ -102,7 +101,7 @@ namespace dynaman {
 	) {
 		std::lock_guard<std::mutex> lock(mtxState);
 		pos = position;
-		vel = velocity;
+		vel = AverageVelocity(this->velocityBuffer, this->dTBuffer);
 		integ = integral;
 	}
 
@@ -181,6 +180,24 @@ namespace dynaman {
 		}
 		averageVelocity /= period;
 		return averageVelocity;
+	}
+
+	Eigen::Vector3f FloatingObject::AverageVelocity(
+		std::deque<Eigen::Vector3f> velocityBuffer,
+		std::deque<float> intervalBuffer
+	) {
+		auto itrVel = velocityBuffer.begin();
+		auto itrDT = intervalBuffer.begin();
+		Eigen::Vector3f distSum(0.f, 0.f, 0.f);
+		float period = 0;
+		while (itrVel != velocityBuffer.end())
+		{
+			distSum += (*itrDT) * (*itrVel);
+			period += *itrDT;
+			itrDT++;
+			itrVel++;
+		}
+		return distSum /= period;
 	}
 
 	Eigen::Vector3f FloatingObject::AveragePosition() {

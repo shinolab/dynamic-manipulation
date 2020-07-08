@@ -26,16 +26,6 @@ link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 find_package(XIMEA REQUIRED)
 include_directories(${XIMEA_INCLUDE_DIR})
 
-include_directories(maneuvers)
-add_library(Maneuvers
-    maneuvers/demo_sa2020_maneuver.cpp
-    maneuvers/demo_sa2020_maneuver.hpp
-)
-target_link_libraries(
-    Maneuvers
-    DynamicManipulation
-)
-
 add_executable(demo_manipulator demo_manipulator.cpp)
 target_link_libraries(
     demo_manipulator

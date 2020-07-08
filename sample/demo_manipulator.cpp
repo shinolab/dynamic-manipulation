@@ -11,7 +11,7 @@ using namespace dynaman;
 int main(int argc, char** argv ) {
 
 	/*user-defined configurations*/
-	Eigen::Vector3f pos_init(0, 0, 0);
+	Eigen::Vector3f pos_init(0, -50, 0);
 	std::string target_image_name("blue_target_no_cover.png");
 	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
 	Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
@@ -51,11 +51,11 @@ int main(int argc, char** argv ) {
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
-	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
-	Eigen::Vector3f posRight(300.f, 0.f, 0.f);
-	Eigen::Vector3f posLeft(-300.f, 0.f, 0.f);
-	Eigen::Vector3f posHigh(0.f, 0.f, 300.f);
-	Eigen::Vector3f posLow(0.f, 0.f, -250.f);
+	Eigen::Vector3f posCenter(0.f, -50.f, 0.f);
+	Eigen::Vector3f posRight(300.f, -50.f, 0.f);
+	Eigen::Vector3f posLeft(-300.f, -50.f, 0.f);
+	Eigen::Vector3f posHigh(0.f, -50.f, 300.f);
+	Eigen::Vector3f posLow(0.f, -50.f, -250.f);
 	// params for circular trajectory
 	float orbit_radius = 150;
 	float orbit_period = 3.f;

@@ -235,6 +235,20 @@ arfModelFocusOnSphereD5::arfModelFocusOnSphereD5() {
 
 Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
 	const Eigen::MatrixXf& posRel,
+	const Eigen::MatrixXf& eulerAngles
+) {
+	std::vector<Eigen::Matrix3f> rots(eulerAngles.cols());
+	for (int iAupa = 0; iAupa < eulerAngles.cols(); iAupa++) {
+		rots[iAupa] 
+			= Eigen::AngleAxisf(eulerAngles.col(iAupa).x(), Eigen::Vector3f::UnitZ())
+			* Eigen::AngleAxisf(eulerAngles.col(iAupa).y(), Eigen::Vector3f::UnitY())
+			* Eigen::AngleAxisf(eulerAngles.col(iAupa).z(), Eigen::Vector3f::UnitZ());
+	}
+	return arf(posRel, rots);
+}
+
+Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
+	const Eigen::MatrixXf& posRel,
 	const std::vector<Eigen::Matrix3f>& rots
 ) {
 	Eigen::MatrixXf directionsAutd(3, rots.size());

@@ -12,10 +12,6 @@ find_package( KinectSDK2 REQUIRED )
 include_directories( ${KinectSDK2_INCLUDE_DIRS} )
 link_directories( ${KinectSDK2_LIBRARY_DIRS} )
 
-add_executable(LPTest
-	LPTest.cpp
-)
-target_link_libraries(LPTest DynamicManipulation)
 
 add_executable(WorkSpaceTest workSpaceTest.cpp)
 target_link_libraries(WorkSpaceTest DynamicManipulation)
@@ -23,11 +19,11 @@ target_link_libraries(WorkSpaceTest DynamicManipulation)
 add_executable(FindDutyTest FindDutyTest.cpp)
 target_link_libraries(FindDutyTest DynamicManipulation)
 
-add_executable(Vortex Vortex.cpp)
-target_link_libraries(Vortex DynamicManipulation)
-
 add_executable(MultiplexDutyTest MultiplexDutyTest.cpp)
 target_link_libraries(MultiplexDutyTest DynamicManipulation)
 
 add_executable(TrajectoryTest TrajectoryTest.cpp)
 target_link_libraries(TrajectoryTest Trajectory)
+
+add_executable(ArfModelTest ArfModelTest.cpp)
+target_link_libraries(ArfModelTest LinearArfModel)

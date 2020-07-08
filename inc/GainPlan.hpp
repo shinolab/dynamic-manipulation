@@ -7,19 +7,6 @@
 
 namespace dynaman {
 
-	class Geometry : public autd::Geometry {
-	public:
-		Eigen::Matrix3f RotForDeviceId(int deviceId);
-
-		std::vector<Eigen::Matrix3f> RotsAutd();
-
-		Eigen::Vector3f CenterForDeviceId(int deviceId);
-
-		Eigen::Matrix3Xf CentersAutd();
-
-		Eigen::Matrix3Xf DirectionsAutd();
-	};
-
 	Eigen::Matrix3f RotForDeviceId(int deviceId, autd::GeometryPtr geo);
 
 	std::vector<Eigen::Matrix3f> RotsAutd(autd::GeometryPtr geo);

@@ -219,7 +219,7 @@ arfModelFocusOnSphereD5::arfModelFocusOnSphereD5() {
 		2.18E-02, 2.18E-02, 2.13E-02, 1.72E-02, 1.03E-02, 5.39E-03, 2.50E-03, 0.001085084, 4.12E-04,
 		2.13E-02, 2.13E-02, 2.09E-02, 1.68E-02, 9.95E-03, 5.20E-03, 2.38E-03, 0.00099765, 3.65E-04,
 		2.08E-02, 2.07E-02, 2.04E-02, 1.64E-02, 9.65E-03, 5.02E-03, 2.26E-03, 0.000920678, 3.27E-04;
-	this->tableArfVertical <<
+	this->tableArfHorizontal <<
 		4.78E-05, 0.001683716, 0.003144588, 0.004250118, 0.00484127, 0.004922806, 4.88E-03, 4.98E-03, 5.06E-03,
 		6.25E-05, 0.003153982, 0.00554344, 0.007020677, 0.007508789, 0.006992697, 5.71E-03, 4.52E-03, 4.42E-03,
 		5.75E-05, 0.003933318, 0.00684551, 0.008441441, 0.00862748, 0.007381622, 5.52E-03, 4.17E-03, 4.30E-03,
@@ -258,7 +258,7 @@ Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
 	Eigen::VectorXf dists = posRel.colwise().norm();
 	Eigen::VectorXf heights = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum().transpose();
 	Eigen::VectorXf angles = heights.cwiseQuotient(dists).array().acos().matrix().transpose()	;
-	Eigen::MatrixXf arfMatrix(posRel.rows(), posRel.cols());
+	Eigen::MatrixXf arfMatrix(3, posRel.cols());
 	for (int i_aupa = 0; i_aupa < posRel.cols(); i_aupa++) {
 		auto forceVertical = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfVertical);
 		auto forceHorizontal = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfHorizontal);

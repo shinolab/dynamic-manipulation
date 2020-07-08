@@ -42,8 +42,7 @@ int main(int argc, char** argv ) {
 		quo_sensor
 	);
 	pTracker->open();
-	/*initiate control*/
-	std::cout << "creating strategy ..." << std::endl;
+
 	auto pManipulator = MultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD

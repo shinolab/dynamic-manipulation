@@ -57,6 +57,18 @@ private:
 	Eigen::MatrixXf tableARF;
 };
 
+class arfModelFocusOnSphereD5 : public arfModelLinearBase{
+public:
+	arfModelFocusOnSphereD5();
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
+private:
+	Eigen::VectorXf tableDistance;
+	Eigen::VectorXf tableAngle;
+	Eigen::MatrixXf tableArfVertical;
+	Eigen::MatrixXf tableArfHorizontal;
+
+};
+
 namespace arfModel
 {
 	Eigen::MatrixXf arf(Eigen::MatrixXf const &posRel);

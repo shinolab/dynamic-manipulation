@@ -3,10 +3,43 @@
 
 #include "arfModel.hpp"
 #include "read-csv-to-eigen.hpp"
-#include <Eigen\Dense>
+#include <Eigen\Geometry>
+#include <unsupported/Eigen/Splines>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>
+
+/*
+returns -1 if an arg is smaller than any elem of range
+returns range.size() if an arg is larger than any elem of range
+*/
+int SearchIntervalIndex(float arg, const Eigen::VectorXf& range) {
+	return static_cast<int>((Eigen::VectorXf(range.size()).setConstant(arg) - range).cwiseSign().cwiseMax(0).sum());
+}
+
+float linearInterp2d(
+	float argRow,
+	float argCol,
+	const Eigen::VectorXf& argDataPointsRow,
+	const Eigen::VectorXf& argDataPointsCol,
+	const Eigen::MatrixXf& valueDataPoints
+) {
+	auto indexIntervalArgRow = std::max(0, std::min(SearchIntervalIndex(argRow, argDataPointsRow), static_cast<int>(argDataPointsRow.size()) - 2));
+	auto indexIntervalArgCol = std::max(0, std::min(SearchIntervalIndex(argCol, argDataPointsCol), static_cast<int>(argDataPointsCol.size()) - 2));
+	auto indexIntervalArgRowNext = indexIntervalArgRow + 1;
+	auto indexIntervalArgColNext = indexIntervalArgCol + 1;
+	float f00 = valueDataPoints(indexIntervalArgRow, indexIntervalArgCol);
+	float f10 = valueDataPoints(indexIntervalArgRow, indexIntervalArgColNext);
+	float f01 = valueDataPoints(indexIntervalArgRowNext, indexIntervalArgCol);
+	float f11 = valueDataPoints(indexIntervalArgRowNext, indexIntervalArgColNext);
+	float r0 = argDataPointsRow[indexIntervalArgRow];
+	float r1 = argDataPointsRow[indexIntervalArgRowNext];
+	float c0 = argDataPointsCol[indexIntervalArgCol];
+	float c1 = argDataPointsCol[indexIntervalArgColNext];
+	float dr = (argRow - r0) / (r1 - r0);
+	float dc = (argCol - c0) / (c1 - c0);
+	return f00 * (1 - dr) * (1 - dc) + f10 * dr * (1 - dc) + f01 * (1 - dr) * dc + f11 * dr * dc;
+}
 
 arfModelLinearBase::~arfModelLinearBase() {}
 
@@ -155,8 +188,6 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& po
 			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
 			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
 	}
-	//std::cout << "directionsAUTD\n" << directionsAUTD << std::endl;
-
 	return arfFromDirections(posRel, directionsAUTD);
 	
 }
@@ -167,6 +198,59 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& po
 		directionsAutd.col(i_autd) = rots[i_autd] * Eigen::Vector3f::UnitZ();
 	}
 	return arfFromDirections(posRel, directionsAutd);
+}
+
+arfModelFocusOnSphereD5::arfModelFocusOnSphereD5() {
+	const int numDist = 11;
+	const int numAngle = 9;
+	this->tableDistance = Eigen::VectorXf::LinSpaced(numDist, 100, 600);
+	this->tableAngle = Eigen::VectorXf::LinSpaced(numAngle, 0, 4 * M_PI / 9);
+	this->tableArfVertical.resize(numDist, numAngle);
+	this->tableArfHorizontal.resize(numDist, numAngle);
+	this->tableArfVertical <<
+		1.90E-02, 1.84E-02, 1.69E-02, 1.46E-02, 1.17E-02, 8.71E-03, 6.55E-03, 0.004348326, 2.32E-03,
+		2.37E-02, 2.28E-02, 2.04E-02, 1.70E-02, 1.30E-02, 8.54E-03, 4.60E-03, 0.002148835, 9.43E-04,
+		2.47E-02, 2.40E-02, 2.16E-02, 1.78E-02, 1.29E-02, 7.61E-03, 3.73E-03, 0.001697458, 9.61E-04,
+		2.45E-02, 2.41E-02, 2.21E-02, 1.81E-02, 1.25E-02, 6.93E-03, 3.33E-03, 0.001527912, 9.90E-04,
+		2.39E-02, 2.38E-02, 2.23E-02, 1.82E-02, 1.20E-02, 6.48E-03, 3.07E-03, 0.001438716, 8.79E-04,
+		2.34E-02, 2.34E-02, 2.22E-02, 1.80E-02, 1.15E-02, 6.15E-03, 2.86E-03, 0.001373089, 6.74E-04,
+		2.29E-02, 2.29E-02, 2.20E-02, 1.78E-02, 1.11E-02, 5.85E-03, 2.73E-03, 0.001283384, 5.60E-04,
+		2.24E-02, 2.24E-02, 2.17E-02, 1.76E-02, 1.07E-02, 5.60E-03, 2.62E-03, 0.001182336, 4.71E-04,
+		2.18E-02, 2.18E-02, 2.13E-02, 1.72E-02, 1.03E-02, 5.39E-03, 2.50E-03, 0.001085084, 4.12E-04,
+		2.13E-02, 2.13E-02, 2.09E-02, 1.68E-02, 9.95E-03, 5.20E-03, 2.38E-03, 0.00099765, 3.65E-04,
+		2.08E-02, 2.07E-02, 2.04E-02, 1.64E-02, 9.65E-03, 5.02E-03, 2.26E-03, 0.000920678, 3.27E-04;
+	this->tableArfVertical <<
+		4.78E-05, 0.001683716, 0.003144588, 0.004250118, 0.00484127, 0.004922806, 4.88E-03, 4.98E-03, 5.06E-03,
+		6.25E-05, 0.003153982, 0.00554344, 0.007020677, 0.007508789, 0.006992697, 5.71E-03, 4.52E-03, 4.42E-03,
+		5.75E-05, 0.003933318, 0.00684551, 0.008441441, 0.00862748, 0.007381622, 5.52E-03, 4.17E-03, 4.30E-03,
+		4.54E-05, 0.004161848, 0.007476261, 0.009168828, 0.009049355, 7.32E-03, 5.28E-03, 3.95E-03, 4.05E-03,
+		3.53E-05, 4.16E-03, 7.77E-03, 9.52E-03, 9.14E-03, 7.16E-03, 5.07E-03, 3.76E-03, 3.72E-03,
+		2.82E-05, 4.09E-03, 7.89E-03, 9.71E-03, 9.06E-03, 6.98E-03, 4.88E-03, 3.57E-03, 3.36E-03,
+		2.31E-05, 4.00E-03, 7.88E-03, 9.75E-03, 8.91E-03, 6.80E-03, 4.69E-03, 3.41E-03, 3.03E-03,
+		1.91E-05, 3.90E-03, 7.79E-03, 9.71E-03, 8.73E-03, 6.58E-03, 4.51E-03, 3.24E-03, 2.73E-03,
+		1.60E-05, 3.81E-03, 7.67E-03, 9.63E-03, 8.50E-03, 6.36E-03, 4.35E-03, 3.05E-03, 2.47E-03,
+		1.35E-05, 3.72E-03, 7.53E-03, 9.49E-03, 8.25E-03, 6.16E-03, 4.19E-03, 2.87E-03, 2.24E-03,
+		1.17E-05, 3.63E-03, 7.37E-03, 9.33E-03, 8.03E-03, 5.98E-03, 4.03E-03, 2.69E-03, 2.04E-03;			
+}
+
+Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
+	const Eigen::MatrixXf& posRel,
+	const std::vector<Eigen::Matrix3f>& rots
+) {
+	Eigen::MatrixXf directionsAutd(3, rots.size());
+	for (int i_aupa = 0; i_aupa < rots.size(); i_aupa++) {
+		directionsAutd.col(i_aupa) = rots[i_aupa] * Eigen::Vector3f::UnitZ();
+	}
+	Eigen::VectorXf dists = posRel.colwise().norm();
+	Eigen::VectorXf heights = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum().transpose();
+	Eigen::VectorXf angles = heights.cwiseQuotient(dists).array().acos().matrix().transpose()	;
+	Eigen::MatrixXf arfMatrix(posRel.rows(), posRel.cols());
+	for (int i_aupa = 0; i_aupa < posRel.cols(); i_aupa++) {
+		auto forceVertical = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfVertical);
+		auto forceHorizontal = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfHorizontal);
+		arfMatrix.col(i_aupa) = rots[i_aupa] * Eigen::Vector3f(forceHorizontal, 0.f, forceVertical);
+	}
+	return arfMatrix;
 }
 
 //Return 3-by-(numAUTD) matrix where each column represents ARF by AUTD at muximum duty. 

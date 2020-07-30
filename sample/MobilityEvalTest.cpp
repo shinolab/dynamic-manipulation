@@ -55,8 +55,9 @@ int main(int argc, char** argv) {
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100 //freqLM
 	);
-	Recorder recorder;
-	recorder.Start(pObject, filename, 33);
+	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(filename);
+	//Recorder recorder;
+	//recorder.Start(pObject, filename, 33);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	
 	for (int iTrial = 0; iTrial < numTrial; iTrial++) {
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
 	}
 
 	pManipulator->FinishManipulation();
-	recorder.Stop();
+	//recorder.Stop();
 	pAupa->Close();
 	return 0;
 }

@@ -47,7 +47,10 @@ int main(int argc, char** argv ) {
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		100 //freqLM
+		100, //freqLM
+		10,
+		5,
+		0
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 

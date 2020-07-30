@@ -12,9 +12,9 @@ using namespace dynaman;
 
 int main(int argc, char** argv) {
 
-	std::string filename("20200708_mobEvalTestLog.csv");
-	Eigen::Vector3f posStart(-300, -50, 0);
-	Eigen::Vector3f posEnd(300, -50, 0);
+	std::string filename("20200708_mobEvalTestLog_i1.csv");
+	Eigen::Vector3f posStart(-250, -50, 0);
+	Eigen::Vector3f posEnd(250, -50, 0);
 	int numTrial = 10;
 
 	Eigen::Vector3f pos_init(0, 0, 0);
@@ -53,11 +53,7 @@ int main(int argc, char** argv) {
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		100, //freqLM
-		10,
-		5,
-		0,
-		std::make_shared<arfModelFocusOnSphereD5>()
+		100 //freqLM
 	);
 	Recorder recorder;
 	recorder.Start(pObject, filename, 33);

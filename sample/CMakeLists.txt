@@ -121,4 +121,9 @@ target_link_libraries(DrawUtil ${OpenCV_LIBS})
 # )
 
 add_executable(MobilityEvalTest MobilityEvalTest.cpp)
-target_link_libraries(MobilityEvalTest DynamicManipulation)
+target_link_libraries(MobilityEvalTest 
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)

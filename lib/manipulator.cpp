@@ -143,7 +143,7 @@ namespace dynaman {
 			pObject->SetTrackingStatus(false);
 		}
 		if (m_logEnabled) {
-			m_logstream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
+			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
 		}
 		int waitTime = m_loopPeriodTracker - (timeGetTime() - observeTime);
 		Sleep(std::max(waitTime, 0));
@@ -184,6 +184,24 @@ namespace dynaman {
 				pAupa->AppendLateralGain(gain_list);
 				pAupa->StartLateralModulation(m_freqLm);
 			}
+			if (m_logEnabled) {
+				m_controlLogStream
+					<< timeLoopInit << ","
+					<< pos.x() << "," << pos.y() << "," << pos.z() << ","
+					<< vel.y() << "," << vel.y() << "," << vel.z() << ","
+					<< integ.x() << "," << integ.y() << "," << integ.z() << ","
+					<< posTgt.x() << "," << posTgt.y() << "," << posTgt.z() << ","
+					<< velTgt.x() << "," << velTgt.y() << "," << velTgt.z() << ","
+					<< accelTgt.x() << "," << accelTgt.y() << "," << accelTgt.z() << ","
+					<< accel.x() << "," << accel.y() << "," << accel.z() << ",";
+				Eigen::MatrixXf posRel = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
+				Eigen::Vector3f forceResult = m_arfModelPtr->arf(posRel, RotsAutd(pAupa->geometry())) * duties;
+				m_controlLogStream << forceResult.x() << "," << forceResult.y() << "," << forceResult.z();
+				for (int i_duty = 0; i_duty < duties.size(); i_duty++) {
+					m_controlLogStream << duties[i_duty] << ",";
+				}
+				m_controlLogStream << std::endl;
+			}
 		}
 		int waitTime = m_loopPeriodAupa - (timeGetTime() - timeLoopInit);
 		Sleep(std::max(waitTime, 0));
@@ -206,7 +224,10 @@ namespace dynaman {
 			return 1;
 		}
 		if (m_logEnabled) {
-			m_logstream.open(m_logName);
+			m_obsLogStream.open(m_obsLogName);
+			m_obsLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,duties" << std::endl;
+			m_controlLogStream.open(m_controlLogName);
+			m_controlLogStream << "sys_time,fxTgt,fyTgt,fzTgt,duties" << std::endl;
 		}
 		timeBeginPeriod(1);
 		{
@@ -242,8 +263,11 @@ namespace dynaman {
 		if (m_thr_track.joinable()){
 			m_thr_track.join();
 		}
-		if (m_logstream.is_open()) {
-			m_logstream.close();
+		if (m_obsLogStream.is_open()) {
+			m_obsLogStream.close();
+		}
+		if (m_controlLogStream.is_open()) {
+			m_controlLogStream.close();
 		}
 		m_pAupa->AppendGainSync(autd::NullGain::Create());
 	}
@@ -268,9 +292,13 @@ namespace dynaman {
 		return m_isRunning;
 	}
 
-	void MultiplexManipulator::EnableLog(const std::string& logName) {
+	void MultiplexManipulator::EnableLog(
+		const std::string& obsLogName,
+		const std::string& controlLogName
+	) {
 		if (!IsRunning()) {
-			m_logName = logName;
+			m_obsLogName = obsLogName;
+			m_controlLogName = controlLogName;
 			m_logEnabled = true;
 		}
 	}

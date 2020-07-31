@@ -12,9 +12,11 @@ using namespace dynaman;
 
 int main(int argc, char** argv) {
 
-	std::string filename("20200708_mobEvalTestLog_i1.csv");
-	Eigen::Vector3f posStart(-250, -50, 0);
-	Eigen::Vector3f posEnd(250, -50, 0);
+
+	std::string obsLogName("20200730_MobTestObsLog.csv");
+	std::string controlLogName("20200730_MobTestControlLog.csv");
+	Eigen::Vector3f posStart(-300, -50, 0);
+	Eigen::Vector3f posEnd(300, -50, 0);
 	int numTrial = 10;
 
 	Eigen::Vector3f pos_init(0, 0, 0);
@@ -55,7 +57,10 @@ int main(int argc, char** argv) {
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100 //freqLM
 	);
-	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(filename);
+	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(
+		obsLogName,
+		controlLogName
+	);
 	//Recorder recorder;
 	//recorder.Start(pObject, filename, 33);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);

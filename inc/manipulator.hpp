@@ -33,14 +33,16 @@ namespace dynaman {
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
-		std::string m_logName;
+		std::string m_obsLogName;
+		std::string m_controlLogName;
 		bool m_logEnabled;
 
 		std::thread m_thr_control;
 		std::thread m_thr_track;
 		std::shared_mutex m_mtx_isRunning;
 		std::mutex m_mtx_gain;
-		std::ofstream m_logstream;
+		std::ofstream m_obsLogStream;
+		std::ofstream m_controlLogStream;
 
 	public:
 		MultiplexManipulator(
@@ -93,7 +95,10 @@ namespace dynaman {
 
 		std::shared_ptr<arfModelLinearBase> arfModel();
 
-		void EnableLog(const std::string& logName);
+		void EnableLog(
+			const std::string& obsLogName,
+			const std::string& controlLogName
+		);
 		
 		void DisableLog(const std::string& logName);
 	};

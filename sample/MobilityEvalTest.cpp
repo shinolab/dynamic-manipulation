@@ -12,7 +12,8 @@ using namespace dynaman;
 
 int main(int argc, char** argv) {
 
-	std::string filename("20200708_mobEvalTestLog.csv");
+	std::string obsLogName("20200730_MobTestObsLog.csv");
+	std::string controlLogName("20200730_MobTestControlLog.csv");
 	Eigen::Vector3f posStart(-300, -50, 0);
 	Eigen::Vector3f posEnd(300, -50, 0);
 	int numTrial = 10;
@@ -59,7 +60,10 @@ int main(int argc, char** argv) {
 		0,
 		std::make_shared<arfModelFocusOnSphereD5>()
 	);
-	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(filename);
+	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(
+		obsLogName,
+		controlLogName
+	);
 	//Recorder recorder;
 	//recorder.Start(pObject, filename, 33);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);

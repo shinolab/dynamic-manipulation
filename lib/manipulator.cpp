@@ -225,9 +225,9 @@ namespace dynaman {
 		}
 		if (m_logEnabled) {
 			m_obsLogStream.open(m_obsLogName);
-			m_obsLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,duties" << std::endl;
+			m_obsLogStream << "sys_time,x,y,z" << std::endl;
 			m_controlLogStream.open(m_controlLogName);
-			m_controlLogStream << "sys_time,fxTgt,fyTgt,fzTgt,duties" << std::endl;
+			m_controlLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,duties" << std::endl;
 		}
 		timeBeginPeriod(1);
 		{

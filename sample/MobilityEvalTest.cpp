@@ -13,10 +13,10 @@ using namespace dynaman;
 int main(int argc, char** argv) {
 
 
-	std::string obsLogName("20200730_MobTestObsLog.csv");
-	std::string controlLogName("20200730_MobTestControlLog.csv");
-	Eigen::Vector3f posStart(-300, -50, 0);
-	Eigen::Vector3f posEnd(300, -50, 0);
+	std::string obsLogName("20200730_MobTestObsLog_z3.csv");
+	std::string controlLogName("20200730_MobTestControlLog_z3.csv");
+	Eigen::Vector3f posStart(0, -50, -250);
+	Eigen::Vector3f posEnd(0, -50, 250);
 	int numTrial = 10;
 
 	Eigen::Vector3f pos_init(0, 0, 0);

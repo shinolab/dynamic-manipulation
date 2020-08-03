@@ -127,3 +127,35 @@ target_link_libraries(MobilityEvalTest
     ImgProcUtil
     DynamicManipulation
 )
+
+option(BUILD_PCL_APPS "build examples that use pcl" ON)
+if(BUILD_PCL_APPS)
+    find_package(realsense2 REQUIRED)
+    include_directories(${realsense2_INCLUDE_DIR})
+
+    find_package(OpenGL REQUIRED)
+    include_directories(${OPENGL_INCLUDE_DIR})
+
+    find_package(GLEW REQUIRED)
+    include_directories(${GLEW_INCLUDE_DIRS})
+
+    find_package(GLFW3 REQUIRED)
+    include_directories(${GLFW3_INCLUDE_DIR})
+
+    find_package(PCL REQUIRED)
+    include_directories(${PCL_INCLUDE_DIR})
+    add_definitions(${PCL_DEFINITIONS})
+
+    add_executable(graspable graspable.cpp)
+    target_link_libraries(graspable
+        ${realsense2_LIBRARY}
+        ${OPENGL_LIBRARIES}
+        ${PCL_LIBRARIES}
+        ${GLEW_LIBRARIES}
+        ${GLFW3_LIBRARY}
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        DynamicManipulation
+    )
+endif()

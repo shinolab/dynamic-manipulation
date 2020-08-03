@@ -13,10 +13,6 @@ int main(int argc, char** argv ) {
 	/*user-defined configurations*/
 	Eigen::Vector3f pos_init(0, -50, 0);
 	std::string target_image_name("blue_target_no_cover.png");
-	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
-	Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
-	std::string leftCamId("32434751");
-	std::string rightCamId("43435351");
 	/*end of user-defined configurations*/
 
 	auto pObject = dynaman::FloatingObject::Create(
@@ -27,21 +23,14 @@ int main(int argc, char** argv ) {
 		50.f
 	);
 
-	std::cout << "opening aupa ..." << std::endl;
+	auto pTracker = haptic_icon::CreateTracker(target_image_name);
+	pTracker->open();
+
 	auto pAupa = std::make_shared<autd::Controller>();
 	pAupa->Open(autd::LinkType::ETHERCAT);
 	if (!pAupa->isOpen())
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
-	std::cout << "opening tracker ..." << std::endl;
-	auto pTracker = stereoTracker::create(
-		stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
-		imgProc::hue_backproject_extractor::create(target_image_name),
-		imgProc::hue_backproject_extractor::create(target_image_name),
-		pos_sensor,
-		quo_sensor
-	);
-	pTracker->open();
 
 	auto pManipulator = MultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP

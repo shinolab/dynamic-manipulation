@@ -27,6 +27,20 @@ namespace haptic_icon {
 			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
 	}
 
+	std::shared_ptr<dynaman::Tracker> CreateTracker(const std::string& target_image_name) {
+		std::string leftCamId("32434751");
+		std::string rightCamId("43435351");
+		Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
+		Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
+		return stereoTracker::create(
+			stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
+			imgProc::hue_backproject_extractor::create(target_image_name),
+			imgProc::hue_backproject_extractor::create(target_image_name),
+			pos_sensor,
+			quo_sensor
+		);
+	}
+
 	void SetGeometry(std::shared_ptr<autd::Controller> pAupa) {
 		const float theta0 = 0.f, phi0 = -3 * pi / 4; bool isUpper0 = true;
 		//upper autd

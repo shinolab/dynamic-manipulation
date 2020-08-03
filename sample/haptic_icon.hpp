@@ -1,7 +1,8 @@
 #ifndef _HAPTIC_ICON_HPP
 #define _HAPTIC_ICON_HPP
 
-#include "odcs.hpp"
+#include "manipulator.hpp"
+#include "StereoTracker.hpp"
 #include <Eigen/Geometry>
 
 namespace {
@@ -32,8 +33,8 @@ namespace haptic_icon {
 		std::string rightCamId("43435351");
 		Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
 		Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
-		return stereoTracker::create(
-			stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
+		return dynaman::stereoTracker::create(
+			dynaman::stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
 			imgProc::hue_backproject_extractor::create(target_image_name),
 			imgProc::hue_backproject_extractor::create(target_image_name),
 			pos_sensor,

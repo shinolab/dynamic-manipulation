@@ -55,8 +55,9 @@ namespace {
 		double yaw, pitch, last_x, last_y; bool ml; float offset_x, offset_y;
 	};
 
-	float3 colors[]{ { 0.8f, 0.1f, 0.3f },
-					  { 0.1f, 0.9f, 0.5f },
+	float3 colors[]{ 
+		{ 0.1f, 0.9f, 0.5f },
+		{ 0.8f, 0.1f, 0.3f },				 
 	};
 }
 
@@ -154,8 +155,8 @@ void draw_pointcloud(window& app, state& app_state, const std::vector<pcl_ptr>& 
 int main(int argc, char** argv) {
 
 	std::string target_image_name("blue_target_no_cover.png");
-	auto tracker = haptic_icon::CreateTracker(target_image_name);
-
+	auto pTracker = haptic_icon::CreateTracker(target_image_name);
+	pTracker->open();
 	auto pAupa = std::make_shared<autd::Controller>();
 	pAupa->Open(autd::LinkType::ETHERCAT);
 	if (!pAupa->isOpen()) {
@@ -170,6 +171,17 @@ int main(int argc, char** argv) {
 		-0.036e-3f,
 		50.f
 	);
+
+	auto pManipulator = dynaman::MultiplexManipulator::Create(
+		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+		100, //freqLM
+		10,
+		5,
+		0
+	);
+	//pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	
 	std::thread t_viewer(
 		[&pObject]() {
@@ -189,21 +201,29 @@ int main(int argc, char** argv) {
 			Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
 			Eigen::Affine3f affine_rs = Eigen::Affine3f::Identity();
 			affine_rs.rotate(rot_rs);
-			affine_rs.translate(pos_rs);
+			affine_rs.translate(0.001f*pos_rs);
+			std::cout << "running viewer" << std::endl;
 			while (viewer) {
+				auto balloon_point = points_to_pcl(std::vector<Eigen::Vector3f>{0.001*pObject->getPosition()});
+				rs2::frameset frame = pipe.wait_for_frames();
+				auto depth = frame.get_depth_frame();
 				rs2::pointcloud points_rs;
-				auto balloon_point = points_to_pcl(std::vector<Eigen::Vector3f>{pObject->getPosition()});
-				auto cloud = points_to_pcl(points_rs.calculate(pipe.wait_for_frames().get_depth_frame()));
-				pcl_ptr cloud_global;
-				pcl::transformPointCloud(*cloud, *cloud_global, affine_rs);
+				//std::cout << "frame aquired." << std::endl;
+				//std::cout << "converting depth to point cloud" << std::endl;
+				auto cloud = points_to_pcl(points_rs.calculate(depth));
+				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);
+	
+				pcl::transformPointCloud(*cloud, *cloud_global, affine_rs.inverse());
 
-				std::vector<pcl_ptr> cloud_ptrs{ cloud, balloon_point };
+				std::vector<pcl_ptr> cloud_ptrs{ cloud_global, balloon_point };
+
 				draw_pointcloud(viewer, viewer_state, cloud_ptrs);
 			}
 		}
 	);
-
+	std::this_thread::sleep_for(std::chrono::seconds(10));
 	t_viewer.join();
+	//pManipulator->FinishManipulation();
 	return 0;
 
 }

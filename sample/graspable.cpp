@@ -6,15 +6,49 @@
 #include <librealsense2/rs.hpp>
 #include "stb_easy_font.h"
 #include "example.hpp"
-#include "pcl/point_cloud.h"
-#include "pcl/point_types.h"
-#include "pcl/common/transforms.h"
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/transforms.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/voxel_grid.h>
 #include "StereoTracker.hpp"
 #include "autd3.hpp"
 #include "manipulator.hpp"
 #include "haptic_icon.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
+
+pcl_ptr make_sphere(const Eigen::Vector3f& center, float radius) {
+	int num_long = 100;
+	int num_lat = 50;
+	int num_points = num_long * num_lat;
+	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	cloud->points.resize(num_points);
+	cloud->height = num_lat;
+	cloud->width = num_long;
+	for (int i_lat = 0; i_lat < num_lat; i_lat++)
+	{
+		for (int i_long = 0; i_long < num_long; i_long++) {
+			int i_vert = i_lat * num_long + i_long;
+			float theta = M_PI * i_lat / num_lat;
+			float phi = 2 * M_PI * i_long / num_long;
+			cloud->points[i_vert].x = center.x() + radius * sin(theta) * cos(phi);
+			cloud->points[i_vert].y = center.y() + radius * sin(theta) * sin(phi);
+			cloud->points[i_vert].z = center.z() + radius * cos(theta);
+		}
+	}
+	return cloud;
+}
+
+pcl_ptr passthrough_pcl(pcl_ptr cloud, const std::string& field_name, float limit_min, float limit_max) {
+	pcl::PassThrough<pcl::PointXYZ> pass;
+	pass.setInputCloud(cloud);
+	pass.setFilterFieldName(field_name);
+	pass.setFilterLimits(limit_min, limit_max);
+	pcl_ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+	pass.filter(*cloud_filtered);
+	return cloud_filtered;
+}
 
 pcl_ptr points_to_pcl(const rs2::points& points) {
 	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -52,12 +86,18 @@ namespace {
 	struct state {
 		state() : yaw(0.0), pitch(0.0), last_x(0.0), last_y(0.0),
 			ml(false), offset_x(0.0f), offset_y(0.0f) {}
-		double yaw, pitch, last_x, last_y; bool ml; float offset_x, offset_y;
+		double yaw, pitch, last_x, last_y;
+		bool ml;
+		float offset_x, offset_y;
 	};
 
 	float3 colors[]{ 
 		{ 0.1f, 0.9f, 0.5f },
-		{ 0.8f, 0.1f, 0.3f },				 
+		{ 0.8f, 0.1f, 0.3f },
+		{ 0.f, 0.f, 0.0f},
+		{ 1.0f, 0.f, 0.f},
+		{ 0.f, 1.0f, 0.f},
+		{ 0.f, 0.f, 1.f}
 	};
 }
 
@@ -78,11 +118,11 @@ void register_glfw_callbacks(window& app, state& app_state) {
 		if (app_state.ml)
 		{
 			app_state.yaw -= (x - app_state.last_x);
-			app_state.yaw = std::max(app_state.yaw, -120.0);
-			app_state.yaw = std::min(app_state.yaw, +120.0);
+			app_state.yaw = std::max(app_state.yaw, -180.0);
+			app_state.yaw = std::min(app_state.yaw, +180.0);
 			app_state.pitch += (y - app_state.last_y);
-			app_state.pitch = std::max(app_state.pitch, -80.0);
-			app_state.pitch = std::min(app_state.pitch, +80.0);
+			app_state.pitch = std::max(app_state.pitch, -180.0);
+			app_state.pitch = std::min(app_state.pitch, +180.0);
 		}
 		app_state.last_x = x;
 		app_state.last_y = y;
@@ -181,7 +221,7 @@ int main(int argc, char** argv) {
 		5,
 		0
 	);
-	//pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	
 	std::thread t_viewer(
 		[&pObject]() {
@@ -204,26 +244,41 @@ int main(int argc, char** argv) {
 			affine_rs.translate(0.001f*pos_rs);
 			std::cout << "running viewer" << std::endl;
 			while (viewer) {
-				auto balloon_point = points_to_pcl(std::vector<Eigen::Vector3f>{0.001*pObject->getPosition()});
 				rs2::frameset frame = pipe.wait_for_frames();
 				auto depth = frame.get_depth_frame();
 				rs2::pointcloud points_rs;
+
 				//std::cout << "frame aquired." << std::endl;
 				//std::cout << "converting depth to point cloud" << std::endl;
 				auto cloud = points_to_pcl(points_rs.calculate(depth));
-				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);
-	
-				pcl::transformPointCloud(*cloud, *cloud_global, affine_rs.inverse());
+				auto cloud_filtered_x = passthrough_pcl(cloud, "x", -0.5f, 0.5f);
+				auto cloud_filtered_xy = passthrough_pcl(cloud, "y", -0.5f, 0.5f);
+				auto cloud_filtered_xyz = passthrough_pcl(cloud, "z", -0.5f, 0.5f);
+				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);	
+				pcl::transformPointCloud(*cloud_filtered_xyz, *cloud_global, affine_rs);
 
-				std::vector<pcl_ptr> cloud_ptrs{ cloud_global, balloon_point };
+				pcl_ptr cloud_voxel_filtered(new pcl::PointCloud<pcl::PointXYZ>());
+				pcl::VoxelGrid<pcl::PointXYZ> sor;
+				sor.setInputCloud(cloud_global);
+				sor.setLeafSize(0.01f, 0.01f, 0.01f);
+				sor.filter(*cloud_voxel_filtered);
+				
+				auto balloon_cloud = make_sphere(0.001f*pObject->getPosition(), 0.05f);
+				auto origin_cloud = make_sphere(Eigen::Vector3f::Zero(), 0.01f);
+				auto x_cloud = make_sphere(Eigen::Vector3f(0.5f, 0.f, 0.f), 0.01f);
+				auto y_cloud = make_sphere(Eigen::Vector3f(0.f, 0.5f, 0.f), 0.01f);
+				auto z_cloud = make_sphere(Eigen::Vector3f(0.f, 0.f, 0.5f), 0.01f);
 
+				std::vector<pcl_ptr> cloud_ptrs{ cloud_voxel_filtered, balloon_cloud, origin_cloud, x_cloud, y_cloud, z_cloud };
 				draw_pointcloud(viewer, viewer_state, cloud_ptrs);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 		}
 	);
-	std::this_thread::sleep_for(std::chrono::seconds(10));
-	t_viewer.join();
-	//pManipulator->FinishManipulation();
-	return 0;
 
+	t_viewer.join();
+	pManipulator->FinishManipulation();
+	return 0;
 }
+
+

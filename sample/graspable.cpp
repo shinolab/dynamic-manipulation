@@ -11,6 +11,7 @@
 #include <pcl/common/transforms.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include "StereoTracker.hpp"
 #include "autd3.hpp"
 #include "manipulator.hpp"
@@ -19,8 +20,8 @@
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
 pcl_ptr make_sphere(const Eigen::Vector3f& center, float radius) {
-	int num_long = 100;
-	int num_lat = 50;
+	int num_long = 50;
+	int num_lat = 25;
 	int num_points = num_long * num_lat;
 	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	cloud->points.resize(num_points);
@@ -94,7 +95,7 @@ namespace {
 	float3 colors[]{ 
 		{ 0.1f, 0.9f, 0.5f },
 		{ 0.8f, 0.1f, 0.3f },
-		{ 0.f, 0.f, 0.0f},
+		{ 0.5f, 0.5f, 0.5f},
 		{ 1.0f, 0.f, 0.f},
 		{ 0.f, 1.0f, 0.f},
 		{ 0.f, 0.f, 1.f}
@@ -118,11 +119,11 @@ void register_glfw_callbacks(window& app, state& app_state) {
 		if (app_state.ml)
 		{
 			app_state.yaw -= (x - app_state.last_x);
-			app_state.yaw = std::max(app_state.yaw, -180.0);
-			app_state.yaw = std::min(app_state.yaw, +180.0);
+			//app_state.yaw = std::max(app_state.yaw, -180.0);
+			//app_state.yaw = std::min(app_state.yaw, +180.0);
 			app_state.pitch += (y - app_state.last_y);
-			app_state.pitch = std::max(app_state.pitch, -180.0);
-			app_state.pitch = std::min(app_state.pitch, +180.0);
+			//app_state.pitch = std::max(app_state.pitch, -180.0);
+			//app_state.pitch = std::min(app_state.pitch, +180.0);
 		}
 		app_state.last_x = x;
 		app_state.last_y = y;
@@ -144,7 +145,7 @@ void draw_pointcloud(window& app, state& app_state, const std::vector<pcl_ptr>& 
 
 	float width = app.width(), height = app.height();
 
-	glClearColor(153.f / 255, 153.f / 255, 153.f / 255, 1);
+	glClearColor(0.f / 255, 0.f / 255, 0.f / 255, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
@@ -158,10 +159,26 @@ void draw_pointcloud(window& app, state& app_state, const std::vector<pcl_ptr>& 
 	glTranslatef(0, 0, +0.5f + app_state.offset_y * 0.05f);
 	glRotated(app_state.pitch, 1, 0, 0);
 	glRotated(app_state.yaw, 0, 1, 0);
-	glTranslatef(0, 0, -0.5f);
+	glTranslatef(0, 0, 0.f);
 
 	glPointSize(width / 640);
 	glEnable(GL_TEXTURE_2D);
+
+	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.1f, 0.0f, 0.0f);
+	glEnd();
+	glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, 0.1f, 0.0f);
+	glEnd();
+	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, 0.0f, 0.1f);
+	glEnd();
 
 	int color = 0;
 
@@ -239,9 +256,9 @@ int main(int argc, char** argv) {
 				-0.71529, -0.0103563, -0.698751,
 				0.0168372, -0.999855, -0.00241686;
 			Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
-			Eigen::Affine3f affine_rs = Eigen::Affine3f::Identity();
-			affine_rs.rotate(rot_rs);
-			affine_rs.translate(0.001f*pos_rs);
+			Eigen::Affine3f affine_rs
+				= Eigen::Translation3f(0.001f * pos_rs) * rot_rs;
+
 			std::cout << "running viewer" << std::endl;
 			while (viewer) {
 				rs2::frameset frame = pipe.wait_for_frames();
@@ -253,26 +270,51 @@ int main(int argc, char** argv) {
 				auto cloud = points_to_pcl(points_rs.calculate(depth));
 				auto cloud_filtered_x = passthrough_pcl(cloud, "x", -0.5f, 0.5f);
 				auto cloud_filtered_xy = passthrough_pcl(cloud, "y", -0.5f, 0.5f);
-				auto cloud_filtered_xyz = passthrough_pcl(cloud, "z", -0.5f, 0.5f);
-				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);	
+				auto cloud_filtered_xyz = passthrough_pcl(cloud, "z", -0.5f, 0.8f);
+				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);
 				pcl::transformPointCloud(*cloud_filtered_xyz, *cloud_global, affine_rs);
 
 				pcl_ptr cloud_voxel_filtered(new pcl::PointCloud<pcl::PointXYZ>());
 				pcl::VoxelGrid<pcl::PointXYZ> sor;
 				sor.setInputCloud(cloud_global);
-				sor.setLeafSize(0.01f, 0.01f, 0.01f);
+				sor.setLeafSize(0.005f, 0.005f, 0.005f);
 				sor.filter(*cloud_voxel_filtered);
-				
-				auto balloon_cloud = make_sphere(0.001f*pObject->getPosition(), 0.05f);
-				auto origin_cloud = make_sphere(Eigen::Vector3f::Zero(), 0.01f);
-				auto x_cloud = make_sphere(Eigen::Vector3f(0.5f, 0.f, 0.f), 0.01f);
-				auto y_cloud = make_sphere(Eigen::Vector3f(0.f, 0.5f, 0.f), 0.01f);
-				auto z_cloud = make_sphere(Eigen::Vector3f(0.f, 0.f, 0.5f), 0.01f);
+				auto pos_balloon = pObject->getPosition();
+				auto balloon_cloud = make_sphere(0.001f * pos_balloon, 0.01f);
 
-				std::vector<pcl_ptr> cloud_ptrs{ cloud_voxel_filtered, balloon_cloud, origin_cloud, x_cloud, y_cloud, z_cloud };
+				pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+				kdtree.setInputCloud(cloud_voxel_filtered);
+				pcl::PointXYZ searchPoint(
+					0.001f * pos_balloon.x(),
+					0.001f * pos_balloon.y(),
+					0.001f * pos_balloon.z()
+				);
+				std::vector<int> pointIdxRadiusSearch;
+				std::vector<float> pointRadiusSquaredDistance;
+				float contact_threshold_min = 0.07f;
+				float contact_threshold_max = 0.1f;
+				kdtree.radiusSearch(
+					searchPoint,
+					contact_threshold_max,
+					pointIdxRadiusSearch,
+					pointRadiusSquaredDistance
+				);
+				auto itr_contact_min = std::find_if(
+					pointRadiusSquaredDistance.begin(),
+					pointRadiusSquaredDistance.end(),
+					[&contact_threshold_min](float dist) { return dist > contact_threshold_min * contact_threshold_min; }
+				);
+				int num_points_contact = std::distance(itr_contact_min, pointRadiusSquaredDistance.end());
+				if (num_points_contact > 30) {
+					std::cout << "contact ( num_points_contact: " << num_points_contact << ")" <<std::endl;
+				}
+				auto threshold_min = make_sphere(0.001f * pos_balloon, contact_threshold_min);
+				auto threshold_max = make_sphere(0.001f * pos_balloon, contact_threshold_max);
+
+				std::vector<pcl_ptr> cloud_ptrs{ cloud_voxel_filtered, balloon_cloud, threshold_min, threshold_max};
 				draw_pointcloud(viewer, viewer_state, cloud_ptrs);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
+				
 		}
 	);
 

@@ -31,8 +31,8 @@ namespace haptic_icon {
 	std::shared_ptr<dynaman::Tracker> CreateTracker(const std::string& target_image_name) {
 		std::string leftCamId("32434751");
 		std::string rightCamId("43435351");
-		Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
-		Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
+		Eigen::Vector3f pos_sensor(-124.664, -861.249,  13.1787);
+		Eigen::Quaternionf quo_sensor(0.694607f, -0.719329, -0.0084289, 0.00396039);
 		return dynaman::stereoTracker::create(
 			dynaman::stereoCamera::create(ximeaCameraDevice::create(leftCamId), ximeaCameraDevice::create(rightCamId)),
 			imgProc::hue_backproject_extractor::create(target_image_name),

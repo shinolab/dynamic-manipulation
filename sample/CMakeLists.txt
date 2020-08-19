@@ -146,16 +146,31 @@ if(BUILD_PCL_APPS)
     include_directories(${PCL_INCLUDE_DIR})
     add_definitions(${PCL_DEFINITIONS})
 
-    add_executable(graspable graspable.cpp)
-    target_link_libraries(graspable
-        ${realsense2_LIBRARY}
+    add_library(pcl_viewer pcl_viewer.hpp pcl_viewer.cpp)
+    target_link_libraries(
+        pcl_viewer
         ${OPENGL_LIBRARIES}
         ${PCL_LIBRARIES}
         ${GLEW_LIBRARIES}
         ${GLFW3_LIBRARY}
+    )
+
+    add_executable(pcl_viewer_test pcl_viewer_test.cpp)
+    target_link_libraries(
+        pcl_viewer_test
+        pcl_viewer
+        ${realsense2_LIBRARY}
+    )
+
+    add_executable(graspable graspable.cpp)
+    target_link_libraries(graspable
+        ${realsense2_LIBRARY}
+        ${PCL_LIBRARIES}
+        pcl_viewer
         StereoTracker
         CameraDevice
         ImgProcUtil
         DynamicManipulation
     )
+
 endif()

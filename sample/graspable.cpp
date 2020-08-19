@@ -5,7 +5,6 @@
 #include <Eigen/Geometry>
 #include <librealsense2/rs.hpp>
 #include "stb_easy_font.h"
-#include "example.hpp"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
@@ -16,6 +15,7 @@
 #include "autd3.hpp"
 #include "manipulator.hpp"
 #include "haptic_icon.hpp"
+#include "pcl_viewer.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
@@ -82,133 +82,6 @@ pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
 	return cloud;
 }
 
-namespace {
-	// Struct for managing rotation of pointcloud view
-	struct state {
-		state() : yaw(0.0), pitch(0.0), last_x(0.0), last_y(0.0),
-			ml(false), offset_x(0.0f), offset_y(0.0f) {}
-		double yaw, pitch, last_x, last_y;
-		bool ml;
-		float offset_x, offset_y;
-	};
-
-	float3 colors[]{ 
-		{ 0.1f, 0.9f, 0.5f },
-		{ 0.8f, 0.1f, 0.3f },
-		{ 0.5f, 0.5f, 0.5f},
-		{ 1.0f, 0.f, 0.f},
-		{ 0.f, 1.0f, 0.f},
-		{ 0.f, 0.f, 1.f}
-	};
-}
-
-void register_glfw_callbacks(window& app, state& app_state) {
-	app.on_left_mouse = [&](bool pressed)
-	{
-		app_state.ml = pressed;
-	};
-
-	app.on_mouse_scroll = [&](double xoffset, double yoffset)
-	{
-		app_state.offset_x += static_cast<float>(xoffset);
-		app_state.offset_y += static_cast<float>(yoffset);
-	};
-
-	app.on_mouse_move = [&](double x, double y)
-	{
-		if (app_state.ml)
-		{
-			app_state.yaw -= (x - app_state.last_x);
-			//app_state.yaw = std::max(app_state.yaw, -180.0);
-			//app_state.yaw = std::min(app_state.yaw, +180.0);
-			app_state.pitch += (y - app_state.last_y);
-			//app_state.pitch = std::max(app_state.pitch, -180.0);
-			//app_state.pitch = std::min(app_state.pitch, +180.0);
-		}
-		app_state.last_x = x;
-		app_state.last_y = y;
-	};
-
-	app.on_key_release = [&](int key)
-	{
-		if (key == 32) // Escape
-		{
-			app_state.yaw = app_state.pitch = 0; app_state.offset_x = app_state.offset_y = 0.0;
-		}
-	};
-}
-
-void draw_pointcloud(window& app, state& app_state, const std::vector<pcl_ptr>& points) {
-	// OpenGL commands that prep screen for the pointcloud
-	glPopMatrix();
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-
-	float width = app.width(), height = app.height();
-
-	glClearColor(0.f / 255, 0.f / 255, 0.f / 255, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	gluPerspective(60, width / height, 0.01f, 10.0f);
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0);
-
-	glTranslatef(0, 0, +0.5f + app_state.offset_y * 0.05f);
-	glRotated(app_state.pitch, 1, 0, 0);
-	glRotated(app_state.yaw, 0, 1, 0);
-	glTranslatef(0, 0, 0.f);
-
-	glPointSize(width / 640);
-	glEnable(GL_TEXTURE_2D);
-
-	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_LINES);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.1f, 0.0f, 0.0f);
-	glEnd();
-	glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-	glBegin(GL_LINES);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.1f, 0.0f);
-	glEnd();
-	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-	glBegin(GL_LINES);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, 0.1f);
-	glEnd();
-
-	int color = 0;
-
-	for (auto&& pc : points)
-	{
-		auto c = colors[(color++) % (sizeof(colors) / sizeof(float3))];
-
-		glBegin(GL_POINTS);
-		glColor3f(c.x, c.y, c.z);
-
-		/* this segment actually prints the pointcloud */
-		for (int i = 0; i < pc->points.size(); i++)
-		{
-			auto&& p = pc->points[i];
-			if (p.z)
-			{
-				// upload the point and texture coordinates only for points we have depth data for
-				glVertex3f(p.x, p.y, p.z);
-			}
-		}
-		glEnd();
-	}
-	// OpenGL cleanup
-	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glPopAttrib();
-	glPushMatrix();
-}
-
 int main(int argc, char** argv) {
 
 	std::string target_image_name("blue_target_no_cover.png");
@@ -242,9 +115,6 @@ int main(int argc, char** argv) {
 	
 	std::thread t_viewer(
 		[&pObject]() {
-			window viewer(1280, 720, "pointcloud");
-			state viewer_state;
-			register_glfw_callbacks(viewer, viewer_state);
 
 			rs2::pipeline pipe;
 			rs2::config cfg;
@@ -260,6 +130,7 @@ int main(int argc, char** argv) {
 				= Eigen::Translation3f(0.001f * pos_rs) * rot_rs;
 
 			std::cout << "running viewer" << std::endl;
+			pcl_viewer viewer("pointcloud", 1280, 720);
 			while (viewer) {
 				rs2::frameset frame = pipe.wait_for_frames();
 				auto depth = frame.get_depth_frame();
@@ -312,9 +183,8 @@ int main(int argc, char** argv) {
 				auto threshold_max = make_sphere(0.001f * pos_balloon, contact_threshold_max);
 
 				std::vector<pcl_ptr> cloud_ptrs{ cloud_voxel_filtered, balloon_cloud, threshold_min, threshold_max};
-				draw_pointcloud(viewer, viewer_state, cloud_ptrs);
-			}
-				
+				viewer.draw(cloud_ptrs);
+			}	
 		}
 	);
 

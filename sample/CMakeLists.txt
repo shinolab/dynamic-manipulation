@@ -155,14 +155,28 @@ if(BUILD_PCL_APPS)
         ${GLFW3_LIBRARY}
     )
 
+    include_directories(${PCL_INCLUDE_DIR})
+    add_definitions(${PCL_DEFINITIONS})
+    add_library(pcl_grabber pcl_grabber.cpp pcl_grabber.hpp)
+    target_link_libraries(
+        pcl_grabber
+        ${realsense2_LIBRARY}
+        ${PCL_LIBRARIES}
+    )
+
     add_executable(pcl_viewer_test pcl_viewer_test.cpp)
     target_link_libraries(
         pcl_viewer_test
         pcl_viewer
+        pcl_grabber
         ${realsense2_LIBRARY}
     )
 
-    add_executable(graspable graspable.cpp)
+    add_executable(graspable
+        graspable.cpp
+        balloon_interface.hpp
+        balloon_interface.cpp
+    )
     target_link_libraries(graspable
         ${realsense2_LIBRARY}
         ${PCL_LIBRARIES}

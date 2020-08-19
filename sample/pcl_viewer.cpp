@@ -84,6 +84,12 @@ void pcl_viewer::initialize_callbacks() {
 		std::cout << "Mouse clicked." << std::endl;
 	};
 
+	m_win.on_right_mouse = [&](bool pressed) {
+		m_state.mr = pressed;
+		std::cout << "right bottun clicked" << std::endl;
+		m_state.offset_x += 0.1f;
+	};
+
 	m_win.on_mouse_scroll = [&](double xoffset, double yoffset)
 	{
 		m_state.offset_x += static_cast<float>(xoffset);
@@ -134,11 +140,11 @@ void pcl_viewer::draw(const std::vector<pcl_ptr>& clouds, const std::vector<floa
 	gluLookAt(
 		0, 0, 0,
 		0, 0, 1,
-		0, -1, 0
+		1, 0, 0
 	);
-	glTranslatef(0, 0, 0.5f + m_state.offset_y * 0.05f);
-	glRotated(m_state.pitch, 1, 0, 0);
-	glRotated(m_state.yaw, 0, 1, 0);
+	glTranslatef(0 + m_state.offset_x, 0, 0.5f + m_state.offset_y * 0.05f);
+	glRotated(-M_PI_2 + m_state.pitch, 0, 1, 0);
+	glRotated(m_state.yaw, 0, 0, 1);
 	glTranslatef(0, 0, 0);
 	glPointSize(2.0f);
 	glEnable(GL_TEXTURE_2D);

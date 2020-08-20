@@ -206,7 +206,7 @@ namespace dynaman {
 		for (auto itr = positionBuffer.begin(); itr != positionBuffer.end(); itr++) {
 			posAverage += *itr;
 		}
-		return posAverage / 3.f;
+		return posAverage / positionBuffer.size();
 	}
 
 	Eigen::VectorXf FloatingObject::getLatestInput()

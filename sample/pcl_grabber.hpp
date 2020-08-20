@@ -13,6 +13,7 @@ public:
 	using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 	virtual ~pcl_grabber() {};
 	virtual void Open() = 0;
+	virtual void Close() = 0;
 	virtual pcl_ptr Capture() = 0;
 };
 
@@ -22,6 +23,7 @@ public:
 	~rs2_pcl_grabber();
 	static std::shared_ptr<pcl_grabber> Create(const Eigen::Vector3f& pos, const Eigen::Matrix3f& rot, const std::string& id, float range_min = 0.15f, float range_max = 1.0f);
 	void Open() override;
+	void Close() override;
 	pcl_ptr Capture() override;
 private:
 	pcl_ptr points_to_pcl(const rs2::points& points);

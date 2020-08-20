@@ -18,6 +18,10 @@ void rs2_pcl_grabber::Open() {
 	m_pipe.start();
 }
 
+void rs2_pcl_grabber::Close() {
+	m_pipe.stop();
+}
+
 pcl_grabber::pcl_ptr rs2_pcl_grabber::Capture() {
 	rs2::frameset frames = m_pipe.wait_for_frames();
 	auto depth_frame = frames.get_depth_frame();

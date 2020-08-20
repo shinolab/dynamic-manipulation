@@ -178,9 +178,9 @@ if(BUILD_PCL_APPS)
         balloon_interface.cpp
     )
     target_link_libraries(graspable
-        ${realsense2_LIBRARY}
         ${PCL_LIBRARIES}
         pcl_viewer
+        pcl_grabber
         StereoTracker
         CameraDevice
         ImgProcUtil

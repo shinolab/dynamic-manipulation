@@ -16,6 +16,8 @@
 #include "manipulator.hpp"
 #include "haptic_icon.hpp"
 #include "pcl_viewer.hpp"
+#include "pcl_grabber.hpp"
+#include "balloon_interface.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
@@ -83,7 +85,6 @@ pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
 }
 
 int main(int argc, char** argv) {
-
 	std::string target_image_name("blue_target_no_cover.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
@@ -112,83 +113,33 @@ int main(int argc, char** argv) {
 		0
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
+
+	Eigen::Matrix3f rot_rs;
+	rot_rs <<
+		-0.698625, -0.0134938, 0.715361,
+		-0.71529, -0.0103563, -0.698751,
+		0.0168372, -0.999855, -0.00241686;
+	Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
 	
-	std::thread t_viewer(
-		[&pObject]() {
-
-			rs2::pipeline pipe;
-			rs2::config cfg;
-			cfg.enable_stream(RS2_STREAM_DEPTH);
-			pipe.start(cfg);
-			Eigen::Matrix3f rot_rs;
-			rot_rs <<
-				-0.698625, -0.0134938, 0.715361,
-				-0.71529, -0.0103563, -0.698751,
-				0.0168372, -0.999855, -0.00241686;
-			Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
-			Eigen::Affine3f affine_rs
-				= Eigen::Translation3f(0.001f * pos_rs) * rot_rs;
-
-			std::cout << "running viewer" << std::endl;
-			pcl_viewer viewer("pointcloud", 1280, 720);
-			while (viewer) {
-				rs2::frameset frame = pipe.wait_for_frames();
-				auto depth = frame.get_depth_frame();
-				rs2::pointcloud points_rs;
-
-				//std::cout << "frame aquired." << std::endl;
-				//std::cout << "converting depth to point cloud" << std::endl;
-				auto cloud = points_to_pcl(points_rs.calculate(depth));
-				auto cloud_filtered_x = passthrough_pcl(cloud, "x", -0.5f, 0.5f);
-				auto cloud_filtered_xy = passthrough_pcl(cloud, "y", -0.5f, 0.5f);
-				auto cloud_filtered_xyz = passthrough_pcl(cloud, "z", -0.5f, 0.8f);
-				pcl_ptr cloud_global(new pcl::PointCloud<pcl::PointXYZ>);
-				pcl::transformPointCloud(*cloud_filtered_xyz, *cloud_global, affine_rs);
-
-				pcl_ptr cloud_voxel_filtered(new pcl::PointCloud<pcl::PointXYZ>());
-				pcl::VoxelGrid<pcl::PointXYZ> sor;
-				sor.setInputCloud(cloud_global);
-				sor.setLeafSize(0.005f, 0.005f, 0.005f);
-				sor.filter(*cloud_voxel_filtered);
-				auto pos_balloon = pObject->getPosition();
-				auto balloon_cloud = make_sphere(0.001f * pos_balloon, 0.01f);
-
-				pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-				kdtree.setInputCloud(cloud_voxel_filtered);
-				pcl::PointXYZ searchPoint(
-					0.001f * pos_balloon.x(),
-					0.001f * pos_balloon.y(),
-					0.001f * pos_balloon.z()
-				);
-				std::vector<int> pointIdxRadiusSearch;
-				std::vector<float> pointRadiusSquaredDistance;
-				float contact_threshold_min = 0.07f;
-				float contact_threshold_max = 0.1f;
-				kdtree.radiusSearch(
-					searchPoint,
-					contact_threshold_max,
-					pointIdxRadiusSearch,
-					pointRadiusSquaredDistance
-				);
-				auto itr_contact_min = std::find_if(
-					pointRadiusSquaredDistance.begin(),
-					pointRadiusSquaredDistance.end(),
-					[&contact_threshold_min](float dist) { return dist > contact_threshold_min * contact_threshold_min; }
-				);
-				int num_points_contact = std::distance(itr_contact_min, pointRadiusSquaredDistance.end());
-				if (num_points_contact > 30) {
-					std::cout << "contact ( num_points_contact: " << num_points_contact << ")" <<std::endl;
-				}
-				auto threshold_min = make_sphere(0.001f * pos_balloon, contact_threshold_min);
-				auto threshold_max = make_sphere(0.001f * pos_balloon, contact_threshold_max);
-
-				std::vector<pcl_ptr> cloud_ptrs{ cloud_voxel_filtered, balloon_cloud, threshold_min, threshold_max};
-				viewer.draw(cloud_ptrs);
-			}	
-		}
+	auto binterface = dynaman::balloon_interface::Create(
+		pObject,
+		rs2_pcl_grabber::Create(pos_rs, rot_rs, "")
 	);
 
-	t_viewer.join();
+	binterface->Open();
+	binterface->Run();
+
+	pcl_viewer viewer("pointcloud", 1280, 720);
+	while (viewer) {
+		auto cloud = binterface->CopyPointCloud();
+		auto pos_balloon = pObject->getPosition();
+		auto threshold_min = make_sphere(0.001f * pos_balloon, binterface->ThresContactMin());
+		auto threshold_max = make_sphere(0.001f * pos_balloon, binterface->ThresContactMax());
+		std::vector<pcl_ptr> cloud_ptrs{ cloud, threshold_min, threshold_max };
+		viewer.draw(cloud_ptrs);
+	}
+
+	binterface->Close();
 	pManipulator->FinishManipulation();
 	return 0;
 }

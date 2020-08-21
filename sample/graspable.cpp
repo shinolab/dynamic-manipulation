@@ -124,6 +124,7 @@ int main(int argc, char** argv) {
 		std::this_thread::sleep_for(std::chrono::microseconds(1000));
 	}
 	binterface->Close();
+	grabber->Close();
 	pManipulator->FinishManipulation();
 	return 0;
 }

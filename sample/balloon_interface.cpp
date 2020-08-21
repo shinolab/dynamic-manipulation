@@ -6,9 +6,9 @@
 #include "balloon_interface.hpp"
 
 namespace {
-	const int thres_contact_num = 50;
+	const int thres_contact_num = 150;
 	const int thres_touch_num = 5;
-	const float thres_hold_num = 10;
+	const int thres_hold_num = 10;
 }
 
 using namespace dynaman;
@@ -90,7 +90,6 @@ void balloon_interface::Close() {
 	if (m_thr_observer.joinable()) {
 		m_thr_observer.join();
 	}
-	m_pPclSensor->Close();
 }
 
 bool balloon_interface::IsOpen() {
@@ -115,7 +114,7 @@ balloon_interface::HoldState balloon_interface::DetermineHoldState(
 			break;
 		}
 	}
-	if (countContact > thres_hold_num) {
+	if (countContact >= thres_hold_num) {
 		return HoldState::HOLD;
 	}
 	else if (countContact > thres_touch_num) {
@@ -144,7 +143,7 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 			return dist > this->thres_contact_min * this->thres_contact_min;
 		}
 	);
-	int num_points_contact = std::distance(pointSquaredDistances.begin(), itr_contact_min);
+	int num_points_contact = std::distance(itr_contact_min, pointSquaredDistances.end());
 	auto is_contact = (num_points_contact > thres_contact_num);
 	std::cout
 		<< "contact points: " << num_points_contact

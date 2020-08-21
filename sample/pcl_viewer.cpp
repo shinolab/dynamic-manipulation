@@ -154,8 +154,6 @@ void pcl_viewer::draw(const std::vector<pcl_ptr>& clouds, const std::vector<floa
 		glBegin(GL_POINTS);
 		glColor3f(color.x, color.y, color.z);
 
-		/* this segment actually prints the pointcloud */
-
 		for (auto&& point : cloud->points) {
 			if (point.z) {
 				glVertex3f(point.x, point.y, point.z);
@@ -190,26 +188,15 @@ void pcl_viewer::draw(const std::vector<pcl_ptr>& clouds, const std::vector<floa
 
 
 void pcl_viewer::draw(const std::vector<pcl_ptr>& clouds) {
-	std::vector<float3> colors;
 	draw(clouds, make_default_colors(clouds.size()));
 }
 
 std::vector<float3> pcl_viewer::make_default_colors(int size) {
-	std::vector<float3> colors(size);
-	for(auto itr = colors.begin(); itr != colors.end(); itr++ ){
-		switch (std::distance(colors.begin(), itr)%3)
-		{
-		case 0:
-			*itr = float3{ 0.8f, 0.1f, 0.1f };
-		case 1:
-			*itr = float3{ 0.1f, 0.8f, 0.1f };
-		case 2:
-			*itr = float3{ 0.1f, 0.1f, 0.8f };
-		default:
-			break;
-		}
-	}
-	return colors;
+	return std::vector<float3>{
+		{ 0.9f, 0.1f, 0.1f },
+		{ 0.1f, 0.9f, 0.1f },
+		{ 0.1f, 0.1f, 0.9f }
+	};
 }
 
 pcl_viewer::operator bool() {

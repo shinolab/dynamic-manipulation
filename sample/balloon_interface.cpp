@@ -20,7 +20,8 @@ balloon_interface::balloon_interface(
 m_is_running(false),
 m_is_open(false),
 m_pPclSensor(pPointCloudSensor),
-m_contact_queue(thres_hold_num, std::make_pair(0, false))
+m_contact_queue(thres_hold_num, std::make_pair(0, false)),
+m_pCloud(new pcl::PointCloud<pcl::PointXYZ>())
 {}
 
 std::shared_ptr<balloon_interface> balloon_interface::Create(

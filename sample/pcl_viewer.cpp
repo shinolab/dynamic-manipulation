@@ -81,12 +81,10 @@ void pcl_viewer::initialize_callbacks() {
 	m_win.on_left_mouse = [&](bool pressed)
 	{
 		m_state.ml = pressed;
-		std::cout << "Mouse clicked." << std::endl;
 	};
 
 	m_win.on_right_mouse = [&](bool pressed) {
 		m_state.mr = pressed;
-		std::cout << "right bottun clicked" << std::endl;
 		m_state.offset_x += 0.1f;
 	};
 

@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 		0.0168372, -0.999855, -0.00241686;
 	Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
 	
-	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 0.6f);
+	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 1.0f);
 	grabber->Open();
 
 	auto binterface = dynaman::balloon_interface::Create(

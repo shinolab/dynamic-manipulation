@@ -19,8 +19,7 @@ balloon_interface::balloon_interface(
 m_is_running(false),
 m_is_open(false),
 m_pPclSensor(pPointCloudSensor),
-m_contact_queue(thres_hold_num, std::make_pair(0, false)),
-m_pCloud(new pcl::PointCloud<pcl::PointXYZ>())
+m_contact_queue(thres_hold_num, std::make_pair(0, false))
 {}
 
 std::shared_ptr<balloon_interface> balloon_interface::Create(
@@ -34,26 +33,30 @@ void balloon_interface::Open() {
 
 	m_thr_observer = std::thread([this]()
 		{
-			m_pPclSensor->Open();
+			//m_pPclSensor->Open();
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_is_open);
 				m_is_open = true;
 			}
-			while (IsOpen()) {
+			while (IsOpen()) 
+			{
 				{
 					std::lock_guard<std::mutex> lock(m_mtx_pCloud);
 					m_pCloud = m_pPclSensor->Capture();
+					auto is_contact = IsContact(m_pObject, m_pCloud);
 					m_contact_queue.push_back(
-						std::make_pair(timeGetTime(), IsContact(m_pObject, m_pCloud))
+						std::make_pair(timeGetTime(), is_contact)
 					);
+
+					m_contact_queue.pop_front();
 				}
-				m_contact_queue.pop_front();
 				auto holdState = DetermineHoldState(m_contact_queue);
 				if (IsRunning()) {
 					if (holdState == HoldState::HOLD) {
 						OnHold();
 					}
 				}
+				std::this_thread::sleep_for(std::chrono::microseconds(1000));
 			}
 		}
 	);
@@ -73,10 +76,13 @@ void balloon_interface::Close() {
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_is_running);
 		m_is_running = false;
+	}
+	{
+		std::lock_guard<std::mutex> lock(m_mtx_is_open);
 		m_is_open = false;
-		if (m_thr_observer.joinable()) {
-			m_thr_observer.join();
-		}
+	}
+	if (m_thr_observer.joinable()) {
+		m_thr_observer.join();
 	}
 	m_pPclSensor->Close();
 }
@@ -95,7 +101,7 @@ balloon_interface::HoldState balloon_interface::DetermineHoldState(
 	std::deque<std::pair<DWORD, bool>> contact_queue
 ) {
 	int countContact = 0;
-	for (auto ic = contact_queue.rbegin() - thres_touch_num; ic != contact_queue.rend(); ic++) {
+	for (auto ic = contact_queue.rbegin(); ic != contact_queue.rend(); ic++) {
 		if ((*ic).second == true) {
 			countContact++;
 		}
@@ -113,12 +119,15 @@ balloon_interface::HoldState balloon_interface::DetermineHoldState(
 }
 
 bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
+	if (pCloud->empty()) {
+		return false;
+	}
 	Eigen::Vector3f c = 0.001f * pObject->getPosition();
 	pcl::PointXYZ balloon_center(c.x(), c.y(), c.z());
 	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+	kdtree.setInputCloud(pCloud);
 	std::vector<int> pointIdxSearch;
 	std::vector<float> pointSquaredDistances;
-
 	kdtree.radiusSearch(balloon_center, thres_contact_max, pointIdxSearch, pointSquaredDistances);
 	auto itr_contact_min = std::find_if(
 		pointSquaredDistances.begin(), 
@@ -134,9 +143,11 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 
 void balloon_interface::OnHold() {
 	m_pObject->updateStatesTarget(m_pObject->AveragePosition());
+	std::cout << "HOLDING" << std::endl;
 }
 
 balloon_interface::pcl_ptr balloon_interface::CopyPointCloud() {
+	std::lock_guard<std::mutex> lock(m_mtx_pCloud);
 	return pcl_ptr(new pcl::PointCloud<pcl::PointXYZ>(*m_pCloud));
 }
 

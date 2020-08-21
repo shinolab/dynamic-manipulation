@@ -1,16 +1,11 @@
 #include <vector>
 #include <memory>
-#include <thread>
 #include <iostream>
 #include <Eigen/Geometry>
-#include <librealsense2/rs.hpp>
-#include "stb_easy_font.h"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/common/transforms.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/kdtree/kdtree_flann.h>
 #include "StereoTracker.hpp"
 #include "autd3.hpp"
 #include "manipulator.hpp"
@@ -51,23 +46,6 @@ pcl_ptr passthrough_pcl(pcl_ptr cloud, const std::string& field_name, float limi
 	pcl_ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
 	pass.filter(*cloud_filtered);
 	return cloud_filtered;
-}
-
-pcl_ptr points_to_pcl(const rs2::points& points) {
-	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-	auto sp = points.get_profile().as<rs2::video_stream_profile>();
-	cloud->width = sp.width();
-	cloud->height = sp.height();
-	cloud->is_dense = false;
-	cloud->points.resize(points.size());
-	auto pVertex = points.get_vertices();
-	for (auto& p : cloud->points) {
-		p.x = pVertex->x;
-		p.y = pVertex->y;
-		p.z = pVertex->z;
-		pVertex++;
-	}
-	return cloud;
 }
 
 pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
@@ -121,27 +99,31 @@ int main(int argc, char** argv) {
 		0.0168372, -0.999855, -0.00241686;
 	Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
 	
+	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 0.6f);
+	grabber->Open();
+
 	auto binterface = dynaman::balloon_interface::Create(
 		pObject,
-		rs2_pcl_grabber::Create(pos_rs, rot_rs, "")
+		grabber
 	);
-
 	binterface->Open();
 	binterface->Run();
-
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
 		auto cloud = binterface->CopyPointCloud();
 		auto pos_balloon = pObject->getPosition();
 		auto threshold_min = make_sphere(0.001f * pos_balloon, binterface->ThresContactMin());
 		auto threshold_max = make_sphere(0.001f * pos_balloon, binterface->ThresContactMax());
-		std::vector<pcl_ptr> cloud_ptrs{ cloud, threshold_min, threshold_max };
+		std::vector<pcl_ptr> cloud_ptrs{ 
+			cloud, 
+			threshold_min, 
+			threshold_max 
+		};
 		viewer.draw(cloud_ptrs);
-	}
 
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+	}
 	binterface->Close();
 	pManipulator->FinishManipulation();
 	return 0;
 }
-
-

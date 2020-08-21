@@ -3,7 +3,11 @@
 #include <librealsense2/rs.hpp>
 
 rs2_pcl_grabber::rs2_pcl_grabber(const Eigen::Vector3f& pos, const Eigen::Matrix3f& rot, const std::string& id, float range_min, float range_max):
-	m_affine(Eigen::Translation3f(pos) * rot), m_id(id), m_thres_filter(range_min, range_max){}
+	m_affine(Eigen::Translation3f(pos) * rot),
+	m_id(id),
+	m_thr_filter(range_min, range_max),
+	m_depth_to_disparity(true),
+	m_disparity_to_depth(false){}
 
 rs2_pcl_grabber::~rs2_pcl_grabber() {}
 
@@ -26,7 +30,13 @@ pcl_grabber::pcl_ptr rs2_pcl_grabber::Capture() {
 	rs2::frameset frames = m_pipe.wait_for_frames();
 	auto depth_frame = frames.get_depth_frame();
 	rs2::pointcloud rsPoints;
-	auto cloud_raw = points_to_pcl(rsPoints.calculate(m_thres_filter.process(depth_frame)));
+	depth_frame = m_dec_filter.process(depth_frame);
+	depth_frame = m_thr_filter.process(depth_frame);
+	depth_frame = m_depth_to_disparity.process(depth_frame);
+	depth_frame = m_spt_filter.process(depth_frame);
+	depth_frame = m_tmp_filter.process(depth_frame);
+	depth_frame = m_disparity_to_depth.process(depth_frame);
+	auto cloud_raw = points_to_pcl(rsPoints.calculate(depth_frame));
 	pcl_ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZ>());
 	pcl::transformPointCloud(*cloud_raw, *cloud_transformed, m_affine);
 	return cloud_transformed;

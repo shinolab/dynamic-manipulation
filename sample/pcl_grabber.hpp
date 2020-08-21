@@ -30,6 +30,11 @@ private:
 	rs2::pipeline m_pipe;
 	std::string m_id;
 	Eigen::Affine3f m_affine;
-	rs2::threshold_filter m_thres_filter;
+	rs2::threshold_filter m_thr_filter;
+	rs2::decimation_filter m_dec_filter;
+	rs2::spatial_filter m_spt_filter;
+	rs2::temporal_filter m_tmp_filter;
+	rs2::disparity_transform m_depth_to_disparity;
+	rs2::disparity_transform m_disparity_to_depth;
 };
 #endif // !_DYNAMAN_PCL_GRABBER_HPP

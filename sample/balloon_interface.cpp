@@ -1,6 +1,7 @@
 #include <utility>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include "balloon_interface.hpp"
 
@@ -42,7 +43,11 @@ void balloon_interface::Open() {
 			{
 				{
 					std::lock_guard<std::mutex> lock(m_mtx_pCloud);
-					m_pCloud = m_pPclSensor->Capture();
+					auto pCloudRaw = m_pPclSensor->Capture();
+					pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
+					vg_filter.setInputCloud(pCloudRaw);
+					vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
+					vg_filter.filter(*m_pCloud);
 					auto is_contact = IsContact(m_pObject, m_pCloud);
 					m_contact_queue.push_back(
 						std::make_pair(timeGetTime(), is_contact)
@@ -124,6 +129,7 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 	}
 	Eigen::Vector3f c = 0.001f * pObject->getPosition();
 	pcl::PointXYZ balloon_center(c.x(), c.y(), c.z());
+
 	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 	kdtree.setInputCloud(pCloud);
 	std::vector<int> pointIdxSearch;
@@ -138,7 +144,12 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 		}
 	);
 	int num_points_contact = std::distance(pointSquaredDistances.begin(), itr_contact_min);
-	return num_points_contact > thres_contact_num;
+	auto is_contact = (num_points_contact > thres_contact_num);
+	std::cout
+		<< "contact points: " << num_points_contact
+		<< (is_contact ? " [Contact]" : " ")
+		<< std::endl;
+	return is_contact;
 }
 
 void balloon_interface::OnHold() {

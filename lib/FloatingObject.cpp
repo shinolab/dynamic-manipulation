@@ -31,7 +31,6 @@ namespace dynaman {
 		positionBuffer(velocityBufferSize, _positionTarget),
 		velocityBuffer(velocityBufferSize, Eigen::Vector3f::Zero()),
 		dTBuffer(velocityBufferSize, 1),
-		covError(100.f * Eigen::MatrixXf::Identity(6, 6)),
 		trajectoryPtr(std::make_shared<TrajectoryConstantState>(_positionTarget)) {}
 
 	FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const& posTgt, Eigen::Vector3f const& lowerbound, Eigen::Vector3f const& upperbound, float _additionalMass, float _radius)
@@ -207,16 +206,6 @@ namespace dynaman {
 			posAverage += *itr;
 		}
 		return posAverage / positionBuffer.size();
-	}
-
-	Eigen::VectorXf FloatingObject::getLatestInput()
-	{
-		return inputLatest;
-	}
-
-	void FloatingObject::setLatestInput(Eigen::VectorXf input)
-	{
-		inputLatest = input;
 	}
 
 	bool FloatingObject::isConverged(float tolPos, float tolVel)

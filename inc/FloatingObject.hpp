@@ -15,10 +15,6 @@ namespace dynaman {
 
 	class FloatingObject {
 	public:
-
-		Eigen::VectorXf inputLatest;
-
-		Eigen::MatrixXf covError;
 		DWORD lastDeterminationTime;
 		const int velocityBufferSize;
 		std::deque<Eigen::Vector3f> positionBuffer;

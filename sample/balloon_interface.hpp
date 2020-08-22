@@ -48,8 +48,6 @@ namespace dynaman {
 		bool m_is_running;
 		bool m_is_open;
 		pcl_ptr m_pCloud;
-		const float thres_contact_min = 0.07f;
-		const float thres_contact_max = 0.1f;
 		float m_thres_contact_min;
 		float m_thres_contact_max;
 		std::shared_ptr<pcl_grabber> m_pPclSensor;

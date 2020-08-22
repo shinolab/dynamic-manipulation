@@ -20,9 +20,9 @@ namespace {
 using namespace dynaman;
 
 float squaredDist(const Eigen::Vector3f& p1, pcl::PointXYZ p2) {
-	return (p1.x() - p2.x) * ((p1.x() - p2.x))
-		+ (p1.y() - p2.y) * ((p1.y() - p2.y))
-		+ (p1.z() - p2.z) * ((p1.z() - p2.z));
+	return (p1.x() - p2.x) * (p1.x() - p2.x)
+		+ (p1.y() - p2.y) * (p1.y() - p2.y)
+		+ (p1.z() - p2.z) * (p1.z() - p2.z);
 }
 
 balloon_interface::pcl_ptr passthrough_pcl(
@@ -70,6 +70,7 @@ void balloon_interface::Open() {
 				m_is_open = true;
 			}
 			{
+				std::lock_guard<std::mutex> lock(m_mtx_pCloud);
 				std::cout << "Configuring collider ...";
 				auto pCloudInit = m_pPclSensor->Capture();
 				auto pCloudInside = TrimCloudOutsideWorkspace(m_pObject, pCloudInit);
@@ -78,13 +79,13 @@ void balloon_interface::Open() {
 				vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
 				pcl_ptr pCloudFiltered(new pcl::PointCloud<pcl::PointXYZ>());
 				vg_filter.filter(*pCloudFiltered);
-				float balloonSize = DetermineBalloonSize(pCloudFiltered, m_pObject->AveragePosition());
+				float balloonSize = DetermineBalloonSize(pCloudFiltered, 0.001f*m_pObject->AveragePosition());
 				{
 					std::lock_guard<std::mutex> lock(m_mtx_collider);
 					m_thres_contact_min = balloonSize;
 					m_thres_contact_max = balloonSize + 0.03f;
 				}
-				std::cout << "Complete." << std::endl;
+				std::cout << "Complete. balloon size is:" << RadiusColliderMin() << std::endl;
 			}
 			
 			while (IsOpen()) 
@@ -164,7 +165,7 @@ balloon_interface::HoldState balloon_interface::DetermineHoldState(
 	if (countContact >= thres_hold_num) {
 		return HoldState::HOLD;
 	}
-	else if (countContact > thres_touch_num) {
+	else if (countContact >= thres_touch_num) {
 		return HoldState::TOUCH;
 	}	
 	return HoldState::FREE;
@@ -181,13 +182,14 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 	kdtree.setInputCloud(pCloud);
 	std::vector<int> pointIdxSearch;
 	std::vector<float> pointSquaredDistances;
-	kdtree.radiusSearch(balloon_center, thres_contact_max, pointIdxSearch, pointSquaredDistances);
+	kdtree.radiusSearch(balloon_center, RadiusColliderMax(), pointIdxSearch, pointSquaredDistances);
+
 	auto itr_contact_min = std::find_if(
 		pointSquaredDistances.begin(), 
 		pointSquaredDistances.end(),
 		[this](float dist) 
 		{
-			return dist > this->thres_contact_min * this->thres_contact_min;
+			return dist > this->RadiusColliderMin() * this->RadiusColliderMin();
 		}
 	);
 	int num_points_contact = std::distance(itr_contact_min, pointSquaredDistances.end());
@@ -215,9 +217,9 @@ balloon_interface::pcl_ptr balloon_interface::TrimCloudOutsideWorkspace(
 ) {
 	auto lb = pObject->lowerbound();
 	auto ub = pObject->upperbound();
-	auto pCloudFiltered = passthrough_pcl(pCloud, "x", 0.001f * lb.x(), 0.001f * ub.x());
-	pCloudFiltered = passthrough_pcl(pCloudFiltered, "y", 0.001f * lb.y(), 0.001f * ub.y());
-	pCloudFiltered = passthrough_pcl(pCloudFiltered, "z", 0.001f * lb.z(), 0.001f * ub.z());
+	auto pCloudFiltered = passthrough_pcl(pCloud, "x", -0.3, 0.3);
+	pCloudFiltered = passthrough_pcl(pCloudFiltered, "y", -0.3, 0.3);
+	pCloudFiltered = passthrough_pcl(pCloudFiltered, "z", -0.3, 0.3);
 	return pCloudFiltered;
 }
 
@@ -229,8 +231,8 @@ float balloon_interface::DetermineBalloonSize(
 	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
 	std::vector<pcl::PointIndices> cluster_indices;
 	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ecex;
-	ecex.setClusterTolerance(0.02f);
-	ecex.setMinClusterSize(50);
+	ecex.setClusterTolerance(0.05f);
+	ecex.setMinClusterSize(20);
 	ecex.setMaxClusterSize(10000);
 	ecex.setSearchMethod(tree);
 	ecex.setInputCloud(pCloud);
@@ -239,9 +241,11 @@ float balloon_interface::DetermineBalloonSize(
 		cluster_indices.begin(), 
 		cluster_indices.end(),
 		[](pcl::PointIndices pi1, pcl::PointIndices pi2) {
-			return pi1.indices.size() > pi2.indices.size();
+			return pi1.indices.size() < pi2.indices.size();
 		}
 	);
+	std::cout << cluster_indices.size() << " clusters are identified." << std::endl;
+	std::cout << "The size of the cluster is: " << (*itr_largest).indices.size() << std::endl;
 	pcl_ptr pCloudBalloon(new pcl::PointCloud<pcl::PointXYZ>());
 	pCloudBalloon->points.resize((*itr_largest).indices.size());
 	pCloudBalloon->width = (*itr_largest).indices.size();
@@ -250,12 +254,20 @@ float balloon_interface::DetermineBalloonSize(
 	for (int idx_pt = 0; idx_pt < (*itr_largest).indices.size(); idx_pt++) {
 		pCloudBalloon->points[idx_pt] = pCloud->points[(*itr_largest).indices[idx_pt]];
 	}
-	
+	m_pCloud = pCloudBalloon;
 	auto itr_pt_farthest = std::max_element(pCloudBalloon->points.begin(), pCloudBalloon->points.end(),
 		[&posBalloon](pcl::PointXYZ p_far, pcl::PointXYZ p_near) {
-			return squaredDist(posBalloon, p_far) > squaredDist(posBalloon, p_near);
+			return squaredDist(posBalloon, p_far) < squaredDist(posBalloon, p_near);
 		}
 	);
+	auto itr_pt_nearest = std::min_element(pCloudBalloon->points.begin(), pCloudBalloon->points.end(),
+		[&posBalloon](pcl::PointXYZ p_far, pcl::PointXYZ p_near) {
+			return squaredDist(posBalloon, p_far) < squaredDist(posBalloon, p_near);
+		}
+	);
+	std::cout << "posBalloon: " << posBalloon.transpose() << std::endl;
+	std::cout << "nearest point distance:" << squaredDist(posBalloon, *itr_pt_nearest);
+	std::cout << "farthest point distance:" << squaredDist(posBalloon, *itr_pt_farthest);
 	return sqrtf(squaredDist(posBalloon, *itr_pt_farthest));
 }
 

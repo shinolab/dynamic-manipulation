@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
 
 	auto pObject = dynaman::FloatingObject::Create(
 		Eigen::Vector3f(0, 0, 0),
-		Eigen::Vector3f::Constant(-600),
-		Eigen::Vector3f::Constant(600),
+		Eigen::Vector3f::Constant(-400),
+		Eigen::Vector3f::Constant(400),
 		-0.036e-3f,
 		50.f
 	);
@@ -91,6 +91,9 @@ int main(int argc, char** argv) {
 	
 	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 1.0f);
 	grabber->Open();
+
+
+	std::this_thread::sleep_for(std::chrono::seconds(5)); // wait until stabilized
 
 	auto binterface = dynaman::balloon_interface::Create(
 		pObject,

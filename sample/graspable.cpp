@@ -38,16 +38,6 @@ pcl_ptr make_sphere(const Eigen::Vector3f& center, float radius) {
 	return cloud;
 }
 
-pcl_ptr passthrough_pcl(pcl_ptr cloud, const std::string& field_name, float limit_min, float limit_max) {
-	pcl::PassThrough<pcl::PointXYZ> pass;
-	pass.setInputCloud(cloud);
-	pass.setFilterFieldName(field_name);
-	pass.setFilterLimits(limit_min, limit_max);
-	pcl_ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
-	pass.filter(*cloud_filtered);
-	return cloud_filtered;
-}
-
 pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
 	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	cloud->width = points.size();
@@ -112,8 +102,8 @@ int main(int argc, char** argv) {
 	while (viewer) {
 		auto cloud = binterface->CopyPointCloud();
 		auto pos_balloon = pObject->getPosition();
-		auto threshold_min = make_sphere(0.001f * pos_balloon, binterface->ThresContactMin());
-		auto threshold_max = make_sphere(0.001f * pos_balloon, binterface->ThresContactMax());
+		auto threshold_min = make_sphere(0.001f * pos_balloon, binterface->RadiusColliderMin());
+		auto threshold_max = make_sphere(0.001f * pos_balloon, binterface->RadiusColliderMax());
 		std::vector<pcl_ptr> cloud_ptrs{ 
 			cloud, 
 			threshold_min, 
@@ -121,7 +111,7 @@ int main(int argc, char** argv) {
 		};
 		viewer.draw(cloud_ptrs);
 
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+		std::this_thread::sleep_for(std::chrono::microseconds(30));
 	}
 	binterface->Close();
 	grabber->Close();

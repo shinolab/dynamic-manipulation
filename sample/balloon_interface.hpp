@@ -15,8 +15,8 @@
 
 namespace dynaman {
 	class balloon_interface {
-		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 	public:
+		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 		enum class HoldState { FREE, TOUCH, HOLD };
 		balloon_interface(
 			FloatingObjectPtr pObject,
@@ -37,8 +37,10 @@ namespace dynaman {
 		HoldState DetermineHoldState(std::deque<std::pair<DWORD, bool>> contact_queue);
 		void OnHold();
 		pcl_ptr CopyPointCloud();
-		float ThresContactMin();
-		float ThresContactMax();
+		float DetermineBalloonSize(pcl_ptr pCloud, const Eigen::Vector3f& posBalloon);
+		pcl_ptr TrimCloudOutsideWorkspace(FloatingObjectPtr pObject, pcl_ptr pCloud);
+		float RadiusColliderMin();
+		float RadiusColliderMax();
 	private:
 		const int size_queue = 10;
 		std::deque<std::pair<DWORD, bool>> m_contact_queue;
@@ -48,10 +50,13 @@ namespace dynaman {
 		pcl_ptr m_pCloud;
 		const float thres_contact_min = 0.07f;
 		const float thres_contact_max = 0.1f;
+		float m_thres_contact_min;
+		float m_thres_contact_max;
 		std::shared_ptr<pcl_grabber> m_pPclSensor;
 		std::mutex m_mtx_is_open;
 		std::mutex m_mtx_is_running;
 		std::mutex m_mtx_pCloud;
+		std::mutex m_mtx_collider;
 		std::thread m_thr_observer;
 	};
 }

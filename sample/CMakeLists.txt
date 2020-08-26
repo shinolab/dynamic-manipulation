@@ -128,6 +128,14 @@ target_link_libraries(MobilityEvalTest
     DynamicManipulation
 )
 
+add_executable(WorkspaceEvalTest WorkspaceEvalTest.cpp)
+target_link_libraries(WorkspaceEvalTest 
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
 if(BUILD_PCL_APPS)
     find_package(realsense2 REQUIRED)

@@ -132,3 +132,47 @@ void autd::VortexFocalPointGain::build() {
 		}
 	}
 }
+
+autd::GainPtr autd::ReversibleFocalPointGain::Create(
+	const Vector3f& point, 
+	uint8_t amp,  
+	std::function<bool(const Eigen::Vector3f&)> condReverse
+) {
+	auto gain = CreateHelper<ReversibleFocalPointGain>();
+	gain->_point = point;
+	gain->_geometry = nullptr;
+	gain->_amp = amp;
+	gain->_condReverse = condReverse;
+	return gain;
+}
+
+void autd::ReversibleFocalPointGain::build() {
+	if (this->built()) return;
+
+	auto geo = this->geometry();
+	if (geo == nullptr) BOOST_ASSERT_MSG(false, "Geometry is required to build Gain");
+
+	this->_data.clear();
+
+	const auto ndevice = geo->numDevices();
+	for (int i = 0; i < ndevice; i++) {
+		this->_data[geo->deviceIdForDeviceIdx(i)].resize(NUM_TRANS_IN_UNIT);
+	}
+
+	const auto ntrans = geo->numTransducers();
+	for (int i = 0; i < ntrans; i++) {
+		const auto trp = geo->position(i);
+		const auto dist = (trp - this->_point).norm();
+		const auto fphase = fmodf(dist, ULTRASOUND_WAVELENGTH) / ULTRASOUND_WAVELENGTH;
+		const auto phase = static_cast<uint8_t>(PhaseShift(trp, round(255.0f * (1.0f - fphase))));
+		uint8_t D, S;
+		SignalDesign(this->_amp, phase, D, S);
+		this->_data[geo->deviceIdForTransIdx(i)].at(i % NUM_TRANS_IN_UNIT) = (static_cast<uint16_t>(D) << 8) + S;
+	}
+
+	this->_built = true;
+}
+
+double autd::ReversibleFocalPointGain::PhaseShift(const Eigen::Vector3f& pos, double phase) {
+	return _condReverse(pos) ? (phase > 0.5f ? phase - 0.5f : phase + 0.5f) : phase;
+}

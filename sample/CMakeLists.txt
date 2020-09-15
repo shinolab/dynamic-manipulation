@@ -136,7 +136,32 @@ target_link_libraries(WorkspaceEvalTest
     DynamicManipulation
 )
 
+add_executable(Stationary stationary.cpp)
+target_link_libraries(Stationary
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
+add_executable(testVibration testVibration.cpp)
+target_link_libraries(testVibration
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
+add_executable(testVibrationSimple testVibrationSimple.cpp)
+target_link_libraries(testVibrationSimple
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
+option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)
     find_package(realsense2 REQUIRED)
     include_directories(${realsense2_INCLUDE_DIR})
@@ -180,19 +205,36 @@ if(BUILD_PCL_APPS)
         ${realsense2_LIBRARY}
     )
 
-    add_executable(graspable
-        graspable.cpp
-        balloon_interface.hpp
-        balloon_interface.cpp
-    )
-    target_link_libraries(graspable
-        ${PCL_LIBRARIES}
-        pcl_viewer
-        pcl_grabber
-        StereoTracker
-        CameraDevice
-        ImgProcUtil
-        DynamicManipulation
-    )
+    if(BUILD_AZURE_KINECT_APPS)
 
+       find_package(k4a REQUIRED)
+        include_directories(k4a_INCLUDE_DIR)
+        find_package(k4abt REQUIRED)
+        include_directories(k4abt_INCLUDE_DIR)
+        add_library(K4aHeadTracker
+            K4aHeadTracker.cpp
+            K4aHeadTracker.hpp
+        )
+        target_link_libraries(K4aHeadTracker
+            k4a::k4a
+            k4a::k4abt
+        )
+
+        add_executable(graspable
+            graspable.cpp
+            balloon_interface.hpp
+            balloon_interface.cpp
+        )
+        target_link_libraries(graspable
+            K4aHeadTracker
+            ${PCL_LIBRARIES}
+            pcl_viewer
+            pcl_grabber
+            StereoTracker
+            CameraDevice
+            ImgProcUtil
+            DynamicManipulation
+        )
+    endif()
+    
 endif()

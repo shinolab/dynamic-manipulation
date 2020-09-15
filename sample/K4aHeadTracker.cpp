@@ -59,7 +59,6 @@ bool K4aHeadTracker::GetHeadGeometry(Eigen::Vector3f& pos, Eigen::Quaternionf& q
 	return true;
 }
 
-
 bool K4aHeadTracker::TransformHead2Global(const Eigen::Vector3f& pos_in_head, Eigen::Vector3f& pos_in_global) {
 	Eigen::Vector3f posHead;
 	Eigen::Quaternionf quoHead;

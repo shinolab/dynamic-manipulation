@@ -1,3 +1,6 @@
+#ifndef _K4A_HEADTRACKER_HPP
+#define _K4A_HEADTRACKER_HPP
+
 #include <k4a/k4a.hpp>
 #include <k4abt.hpp>
 #include <memory>
@@ -17,3 +20,5 @@ private:
 	k4a::device m_device;
 	k4abt::tracker m_tracker;
 };
+
+#endif

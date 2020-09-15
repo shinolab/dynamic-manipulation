@@ -118,12 +118,16 @@ namespace dynaman {
 		//acquire cm from both cameras;
 		//rectify
 		cv::Mat img_left_rect, img_right_rect;
+		
 		time = timeGetTime();
 		_stereoCamPtr->imgLeftRect(img_left_rect);
 		_stereoCamPtr->imgRightRect(img_right_rect);
 
-		cv::Point2f point_left = _extPtrLeft->extract_center(img_left_rect);
-		cv::Point2f point_right = _extPtrRight->extract_center(img_right_rect);
+		cv::Point roi_upperleft(40, 40);
+		cv::Point roi_lowerright(img_left_rect.cols - 40, img_left_rect.rows - 40);
+		cv::Rect roi(roi_upperleft, roi_lowerright);
+		cv::Point2f point_left = _extPtrLeft->extract_center(cv::Mat(img_left_rect, roi)) + static_cast<cv::Point2f>(roi_upperleft);
+		cv::Point2f point_right = _extPtrRight->extract_center(cv::Mat(img_right_rect, roi)) + static_cast<cv::Point2f>(roi_upperleft);
 		cv::circle(img_left_rect, point_left, 1, cv::Scalar(0, 0, 255), -1);
 		cv::circle(img_right_rect, point_right, 1, cv::Scalar(0, 0, 255), -1);
 		//cv::imshow("left view", img_left_rect);

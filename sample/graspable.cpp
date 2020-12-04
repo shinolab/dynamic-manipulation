@@ -13,6 +13,7 @@
 #include "pcl_viewer.hpp"
 #include "pcl_grabber.hpp"
 #include "balloon_interface.hpp"
+#include "K4aHeadTracker.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
@@ -53,7 +54,9 @@ pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
 }
 
 int main(int argc, char** argv) {
-	std::string target_image_name("blue_target_no_cover.png");
+	//std::string target_image_name("blue_target_no_cover.png");
+	std::string target_image_name("blue_20cm_daiso_target.png");
+
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
 	auto pAupa = std::make_shared<autd::Controller>();
@@ -92,15 +95,26 @@ int main(int argc, char** argv) {
 	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 1.0f);
 	grabber->Open();
 
+	Eigen::Vector3f pos_k4a(2.50839, 207.915, 899.099);
+	Eigen::Matrix3f rot_k4a;
+	rot_k4a <<
+		0.999971, 0.0011368, 0.00758689,
+		0.0076679, -0.117437, -0.993051,
+		-0.000237917, 0.99308, -0.117443;
+	auto pHeadTracker = K4aHeadTracker::Create(pos_k4a, rot_k4a);
+	pHeadTracker->Open();
 
 	std::this_thread::sleep_for(std::chrono::seconds(5)); // wait until stabilized
 
 	auto binterface = dynaman::balloon_interface::Create(
 		pObject,
-		grabber
+		grabber,
+		pHeadTracker
 	);
 	binterface->Open();
 	binterface->Run();
+	std::this_thread::sleep_for(std::chrono::seconds(5)); //switched to user_reference_mode in five seconds.
+	binterface->SetReferenceFrame(dynaman::balloon_interface::REF_FRAME::USER);
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
 		auto cloud = binterface->CopyPointCloud();
@@ -118,6 +132,7 @@ int main(int argc, char** argv) {
 	}
 	binterface->Close();
 	grabber->Close();
+	pHeadTracker->Close();
 	pManipulator->FinishManipulation();
 	return 0;
 }

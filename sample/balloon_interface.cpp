@@ -42,11 +42,13 @@ balloon_interface::pcl_ptr passthrough_pcl(
 
 balloon_interface::balloon_interface(
 	FloatingObjectPtr pObject,
-	std::shared_ptr<pcl_grabber> pPointCloudSensor
+	std::shared_ptr<pcl_grabber> pPointCloudSensor,
+	std::shared_ptr<K4aHeadTracker> pHeadTracker
 ):m_pObject(pObject),
 m_is_running(false),
 m_is_open(false),
 m_pPclSensor(pPointCloudSensor),
+m_pHeadTracker(pHeadTracker),
 m_contact_queue(thres_hold_num, std::make_pair(0, false)),
 m_pCloud(new pcl::PointCloud<pcl::PointXYZ>()),
 m_thres_contact_min(0.07f),
@@ -55,9 +57,30 @@ m_thres_contact_max(0.1f)
 
 std::shared_ptr<balloon_interface> balloon_interface::Create(
 	FloatingObjectPtr pObject,
-	std::shared_ptr<pcl_grabber> pPointCloudSensor
+	std::shared_ptr<pcl_grabber> pPointCloudSensor,
+	std::shared_ptr<K4aHeadTracker> pHeadTracker
 ) {
-	return std::make_shared<balloon_interface>(pObject, pPointCloudSensor);
+	return std::make_shared<balloon_interface>(pObject, pPointCloudSensor, pHeadTracker);
+}
+
+void balloon_interface::InitializeCollider()
+{	
+	std::lock_guard<std::mutex> lock(m_mtx_pCloud);
+	std::cout << "Configuring collider ...";
+	auto pCloudInit = m_pPclSensor->Capture();
+	auto pCloudInside = TrimCloudOutsideWorkspace(m_pObject, pCloudInit);
+	pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
+	vg_filter.setInputCloud(pCloudInside);
+	vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
+	pcl_ptr pCloudFiltered(new pcl::PointCloud<pcl::PointXYZ>());
+	vg_filter.filter(*pCloudFiltered);
+	float balloonSize = DetermineBalloonSize(pCloudFiltered, 0.001f * m_pObject->AveragePosition());
+	{
+		std::lock_guard<std::mutex> lock(m_mtx_collider);
+		m_thres_contact_min = balloonSize;
+		m_thres_contact_max = balloonSize + 0.03f;
+	}
+	std::cout << "Complete. balloon size is:" << RadiusColliderMin() << std::endl;
 }
 
 void balloon_interface::Open() {
@@ -69,24 +92,7 @@ void balloon_interface::Open() {
 				std::lock_guard<std::mutex> lock(m_mtx_is_open);
 				m_is_open = true;
 			}
-			{
-				std::lock_guard<std::mutex> lock(m_mtx_pCloud);
-				std::cout << "Configuring collider ...";
-				auto pCloudInit = m_pPclSensor->Capture();
-				auto pCloudInside = TrimCloudOutsideWorkspace(m_pObject, pCloudInit);
-				pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
-				vg_filter.setInputCloud(pCloudInside);
-				vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
-				pcl_ptr pCloudFiltered(new pcl::PointCloud<pcl::PointXYZ>());
-				vg_filter.filter(*pCloudFiltered);
-				float balloonSize = DetermineBalloonSize(pCloudFiltered, 0.001f*m_pObject->AveragePosition());
-				{
-					std::lock_guard<std::mutex> lock(m_mtx_collider);
-					m_thres_contact_min = balloonSize;
-					m_thres_contact_max = balloonSize + 0.03f;
-				}
-				std::cout << "Complete. balloon size is:" << RadiusColliderMin() << std::endl;
-			}
+			InitializeCollider();
 			
 			while (IsOpen()) 
 			{
@@ -108,6 +114,12 @@ void balloon_interface::Open() {
 				if (IsRunning()) {
 					if (holdState == HoldState::HOLD) {
 						OnHold();
+					}
+					else if (m_ref_frame == REF_FRAME::USER) {
+						Eigen::Vector3f posTarget;
+						if (m_pHeadTracker->TransformHead2Global(defaultPositionInUserCoord, posTarget)) {
+							m_pObject->updateStatesTarget(posTarget);
+						}
 					}
 				}
 				std::this_thread::sleep_for(std::chrono::microseconds(30));
@@ -202,8 +214,15 @@ bool balloon_interface::IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud) {
 }
 
 void balloon_interface::OnHold() {
-	m_pObject->updateStatesTarget(m_pObject->AveragePosition());
-	std::cout << "HOLDING" << std::endl;
+	std::cout << "HOLDING.";
+	auto currentPositionGlobal = m_pObject->AveragePosition();
+	m_pObject->updateStatesTarget(currentPositionGlobal);
+	Eigen::Vector3f newDefaultPositionInUserCoord;
+	if (m_ref_frame == REF_FRAME::USER && m_pHeadTracker->TransformGlobal2Head(currentPositionGlobal, newDefaultPositionInUserCoord)) {
+		defaultPositionInUserCoord = newDefaultPositionInUserCoord;
+		std::cout << " Updated default position.";
+	}
+	std::cout << std::endl;
 }
 
 balloon_interface::pcl_ptr balloon_interface::CopyPointCloud() {
@@ -222,7 +241,6 @@ balloon_interface::pcl_ptr balloon_interface::TrimCloudOutsideWorkspace(
 	pCloudFiltered = passthrough_pcl(pCloudFiltered, "z", -0.3, 0.3);
 	return pCloudFiltered;
 }
-
 
 float balloon_interface::DetermineBalloonSize(
 	balloon_interface::pcl_ptr pCloud,
@@ -279,4 +297,24 @@ float balloon_interface::RadiusColliderMin() {
 float balloon_interface::RadiusColliderMax() {
 	std::lock_guard<std::mutex> lock(m_mtx_collider);
 	return m_thres_contact_max;
+}
+
+void balloon_interface::SetReferenceFrame(balloon_interface::REF_FRAME ref_frame) {
+	std::lock_guard<std::mutex> lock(m_mtx_ref_frame);
+
+	if (ref_frame == balloon_interface::REF_FRAME::USER) {
+		for (int i = 0; i < 100; i++) {
+			if (m_pHeadTracker->TransformGlobal2Head(m_pObject->AveragePosition(), defaultPositionInUserCoord))
+			{
+				m_ref_frame = ref_frame;
+				break;
+			}
+			std::cout << "Failed to configure target position!" << std::endl;
+		}
+	}
+}
+
+balloon_interface::REF_FRAME balloon_interface::GetReferenceFrame() {
+	std::lock_guard<std::mutex> lock(m_mtx_ref_frame);
+	return m_ref_frame;
 }

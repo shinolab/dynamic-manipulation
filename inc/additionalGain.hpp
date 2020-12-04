@@ -41,6 +41,17 @@ namespace autd {
 		Eigen::VectorXf _chiralities;
 	};
 
+	class ReversibleFocalPointGain : public Gain {
+	public:
+		static GainPtr Create(const Eigen::Vector3f& pos, uint8_t amplitude, std::function<bool(const Eigen::Vector3f&)>);
+		void build();
+	private:
+		double PhaseShift(const Eigen::Vector3f& pos, double phase);
+		Eigen::Vector3f _point;
+		uint8_t _amp;
+		bool _reversed;
+		std::function<bool(const Eigen::Vector3f&)> _condReverse;
+	};
 }
 
 

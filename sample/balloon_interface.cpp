@@ -9,6 +9,7 @@
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
+#include "pcl_util.hpp"
 #include "balloon_interface.hpp"
 
 namespace {
@@ -23,21 +24,6 @@ float squaredDist(const Eigen::Vector3f& p1, pcl::PointXYZ p2) {
 	return (p1.x() - p2.x) * (p1.x() - p2.x)
 		+ (p1.y() - p2.y) * (p1.y() - p2.y)
 		+ (p1.z() - p2.z) * (p1.z() - p2.z);
-}
-
-balloon_interface::pcl_ptr passthrough_pcl(
-	balloon_interface::pcl_ptr cloud,
-	const std::string& field_name,
-	float limit_min,
-	float limit_max
-) {
-	pcl::PassThrough<pcl::PointXYZ> pass;
-	pass.setInputCloud(cloud);
-	pass.setFilterFieldName(field_name);
-	pass.setFilterLimits(limit_min, limit_max);
-	balloon_interface::pcl_ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
-	pass.filter(*cloud_filtered);
-	return cloud_filtered;
 }
 
 balloon_interface::balloon_interface(
@@ -65,7 +51,7 @@ void balloon_interface::InitializeCollider()
 	std::lock_guard<std::mutex> lock(m_mtx_pCloud);
 	std::cout << "Configuring collider ...";
 	auto pCloudInit = m_pPclSensor->Capture();
-	auto pCloudInside = TrimCloudOutsideWorkspace(m_pObject, pCloudInit);
+	auto pCloudInside = pcl_util::TrimPointsOutsideWorkspace(m_pObject, pCloudInit);
 	pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
 	vg_filter.setInputCloud(pCloudInside);
 	vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
@@ -96,7 +82,7 @@ void balloon_interface::Open() {
 				{
 					std::lock_guard<std::mutex> lock(m_mtx_pCloud);
 					auto pCloudRaw = m_pPclSensor->Capture();
-					auto pCloudFiltered = TrimCloudOutsideWorkspace(m_pObject, pCloudRaw);
+					auto pCloudFiltered = pcl_util::TrimPointsOutsideWorkspace(m_pObject, pCloudRaw);
 					pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
 					vg_filter.setInputCloud(pCloudFiltered);
 					vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
@@ -215,17 +201,7 @@ balloon_interface::pcl_ptr balloon_interface::CopyPointCloud() {
 	return pcl_ptr(new pcl::PointCloud<pcl::PointXYZ>(*m_pCloud));
 }
 
-balloon_interface::pcl_ptr balloon_interface::TrimCloudOutsideWorkspace(
-	FloatingObjectPtr pObject,
-	balloon_interface::pcl_ptr pCloud
-) {
-	auto lb = pObject->lowerbound();
-	auto ub = pObject->upperbound();
-	auto pCloudFiltered = passthrough_pcl(pCloud, "x", -0.3, 0.3);
-	pCloudFiltered = passthrough_pcl(pCloudFiltered, "y", -0.3, 0.3);
-	pCloudFiltered = passthrough_pcl(pCloudFiltered, "z", -0.3, 0.3);
-	return pCloudFiltered;
-}
+
 
 float balloon_interface::DetermineBalloonSize(
 	balloon_interface::pcl_ptr pCloud,

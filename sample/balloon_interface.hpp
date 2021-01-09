@@ -15,20 +15,6 @@
 
 namespace dynaman {
 
-	enum class Command {
-		NOP, DRAG, CLICK
-	};
-
-	class CommandReader {
-	public:
-		virtual ~CommandReader() {}
-		virtual dynaman::Command Detect() = 0;
-	};
-
-	class Rs2CommandReader : public CommandReader {
-
-	};
-
 	class balloon_interface {
 	public:
 		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
@@ -58,8 +44,7 @@ namespace dynaman {
 		pcl_ptr TrimCloudOutsideWorkspace(FloatingObjectPtr pObject, pcl_ptr pCloud);
 		float RadiusColliderMin();
 		float RadiusColliderMax();
-		void SetReferenceFrame(REF_FRAME ref_frame);
-		REF_FRAME GetReferenceFrame();
+
 	private:
 		void InitializeCollider();
 		const int size_queue = 10;

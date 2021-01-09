@@ -209,6 +209,10 @@ if(BUILD_PCL_APPS)
     graspable.cpp
     balloon_interface.hpp
     balloon_interface.cpp
+    HandStateReader.hpp
+    HandStateReader.cpp
+    pcl_util.hpp
+    pcl_util.cpp
     )
     target_link_libraries(graspable
         ${PCL_LIBRARIES}

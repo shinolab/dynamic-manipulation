@@ -102,7 +102,6 @@ int main(int argc, char** argv) {
 	binterface->Open();
 	binterface->Run();
 	std::this_thread::sleep_for(std::chrono::seconds(5)); //switched to user_reference_mode in five seconds.
-	binterface->SetReferenceFrame(dynaman::balloon_interface::REF_FRAME::USER);
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
 		auto cloud = binterface->CopyPointCloud();

@@ -12,8 +12,7 @@ int main(int argc, char** argv ) {
 
 	/*user-defined configurations*/
 	Eigen::Vector3f pos_init(0, -50, 0);
-	//std::string target_image_name("blue_target_no_cover.png");
-	std::string target_image_name("blue_20cm_daiso_target.png");
+	std::string target_image_name("blue_target_no_cover.png");
 	/*end of user-defined configurations*/
 
 	auto pObject = dynaman::FloatingObject::Create(

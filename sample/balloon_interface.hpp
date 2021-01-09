@@ -10,11 +10,25 @@
 #include "FloatingObject.hpp"
 #include "pcl_grabber.hpp"
 #include <librealsense2/rs.hpp>
-#include "K4aHeadTracker.hpp"
 #include <Windows.h>
 #pragma comment (lib, "winmm")
 
 namespace dynaman {
+
+	enum class Command {
+		NOP, DRAG, CLICK
+	};
+
+	class CommandReader {
+	public:
+		virtual ~CommandReader() {}
+		virtual dynaman::Command Detect() = 0;
+	};
+
+	class Rs2CommandReader : public CommandReader {
+
+	};
+
 	class balloon_interface {
 	public:
 		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
@@ -22,15 +36,13 @@ namespace dynaman {
 		enum class HoldState { FREE, TOUCH, HOLD };
 		balloon_interface(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPointCloudSensor,
-			std::shared_ptr<K4aHeadTracker> pHeadTracker
+			std::shared_ptr<pcl_grabber> pPointCloudSensor
 		);
 		~balloon_interface() = default;
 
 		static std::shared_ptr<balloon_interface> Create(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPointCloudSensor,
-			std::shared_ptr<K4aHeadTracker> pHeadTracker
+			std::shared_ptr<pcl_grabber> pPointCloudSensor
 		);
 		void Open();
 		void Run();
@@ -49,7 +61,6 @@ namespace dynaman {
 		void SetReferenceFrame(REF_FRAME ref_frame);
 		REF_FRAME GetReferenceFrame();
 	private:
-		Eigen::Vector3f MakeTargetPositionCommand();
 		void InitializeCollider();
 		const int size_queue = 10;
 		REF_FRAME m_ref_frame = REF_FRAME::GLOBAL;
@@ -60,14 +71,11 @@ namespace dynaman {
 		pcl_ptr m_pCloud;
 		float m_thres_contact_min;
 		float m_thres_contact_max;
-		Eigen::Vector3f defaultPositionInUserCoord;
 		std::shared_ptr<pcl_grabber> m_pPclSensor;
-		std::shared_ptr<K4aHeadTracker> m_pHeadTracker;
 		std::mutex m_mtx_is_open;
 		std::mutex m_mtx_is_running;
 		std::mutex m_mtx_pCloud;
 		std::mutex m_mtx_collider;
-		std::mutex m_mtx_ref_frame;
 		std::thread m_thr_observer;
 	};
 }

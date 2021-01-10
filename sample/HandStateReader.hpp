@@ -2,8 +2,9 @@
 #define _DYNAMAN_HANDSTATE_READER_HPP
 
 #include <utility>
-#include "pcl_grabber.hpp"
 #include "FloatingObject.hpp"
+#include "pcl_grabber.hpp"
+#include "pcl_util.hpp"
 
 namespace dynaman {
 	enum class HandState {
@@ -30,12 +31,26 @@ namespace dynaman {
 			std::shared_ptr<pcl_grabber> pPclGrabber
 		);
 
-		void Initialize();
+		pcl_util::pcl_ptr DefaultPreprocess(pcl_util::pcl_ptr pCloud);
+
+		bool Initialize();
+
+		//Estimate the radius of a sphere based on its center and a point cloud.
+		//The radius is estimated using the distance between the center and the furthest point of the nearest cluster
+		float EstimateSphereRadius(const Eigen::Vector3f& centerSphere, pcl_util::pcl_ptr pCloud);
+		bool EstimateHandState(
+			dynaman::HandState& state,
+			const Eigen::Vector3f& center, 
+			pcl_util::pcl_ptr pCloud
+		);
+		float RadiusObject();
+		float RadiusColliderContact();
+		float RadiusColliderClick();
 		bool Read(dynaman::HandState &state) override;
 
 	private:
 		dynaman::FloatingObjectPtr m_pObject;
-		std::shared_ptr<pcl_grabber> m_PclGrabber;
+		std::shared_ptr<pcl_grabber> m_pPclGrabber;
 		float m_radiusObject;
 		float m_radiusColliderContact;
 		float m_radiusColliderClick;

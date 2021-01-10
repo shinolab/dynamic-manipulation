@@ -2,6 +2,12 @@
 #include "pcl_util.hpp"
 #include "FloatingObject.hpp"
 
+float pcl_util::squareDist(const Eigen::Vector3f& p1, pcl::PointXYZ p2) {
+	return (p1.x() - p2.x) * (p1.x() - p2.x)
+		+ (p1.y() - p2.y) * (p1.y() - p2.y)
+		+ (p1.z() - p2.z) * (p1.z() - p2.z);
+}
+
 pcl_util::pcl_ptr pcl_util::passthrough(
 	pcl_util::pcl_ptr cloud,
 	const std::string& field_name,

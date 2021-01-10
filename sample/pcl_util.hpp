@@ -10,6 +10,8 @@
 namespace pcl_util {
 	using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
+	float squareDist(const Eigen::Vector3f& p1, pcl::PointXYZ p2);
+
 	pcl_ptr passthrough(
 		pcl_ptr cloud,
 		const std::string& field_name,

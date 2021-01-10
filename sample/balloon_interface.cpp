@@ -20,11 +20,6 @@ namespace {
 
 using namespace dynaman;
 
-float squaredDist(const Eigen::Vector3f& p1, pcl::PointXYZ p2) {
-	return (p1.x() - p2.x) * (p1.x() - p2.x)
-		+ (p1.y() - p2.y) * (p1.y() - p2.y)
-		+ (p1.z() - p2.z) * (p1.z() - p2.z);
-}
 
 balloon_interface::balloon_interface(
 	FloatingObjectPtr pObject,
@@ -201,8 +196,6 @@ balloon_interface::pcl_ptr balloon_interface::CopyPointCloud() {
 	return pcl_ptr(new pcl::PointCloud<pcl::PointXYZ>(*m_pCloud));
 }
 
-
-
 float balloon_interface::DetermineBalloonSize(
 	balloon_interface::pcl_ptr pCloud,
 	const Eigen::Vector3f& posBalloon
@@ -236,18 +229,18 @@ float balloon_interface::DetermineBalloonSize(
 	m_pCloud = pCloudBalloon;
 	auto itr_pt_farthest = std::max_element(pCloudBalloon->points.begin(), pCloudBalloon->points.end(),
 		[&posBalloon](pcl::PointXYZ p_far, pcl::PointXYZ p_near) {
-			return squaredDist(posBalloon, p_far) < squaredDist(posBalloon, p_near);
+			return pcl_util::squareDist(posBalloon, p_far) < pcl_util::squareDist(posBalloon, p_near);
 		}
 	);
 	auto itr_pt_nearest = std::min_element(pCloudBalloon->points.begin(), pCloudBalloon->points.end(),
 		[&posBalloon](pcl::PointXYZ p_far, pcl::PointXYZ p_near) {
-			return squaredDist(posBalloon, p_far) < squaredDist(posBalloon, p_near);
+			return pcl_util::squareDist(posBalloon, p_far) < pcl_util::squareDist(posBalloon, p_near);
 		}
 	);
 	std::cout << "posBalloon: " << posBalloon.transpose() << std::endl;
-	std::cout << "nearest point distance:" << squaredDist(posBalloon, *itr_pt_nearest);
-	std::cout << "farthest point distance:" << squaredDist(posBalloon, *itr_pt_farthest);
-	return sqrtf(squaredDist(posBalloon, *itr_pt_farthest));
+	std::cout << "nearest point distance:" << pcl_util::squareDist(posBalloon, *itr_pt_nearest);
+	std::cout << "farthest point distance:" << pcl_util::squareDist(posBalloon, *itr_pt_farthest);
+	return sqrtf(pcl_util::squareDist(posBalloon, *itr_pt_farthest));
 }
 
 float balloon_interface::RadiusColliderMin() {

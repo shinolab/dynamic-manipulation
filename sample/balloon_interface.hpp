@@ -7,9 +7,10 @@
 #include <memory>
 #include <mutex>
 #include <Eigen/Geometry>
-#include "FloatingObject.hpp"
-#include "pcl_grabber.hpp"
 #include <librealsense2/rs.hpp>
+#include "FloatingObject.hpp"
+#include "HandStateReader.hpp"
+#include "pcl_grabber.hpp"
 #include <Windows.h>
 #pragma comment (lib, "winmm")
 

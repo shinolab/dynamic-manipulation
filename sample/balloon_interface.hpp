@@ -23,13 +23,13 @@ namespace dynaman {
 		enum class HoldState { FREE, TOUCH, HOLD };
 		balloon_interface(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPointCloudSensor
+			std::shared_ptr<HandStateReader> pHandStateReader
 		);
 		~balloon_interface() = default;
 
 		static std::shared_ptr<balloon_interface> Create(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPointCloudSensor
+			std::shared_ptr<HandStateReader> pHandStateReader
 		);
 		void Open();
 		void Run();
@@ -37,31 +37,20 @@ namespace dynaman {
 		void Close();
 		bool IsOpen();
 		bool IsRunning();
-		bool IsContact(FloatingObjectPtr pObject, pcl_ptr pCloud);
 		HoldState DetermineHoldState(std::deque<std::pair<DWORD, bool>> contact_queue);
 		void OnHold();
-		pcl_ptr CopyPointCloud();
-		float DetermineBalloonSize(pcl_ptr pCloud, const Eigen::Vector3f& posBalloon);
-		pcl_ptr TrimCloudOutsideWorkspace(FloatingObjectPtr pObject, pcl_ptr pCloud);
-		float RadiusColliderMin();
-		float RadiusColliderMax();
+
 
 	private:
-		void InitializeCollider();
 		const int size_queue = 10;
 		REF_FRAME m_ref_frame = REF_FRAME::GLOBAL;
 		std::deque<std::pair<DWORD, bool>> m_contact_queue;
+		std::shared_ptr<HandStateReader> m_pHandStateReader;
 		FloatingObjectPtr m_pObject;
 		bool m_is_running;
 		bool m_is_open;
-		pcl_ptr m_pCloud;
-		float m_thres_contact_min;
-		float m_thres_contact_max;
-		std::shared_ptr<pcl_grabber> m_pPclSensor;
 		std::mutex m_mtx_is_open;
 		std::mutex m_mtx_is_running;
-		std::mutex m_mtx_pCloud;
-		std::mutex m_mtx_collider;
 		std::thread m_thr_observer;
 	};
 }

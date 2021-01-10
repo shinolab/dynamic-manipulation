@@ -12,6 +12,7 @@
 #include "haptic_icon.hpp"
 #include "pcl_viewer.hpp"
 #include "pcl_grabber.hpp"
+#include "HandStateReader.hpp"
 #include "balloon_interface.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
@@ -97,21 +98,17 @@ int main(int argc, char** argv) {
 
 	auto binterface = dynaman::balloon_interface::Create(
 		pObject,
-		grabber
+		dynaman::PclHandStateReader::Create(pObject, grabber)
 	);
 	binterface->Open();
 	binterface->Run();
-	std::this_thread::sleep_for(std::chrono::seconds(5)); //switched to user_reference_mode in five seconds.
+	std::this_thread::sleep_for(std::chrono::seconds(5)); 
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
-		auto cloud = binterface->CopyPointCloud();
 		auto pos_balloon = pObject->getPosition();
-		auto threshold_min = make_sphere(0.001f * pos_balloon, binterface->RadiusColliderMin());
-		auto threshold_max = make_sphere(0.001f * pos_balloon, binterface->RadiusColliderMax());
+		auto threshold_min = make_sphere(0.001f * pos_balloon, 0.1f);
 		std::vector<pcl_ptr> cloud_ptrs{ 
-			cloud, 
 			threshold_min, 
-			threshold_max 
 		};
 		viewer.draw(cloud_ptrs);
 

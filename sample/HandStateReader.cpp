@@ -54,8 +54,7 @@ pcl_util::pcl_ptr PclHandStateReader::DefaultPreprocess(pcl_util::pcl_ptr pCloud
 }
 
 bool PclHandStateReader::Initialize() {
-	auto pCloudRaw = m_pPclGrabber->Capture();
-	auto pCloud = DefaultPreprocess(pCloudRaw);
+	auto pCloud = DefaultPreprocess(m_pPclGrabber->Capture());
 	float sphereSize = EstimateSphereRadius(m_pObject->getPosition(), pCloud);
 	m_radiusObject = sphereSize;
 	m_radiusColliderContact = sphereSize + thickness_collider_contact;

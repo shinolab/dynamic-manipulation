@@ -19,12 +19,13 @@ namespace dynaman {
 	class balloon_interface {
 	public:
 		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
-		enum class REF_FRAME { GLOBAL, USER };
 		enum class HoldState { FREE, TOUCH, HOLD };
+
 		balloon_interface(
 			FloatingObjectPtr pObject,
 			std::shared_ptr<HandStateReader> pHandStateReader
 		);
+
 		~balloon_interface() = default;
 
 		static std::shared_ptr<balloon_interface> Create(
@@ -37,13 +38,13 @@ namespace dynaman {
 		void Close();
 		bool IsOpen();
 		bool IsRunning();
+
+		//EventHandler eval;
 		HoldState DetermineHoldState(std::deque<std::pair<DWORD, bool>> contact_queue);
 		void OnHold();
 
-
 	private:
 		const int size_queue = 10;
-		REF_FRAME m_ref_frame = REF_FRAME::GLOBAL;
 		std::deque<std::pair<DWORD, bool>> m_contact_queue;
 		std::shared_ptr<HandStateReader> m_pHandStateReader;
 		FloatingObjectPtr m_pObject;
@@ -52,6 +53,7 @@ namespace dynaman {
 		std::mutex m_mtx_is_open;
 		std::mutex m_mtx_is_running;
 		std::thread m_thr_observer;
+		
 	};
 }
 

@@ -9,6 +9,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include "FloatingObject.hpp"
+#include "state_type.hpp"
 #include "HandStateReader.hpp"
 
 namespace {
@@ -16,7 +17,7 @@ namespace {
 	const float thickness_collider_click = 0.05;
 	const float tol_cluster_dist = 0.05f;
 	const int min_cluster_size_balloon = 100;
-	const int max_cluster_size = 10000;
+	const int max_cluster_size = 100000;
 	const int thres_contact_num = 150;
 }
 
@@ -137,10 +138,10 @@ bool PclHandStateReader::EstimateHandState(
 		}
 	);
 	int num_points_contact = std::distance(itr_contact_min, itr_click_min);
-	state = (num_points_contact > thres_contact_num) ? HandState::TOUCH : HandState::NONCONTACT;
+	state = (num_points_contact > thres_contact_num) ? HandState::HOLD_FINGER_DOWN : HandState::NONCONTACT;
 	std::cout
 		<< "contact points: " << num_points_contact
-		<< (state == HandState::TOUCH ? " [Contact]" : " ")
+		<< (state == HandState::NONCONTACT ? " " : " [Contact]")
 		<< std::endl;
 	return true;
 }

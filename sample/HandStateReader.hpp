@@ -5,11 +5,9 @@
 #include "FloatingObject.hpp"
 #include "pcl_grabber.hpp"
 #include "pcl_util.hpp"
+#include "state_type.hpp"
 
 namespace dynaman {
-	enum class HandState {
-		NONCONTACT, TOUCH, HOLD_FINGER_UP, HOLD_FINGER_DOWN
-	};
 
 	class HandStateReader {
 	public:

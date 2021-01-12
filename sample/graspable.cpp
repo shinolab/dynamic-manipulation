@@ -54,8 +54,8 @@ pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
 }
 
 int main(int argc, char** argv) {
-	std::string target_image_name("blue_target_no_cover.png");
 
+	std::string target_image_name("blue_target_no_cover.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
 	auto pAupa = std::make_shared<autd::Controller>();

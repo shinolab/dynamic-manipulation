@@ -205,14 +205,26 @@ if(BUILD_PCL_APPS)
         ${realsense2_LIBRARY}
     )
 
+    add_library(ActionHanlder
+        ActionHandler.hpp
+        ActionHandler.cpp
+    )
+    add_executable(ActionHandlerTest
+        ActionHandlerTest.cpp
+    )
+    target_link_libraries(ActionHandlerTest
+        ActionHanlder
+    )
+
     add_executable(graspable
-    graspable.cpp
-    balloon_interface.hpp
-    balloon_interface.cpp
-    HandStateReader.hpp
-    HandStateReader.cpp
-    pcl_util.hpp
-    pcl_util.cpp
+        graspable.cpp
+        balloon_interface.hpp
+        balloon_interface.cpp
+        HandStateReader.hpp
+        HandStateReader.cpp
+        state_type.hpp
+        pcl_util.hpp
+        pcl_util.cpp
     )
     target_link_libraries(graspable
         ${PCL_LIBRARIES}
@@ -222,6 +234,7 @@ if(BUILD_PCL_APPS)
         CameraDevice
         ImgProcUtil
         DynamicManipulation
+        ActionHandler
     )
 
 endif()

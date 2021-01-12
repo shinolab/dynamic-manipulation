@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <utility>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -17,6 +18,7 @@ namespace {
 	const float thickness_collider_click = 0.05;
 	const float tol_cluster_dist = 0.05f;
 	const int min_cluster_size_balloon = 100;
+	const int min_cluster_size_finger = 8;
 	const int max_cluster_size = 100000;
 	const int thres_contact_num = 150;
 }
@@ -65,15 +67,8 @@ bool PclHandStateReader::Initialize() {
 }
 
 float PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pcl_util::pcl_ptr pCloud) {	
-	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ecex;
-	ecex.setClusterTolerance(tol_cluster_dist);
-	ecex.setMinClusterSize(min_cluster_size_balloon);
-	ecex.setMaxClusterSize(max_cluster_size);
-	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-	ecex.setSearchMethod(tree);
-	ecex.setInputCloud(pCloud);
-	std::vector<pcl::PointIndices> cluster_indices;
-	ecex.extract(cluster_indices);
+
+	auto cluster_indices = pcl_util::EuclidianClusterExtraction(pCloud, tol_cluster_dist, min_cluster_size_balloon, max_cluster_size);
 	auto itr_largest = std::max_element(
 		cluster_indices.begin(),
 		cluster_indices.end(),
@@ -83,14 +78,7 @@ float PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pc
 	);
 	std::cout << cluster_indices.size() << " clusters are detected." << std::endl;
 	std::cout << "The size of the cluster is: " << (*itr_largest).indices.size() << std::endl;
-	pcl_ptr pCloudSphere(new pcl::PointCloud<pcl::PointXYZ>());
-	pCloudSphere->points.resize((*itr_largest).indices.size());
-	pCloudSphere->width = (*itr_largest).indices.size();
-	pCloudSphere->height = 1;
-	pCloudSphere->is_dense = true;
-	for (int idx_pt = 0; idx_pt < (*itr_largest).indices.size(); idx_pt++) {
-		pCloudSphere->points[idx_pt] = pCloud->points[(*itr_largest).indices[idx_pt]];
-	}
+	auto pCloudSphere = pcl_util::ExtractPointCloud(pCloud, *itr_largest);
 	auto itr_pt_farthest = std::max_element(pCloudSphere->points.begin(), pCloudSphere->points.end(),
 		[&center](pcl::PointXYZ p_near, pcl::PointXYZ p_far) {
 			return pcl_util::squareDist(center, p_near) < pcl_util::squareDist(center, p_far);
@@ -143,6 +131,31 @@ bool PclHandStateReader::EstimateHandState(
 		<< "contact points: " << num_points_contact
 		<< (state == HandState::NONCONTACT ? " " : " [Contact]")
 		<< std::endl;
+	if (num_points_contact < thres_contact_num) {
+		state == HandState::NONCONTACT;
+		return true;
+	}
+	//extract click_collider:
+	int num_points_click = std::distance(itr_click_min, pointSquareDists.end());
+	auto pCloudClick = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
+	pCloudClick->points.resize(num_points_click);
+	pCloudClick->width = num_points_click;
+	pCloudClick->height = 1;
+	pCloudClick->is_dense = true;
+	for (auto itr = itr_click_min; itr != pointSquareDists.end(); itr++) {
+		auto idx_all = std::distance(pointSquareDists.begin(), itr);
+		auto idx_click = std::distance(itr_click_min, itr);
+		pCloudClick->points[idx_click] = pCloud->points[idx_all];
+	}
+	
+	auto clusterIndicesClickCollider = pcl_util::EuclidianClusterExtraction(
+		pCloudClick,
+		tol_cluster_dist,
+		min_cluster_size_finger,
+		max_cluster_size
+	);
+	
+	clusterIndicesClickCollider.size() > 2 ? state = HandState::HOLD_FINGER_UP : state = HandState::HOLD_FINGER_DOWN;
 	return true;
 }
 

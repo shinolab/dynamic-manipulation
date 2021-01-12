@@ -205,7 +205,7 @@ if(BUILD_PCL_APPS)
         ${realsense2_LIBRARY}
     )
 
-    add_library(ActionHanlder
+    add_library(ActionHandler
         ActionHandler.hpp
         ActionHandler.cpp
     )
@@ -213,7 +213,7 @@ if(BUILD_PCL_APPS)
         ActionHandlerTest.cpp
     )
     target_link_libraries(ActionHandlerTest
-        ActionHanlder
+        ActionHandler
     )
 
     add_executable(graspable

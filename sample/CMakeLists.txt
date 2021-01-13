@@ -179,9 +179,15 @@ if(BUILD_PCL_APPS)
     include_directories(${PCL_INCLUDE_DIR})
     add_definitions(${PCL_DEFINITIONS})
 
+    add_library(pcl_util pcl_util.hpp pcl_util.cpp)
+    target_link_libraries(
+        pcl_util
+        ${PCL_LIBRARIES}
+    )
     add_library(pcl_viewer pcl_viewer.hpp pcl_viewer.cpp)
     target_link_libraries(
         pcl_viewer
+        pcl_util
         ${OPENGL_LIBRARIES}
         ${PCL_LIBRARIES}
         ${GLEW_LIBRARIES}
@@ -193,6 +199,7 @@ if(BUILD_PCL_APPS)
     add_library(pcl_grabber pcl_grabber.cpp pcl_grabber.hpp)
     target_link_libraries(
         pcl_grabber
+        pcl_util
         ${realsense2_LIBRARY}
         ${PCL_LIBRARIES}
     )
@@ -216,17 +223,40 @@ if(BUILD_PCL_APPS)
         ActionHandler
     )
 
+    add_library(HandStateReader
+        HandStateReader.hpp
+        HandStateReader.cpp
+    )    
+    target_link_libraries(
+        HandStateReader
+        pcl_util
+        ${PCL_LIBRARIES}
+        pcl_grabber
+        DynamicManipulation
+    )
+
+    add_executable(HandStateReaderTest
+        HandStateReaderTest.cpp
+    )
+    target_link_libraries(
+        HandStateReaderTest
+        DynamicManipulation
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        HandStateReader
+        pcl_util
+        pcl_grabber
+        pcl_viewer
+    )
+
     add_executable(graspable
         graspable.cpp
         balloon_interface.hpp
         balloon_interface.cpp
-        HandStateReader.hpp
-        HandStateReader.cpp
-        state_type.hpp
-        pcl_util.hpp
-        pcl_util.cpp
     )
     target_link_libraries(graspable
+        pcl_util
         ${PCL_LIBRARIES}
         pcl_viewer
         pcl_grabber
@@ -235,6 +265,7 @@ if(BUILD_PCL_APPS)
         ImgProcUtil
         DynamicManipulation
         ActionHandler
+        HandStateReader
     )
 
 endif()

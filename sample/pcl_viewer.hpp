@@ -44,7 +44,6 @@ private:
 	std::string m_title;
 };
 
-
 class pcl_viewer {
 	using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 	struct State {

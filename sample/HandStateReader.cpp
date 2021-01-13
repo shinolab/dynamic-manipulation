@@ -156,6 +156,18 @@ bool PclHandStateReader::EstimateHandState(
 	);
 	
 	clusterIndicesClickCollider.size() > 2 ? state = HandState::HOLD_FINGER_UP : state = HandState::HOLD_FINGER_DOWN;
+	auto pCloudBalloon = pcl_util::MakeSphere(center, RadiusObject());
+	auto pCloudContactCollidar = pcl_util::MakeSphere(center, RadiusColliderContact());
+	auto pCloudClickCollidar = pcl_util::MakeSphere(center, RadiusColliderClick());
+	//visualization for debug
+	std::vector<pcl_util::pcl_ptr> cloudPtrs{
+		pCloud,
+		pCloudClick,
+		pCloudBalloon,
+		pCloudContactCollidar,
+		pCloudClickCollidar
+	};
+	m_viewer.draw(cloudPtrs);
 	return true;
 }
 

@@ -5,6 +5,7 @@
 #include "FloatingObject.hpp"
 #include "pcl_grabber.hpp"
 #include "pcl_util.hpp"
+#include "pcl_viewer.hpp"
 #include "state_type.hpp"
 
 namespace dynaman {
@@ -53,6 +54,7 @@ namespace dynaman {
 		float m_radiusObject;
 		float m_radiusColliderContact;
 		float m_radiusColliderClick;
+		pcl_viewer m_viewer = pcl_viewer("HandStateReader", 1280, 720);
 	};
 
 }

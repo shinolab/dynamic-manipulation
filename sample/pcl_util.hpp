@@ -36,6 +36,10 @@ namespace pcl_util {
 		pcl_ptr pCloud,
 		pcl::PointIndices pointIndices
 	);
+
+	pcl_ptr MakeSphere(const Eigen::Vector3f& center, float radius);
+
+	pcl_ptr EigenToPcl(const std::vector<Eigen::Vector3f>& points);
 }
 
 #endif // !_DYNAMAN_PCL_UTIL_HPP

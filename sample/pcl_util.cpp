@@ -79,3 +79,44 @@ pcl_util::pcl_ptr pcl_util::ExtractPointCloud(
 	}
 	return pCloudExtracted;
 }
+
+pcl_util::pcl_ptr pcl_util::MakeSphere(
+	const Eigen::Vector3f& center,
+	float radius
+) {
+	int num_long = 50;
+	int num_lat = 25;
+	int num_points = num_long * num_lat;
+	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	cloud->points.resize(num_points);
+	cloud->height = num_lat;
+	cloud->width = num_long;
+	for (int i_lat = 0; i_lat < num_lat; i_lat++)
+	{
+		for (int i_long = 0; i_long < num_long; i_long++) {
+			int i_vert = i_lat * num_long + i_long;
+			float theta = M_PI * i_lat / num_lat;
+			float phi = 2 * M_PI * i_long / num_long;
+			cloud->points[i_vert].x = center.x() + radius * sin(theta) * cos(phi);
+			cloud->points[i_vert].y = center.y() + radius * sin(theta) * sin(phi);
+			cloud->points[i_vert].z = center.z() + radius * cos(theta);
+		}
+	}
+	return cloud;
+}
+
+pcl_util::pcl_ptr pcl_util::EigenToPcl(
+	const std::vector<Eigen::Vector3f>& points
+) {
+	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	cloud->width = points.size();
+	cloud->height = 1;
+	cloud->is_dense = true;
+	cloud->points.resize(points.size());
+	for (int iv = 0; iv < points.size(); iv++) {
+		cloud->points[iv].x = points[iv].x();
+		cloud->points[iv].y = points[iv].y();
+		cloud->points[iv].z = points[iv].z();
+	}
+	return cloud;
+}

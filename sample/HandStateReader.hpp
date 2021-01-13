@@ -13,7 +13,7 @@ namespace dynaman {
 	class HandStateReader {
 	public:
 		virtual ~HandStateReader() {}
-		virtual bool Initialize() = 0;
+		virtual bool initialize() = 0;
 		virtual bool Read(dynaman::HandState &state) = 0;
 	};
 
@@ -33,11 +33,11 @@ namespace dynaman {
 
 		pcl_util::pcl_ptr DefaultPreprocess(pcl_util::pcl_ptr pCloud);
 
-		bool Initialize() override;
+		bool initialize() override;
 
 		//Estimate the radius of a sphere based on its center and a point cloud.
 		//The radius is estimated using the distance between the center and the furthest point of the nearest cluster
-		float EstimateSphereRadius(const Eigen::Vector3f& centerSphere, pcl_util::pcl_ptr pCloud);
+		bool EstimateSphereRadius(const Eigen::Vector3f& centerSphere, pcl_util::pcl_ptr pCloud, float &radius);
 		bool EstimateHandState(
 			dynaman::HandState& state,
 			const Eigen::Vector3f& center, 
@@ -54,7 +54,6 @@ namespace dynaman {
 		float m_radiusObject;
 		float m_radiusColliderContact;
 		float m_radiusColliderClick;
-		pcl_viewer m_viewer = pcl_viewer("HandStateReader", 1280, 720);
 	};
 
 }

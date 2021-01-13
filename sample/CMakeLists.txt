@@ -183,11 +183,13 @@ if(BUILD_PCL_APPS)
     target_link_libraries(
         pcl_util
         ${PCL_LIBRARIES}
+        DynamicManipulation
     )
     add_library(pcl_viewer pcl_viewer.hpp pcl_viewer.cpp)
     target_link_libraries(
         pcl_viewer
         pcl_util
+        DynamicManipulation
         ${OPENGL_LIBRARIES}
         ${PCL_LIBRARIES}
         ${GLEW_LIBRARIES}

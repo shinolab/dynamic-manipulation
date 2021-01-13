@@ -38,12 +38,12 @@ pcl_util::pcl_ptr pcl_util::TrimPointsOutsideWorkspace(
 	dynaman::FloatingObjectPtr pObject,
 	pcl_util::pcl_ptr pCloud
 ) {
-	auto lb = pObject->lowerbound();
-	auto ub = pObject->upperbound();
-	auto radius = pObject->Radius() / 1000.f;
-	auto pCloudFiltered = passthrough(pCloud, "x", -lb.x() - radius, lb.x() + radius);
-	pCloudFiltered = passthrough(pCloudFiltered, "y", -lb.y() - radius, lb.y() + radius);
-	pCloudFiltered = passthrough(pCloudFiltered, "z", -lb.z() - radius, lb.z() + radius);
+	auto lb = 0.001f * pObject->lowerbound();
+	auto ub = 0.001f * pObject->upperbound();
+	auto radius = 0.001f * pObject->Radius();
+	auto pCloudFiltered = passthrough(pCloud, "x", lb.x() - radius, ub.x() + radius);
+	pCloudFiltered = passthrough(pCloudFiltered, "y", lb.y() - radius, ub.y() + radius);
+	pCloudFiltered = passthrough(pCloudFiltered, "z", lb.z() - radius, ub.z() + radius);
 	return pCloudFiltered;
 }
 

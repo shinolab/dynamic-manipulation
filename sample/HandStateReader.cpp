@@ -56,19 +56,25 @@ pcl_util::pcl_ptr PclHandStateReader::DefaultPreprocess(pcl_util::pcl_ptr pCloud
 	return pCloudFiltered;
 }
 
-bool PclHandStateReader::Initialize() {
+bool PclHandStateReader::initialize() {
+	std::cout << "prerocessing..." << std::endl;
 	auto pCloud = DefaultPreprocess(m_pPclGrabber->Capture());
-	float sphereSize = EstimateSphereRadius(m_pObject->getPosition(), pCloud);
-	m_radiusObject = sphereSize;
-	m_radiusColliderContact = sphereSize + thickness_collider_contact;
+	std::cout << "estimating radius ..." << std::endl;
+	float sphereRadius = 0;
+	bool estimation_success = EstimateSphereRadius(0.001f * m_pObject->getPosition(), pCloud, sphereRadius);
+	m_radiusObject = sphereRadius;
+	m_radiusColliderContact = sphereRadius + thickness_collider_contact;
 	m_radiusColliderClick = m_radiusColliderContact + thickness_collider_click;
 	std::cout << "Estimation finished. balloon size is:" << RadiusObject() << std::endl;
-	return true;
+	return estimation_success;
 }
 
-float PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pcl_util::pcl_ptr pCloud) {	
+bool PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pcl_util::pcl_ptr pCloud, float& radius) {	
 
 	auto cluster_indices = pcl_util::EuclidianClusterExtraction(pCloud, tol_cluster_dist, min_cluster_size_balloon, max_cluster_size);
+	if (cluster_indices.empty()) {
+		return false;
+	}
 	auto itr_largest = std::max_element(
 		cluster_indices.begin(),
 		cluster_indices.end(),
@@ -92,7 +98,8 @@ float PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pc
 	std::cout << "posBalloon: " << center.transpose() << std::endl;
 	std::cout << "nearest point distance:" << pcl_util::squareDist(center, *itr_pt_nearest);
 	std::cout << "farthest point distance:" << pcl_util::squareDist(center, *itr_pt_farthest);
-	return sqrtf(pcl_util::squareDist(center, *itr_pt_farthest));
+	radius = sqrtf(pcl_util::squareDist(center, *itr_pt_farthest));
+	return true;
 }
 
 bool PclHandStateReader::EstimateHandState(
@@ -156,18 +163,7 @@ bool PclHandStateReader::EstimateHandState(
 	);
 	
 	clusterIndicesClickCollider.size() > 2 ? state = HandState::HOLD_FINGER_UP : state = HandState::HOLD_FINGER_DOWN;
-	auto pCloudBalloon = pcl_util::MakeSphere(center, RadiusObject());
-	auto pCloudContactCollidar = pcl_util::MakeSphere(center, RadiusColliderContact());
-	auto pCloudClickCollidar = pcl_util::MakeSphere(center, RadiusColliderClick());
-	//visualization for debug
-	std::vector<pcl_util::pcl_ptr> cloudPtrs{
-		pCloud,
-		pCloudClick,
-		pCloudBalloon,
-		pCloudContactCollidar,
-		pCloudClickCollidar
-	};
-	m_viewer.draw(cloudPtrs);
+
 	return true;
 }
 

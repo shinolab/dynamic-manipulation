@@ -40,26 +40,26 @@ int main(int argc, char** argv) {
 	auto pManipulator = dynaman::MultiplexManipulator::Create(gainP, gainD, gainI);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
-	Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
-	Eigen::Matrix3f rot_rs;
-	rot_rs <<
-		-0.698625, -0.0134938, 0.715361,
-		-0.71529, -0.0103563, -0.698751,
-		0.0168372, -0.999855, -0.00241686;
 
-	auto grabber = rs2_pcl_grabber::Create(0.001f * pos_rs, rot_rs, "827312072688", 0.15f, 1.0f);
-	grabber->Open();
-	std::this_thread::sleep_for(std::chrono::seconds(5)); // wait until stabilized
-
-	auto pHandStateReader = dynaman::PclHandStateReader::Create(
-		pObject,
-		grabber
-	);
-	pHandStateReader->Initialize();
 
 	std::atomic<bool> isRunning = false;
-	auto thr_reader = std::thread([&]() 
+	auto thr_reader = std::thread([&pObject, &isRunning]() 
 		{
+			Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
+			Eigen::Matrix3f rot_rs;
+			rot_rs <<
+				-0.698625, -0.0134938, 0.715361,
+				-0.71529, -0.0103563, -0.698751,
+				0.0168372, -0.999855, -0.00241686;
+
+			auto grabber = rs2_pcl_grabber::Create(0.001f * pos_rs, rot_rs, "825513025618", 0.15f, 1.0f);
+			grabber->Open();
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+			auto pHandStateReader = dynaman::PclHandStateReader::Create(
+				pObject,
+				grabber
+			);
+			pHandStateReader->initialize();
 			dynaman::HandState handState;
 			bool isValid = pHandStateReader->Read(handState);
 			isRunning = true;
@@ -79,16 +79,17 @@ int main(int argc, char** argv) {
 					break;
 				}
 			}
+			grabber->Close();
 		}
 	);
 
 	getchar();
-	isRunning = false;
-	if (thr_reader.joinable()) {
-		thr_reader.join();
-	}
+	//isRunning = false;
+	//if (thr_reader.joinable()) {
+	//	thr_reader.join();
+	//}
 
-	grabber->Close();
+
 	pManipulator->FinishManipulation();
 	return 0;
 }

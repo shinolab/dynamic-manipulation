@@ -198,7 +198,7 @@ namespace dynaman {
 				Eigen::Vector3f forceResult = m_arfModelPtr->arf(posRel, RotsAutd(pAupa->geometry())) * duties;
 				m_controlLogStream << forceResult.x() << "," << forceResult.y() << "," << forceResult.z();
 				for (int i_duty = 0; i_duty < duties.size(); i_duty++) {
-					m_controlLogStream << duties[i_duty] << ",";
+					m_controlLogStream << "," << duties[i_duty];
 				}
 				m_controlLogStream << std::endl;
 			}
@@ -227,7 +227,11 @@ namespace dynaman {
 			m_obsLogStream.open(m_obsLogName);
 			m_obsLogStream << "sys_time,x,y,z" << std::endl;
 			m_controlLogStream.open(m_controlLogName);
-			m_controlLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,duties" << std::endl;
+			m_controlLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,Fxres,Fyres,Fzres";
+			for (int i_aupa = 0; i_aupa < pAupa->geometry()->numDevices(); i_aupa++) {
+				m_controlLogStream << ",duty" << i_aupa;
+			}
+			m_controlLogStream << std::endl;
 		}
 		timeBeginPeriod(1);
 		{

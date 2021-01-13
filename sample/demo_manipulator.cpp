@@ -12,8 +12,8 @@ int main(int argc, char** argv ) {
 
 	/*user-defined configurations*/
 	Eigen::Vector3f pos_init(0, -50, 0);
-	//std::string target_image_name("blue_target_no_cover.png");
-	std::string target_image_name("blue_20cm_daiso_target.png");
+	std::string target_image_name("blue_target_no_cover.png");
+	//std::string target_image_name("blue_20cm_daiso_target.png");
 	/*end of user-defined configurations*/
 
 	auto pObject = dynaman::FloatingObject::Create(
@@ -55,25 +55,25 @@ int main(int argc, char** argv ) {
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 	std::this_thread::sleep_for(std::chrono::seconds(5));
 	//traslation maneuver:
-	pObject->updateStatesTarget(posLeft);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	pObject->updateStatesTarget(posRight);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posRight, posCenter));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	pObject->updateStatesTarget(posHigh);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posHigh));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	pObject->updateStatesTarget(posLow);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posHigh, posLow));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-	pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//pObject->updateStatesTarget(posLeft);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//pObject->updateStatesTarget(posRight);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1250));
+	//pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posRight, posCenter));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//pObject->updateStatesTarget(posHigh);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posHigh));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//pObject->updateStatesTarget(posLow);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posHigh, posLow));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+	//pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
-	std::this_thread::sleep_for(std::chrono::milliseconds(6000));
-	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-
+	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	getchar();
 	pManipulator->FinishManipulation();
 	pAupa->Close();
 	return 0;

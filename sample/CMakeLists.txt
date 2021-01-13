@@ -161,7 +161,7 @@ target_link_libraries(testVibrationSimple
 )
 
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
-option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
+#option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)
     find_package(realsense2 REQUIRED)
     include_directories(${realsense2_INCLUDE_DIR})
@@ -179,9 +179,15 @@ if(BUILD_PCL_APPS)
     include_directories(${PCL_INCLUDE_DIR})
     add_definitions(${PCL_DEFINITIONS})
 
+    add_library(pcl_util pcl_util.hpp pcl_util.cpp)
+    target_link_libraries(
+        pcl_util
+        ${PCL_LIBRARIES}
+    )
     add_library(pcl_viewer pcl_viewer.hpp pcl_viewer.cpp)
     target_link_libraries(
         pcl_viewer
+        pcl_util
         ${OPENGL_LIBRARIES}
         ${PCL_LIBRARIES}
         ${GLEW_LIBRARIES}
@@ -193,6 +199,7 @@ if(BUILD_PCL_APPS)
     add_library(pcl_grabber pcl_grabber.cpp pcl_grabber.hpp)
     target_link_libraries(
         pcl_grabber
+        pcl_util
         ${realsense2_LIBRARY}
         ${PCL_LIBRARIES}
     )
@@ -205,36 +212,60 @@ if(BUILD_PCL_APPS)
         ${realsense2_LIBRARY}
     )
 
-    if(BUILD_AZURE_KINECT_APPS)
+    add_library(ActionHandler
+        ActionHandler.hpp
+        ActionHandler.cpp
+    )
+    add_executable(ActionHandlerTest
+        ActionHandlerTest.cpp
+    )
+    target_link_libraries(ActionHandlerTest
+        ActionHandler
+    )
 
-       find_package(k4a REQUIRED)
-        include_directories(k4a_INCLUDE_DIR)
-        find_package(k4abt REQUIRED)
-        include_directories(k4abt_INCLUDE_DIR)
-        add_library(K4aHeadTracker
-            K4aHeadTracker.cpp
-            K4aHeadTracker.hpp
-        )
-        target_link_libraries(K4aHeadTracker
-            k4a::k4a
-            k4a::k4abt
-        )
+    add_library(HandStateReader
+        HandStateReader.hpp
+        HandStateReader.cpp
+    )    
+    target_link_libraries(
+        HandStateReader
+        pcl_util
+        ${PCL_LIBRARIES}
+        pcl_grabber
+        DynamicManipulation
+    )
 
-        add_executable(graspable
-            graspable.cpp
-            balloon_interface.hpp
-            balloon_interface.cpp
-        )
-        target_link_libraries(graspable
-            K4aHeadTracker
-            ${PCL_LIBRARIES}
-            pcl_viewer
-            pcl_grabber
-            StereoTracker
-            CameraDevice
-            ImgProcUtil
-            DynamicManipulation
-        )
-    endif()
-    
+    add_executable(HandStateReaderTest
+        HandStateReaderTest.cpp
+    )
+    target_link_libraries(
+        HandStateReaderTest
+        DynamicManipulation
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        HandStateReader
+        pcl_util
+        pcl_grabber
+        pcl_viewer
+    )
+
+    add_executable(graspable
+        graspable.cpp
+        balloon_interface.hpp
+        balloon_interface.cpp
+    )
+    target_link_libraries(graspable
+        pcl_util
+        ${PCL_LIBRARIES}
+        pcl_viewer
+        pcl_grabber
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        DynamicManipulation
+        ActionHandler
+        HandStateReader
+    )
+
 endif()

@@ -31,3 +31,5 @@
 (OpenCVに関しては，CMakeを利用するとOpenCVディレクトリのどこかに"install"というディレクトリが生成されているはずなので，そのパスを指定する)
 
 成功すると，DynamicLevitation.slnというソリューションファイルが生成される．
+
+4. (サンプルプログラム：demo_manipulatorを動かす場合のみ)dataディレクトリ内のcam_stereo.ymlとblue_target_no_cover.pngを実行ファイルと同じディレクトリに移す．

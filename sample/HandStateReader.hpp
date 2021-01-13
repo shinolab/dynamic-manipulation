@@ -5,39 +5,23 @@
 #include "FloatingObject.hpp"
 #include "pcl_grabber.hpp"
 #include "pcl_util.hpp"
-#include "pcl_viewer.hpp"
 #include "state_type.hpp"
 
 namespace dynaman {
 
-	class HandStateReader {
+	class PclHandStateReader {
 	public:
-		virtual ~HandStateReader() {}
-		virtual bool initialize() = 0;
-		virtual bool Read(dynaman::HandState &state) = 0;
-	};
-
-	class PclHandStateReader : public HandStateReader {
-	public:
-		PclHandStateReader(
-			dynaman::FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPclGrabber
-		);
+		PclHandStateReader(float radius);
 
 		~PclHandStateReader();
 
-		static std::shared_ptr<HandStateReader> Create(
-			dynaman::FloatingObjectPtr pObject,
-			std::shared_ptr<pcl_grabber> pPclGrabber
-		);
+		static std::shared_ptr<PclHandStateReader> Create(float radius);
 
-		pcl_util::pcl_ptr DefaultPreprocess(pcl_util::pcl_ptr pCloud);
-
-		bool initialize() override;
+		pcl_util::pcl_ptr DefaultPreprocess(pcl_util::pcl_ptr pCloud, FloatingObjectPtr pObject);
 
 		//Estimate the radius of a sphere based on its center and a point cloud.
 		//The radius is estimated using the distance between the center and the furthest point of the nearest cluster
-		bool EstimateSphereRadius(const Eigen::Vector3f& centerSphere, pcl_util::pcl_ptr pCloud, float &radius);
+		bool EstimateSphereRadius(pcl_util::pcl_ptr pCloud, const Eigen::Vector3f& centerSphere);
 		bool EstimateHandState(
 			dynaman::HandState& state,
 			const Eigen::Vector3f& center, 
@@ -46,11 +30,9 @@ namespace dynaman {
 		float RadiusObject();
 		float RadiusColliderContact();
 		float RadiusColliderClick();
-		bool Read(dynaman::HandState &state) override;
+		bool Read(dynaman::HandState &state, pcl_util::pcl_ptr pCloud, const Eigen::Vector3f& center);
 
 	private:
-		dynaman::FloatingObjectPtr m_pObject;
-		std::shared_ptr<pcl_grabber> m_pPclGrabber;
 		float m_radiusObject;
 		float m_radiusColliderContact;
 		float m_radiusColliderClick;

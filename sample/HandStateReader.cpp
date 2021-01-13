@@ -27,27 +27,20 @@ using namespace dynaman;
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
-PclHandStateReader::PclHandStateReader(
-	dynaman::FloatingObjectPtr pObject,
-	std::shared_ptr<pcl_grabber> pPclGrabber)
-	:m_pObject(pObject),
-	m_pPclGrabber(pPclGrabber),
-	m_radiusObject(pObject->Radius()),
-	m_radiusColliderContact(pObject->Radius() + thickness_collider_contact),
-	m_radiusColliderClick(pObject->Radius() + thickness_collider_contact + thickness_collider_click)
+PclHandStateReader::PclHandStateReader(float radius)
+	:m_radiusObject(radius),
+	m_radiusColliderContact(radius + thickness_collider_contact),
+	m_radiusColliderClick(radius + thickness_collider_contact + thickness_collider_click)
 {}
 
 PclHandStateReader::~PclHandStateReader() {};
 
-std::shared_ptr<HandStateReader> PclHandStateReader::Create(
-	dynaman::FloatingObjectPtr pObject,
-	std::shared_ptr<pcl_grabber> pPclGrabber
-) {
-	return std::make_shared<PclHandStateReader>(pObject, pPclGrabber);
+std::shared_ptr<PclHandStateReader> PclHandStateReader::Create(float radius) {
+	return std::make_shared<PclHandStateReader>(radius);
 }
 
-pcl_util::pcl_ptr PclHandStateReader::DefaultPreprocess(pcl_util::pcl_ptr pCloud) {
-	auto pCloudInside = pcl_util::TrimPointsOutsideWorkspace(m_pObject, pCloud);
+pcl_util::pcl_ptr PclHandStateReader::DefaultPreprocess(pcl_util::pcl_ptr pCloud, FloatingObjectPtr pObject) {
+	auto pCloudInside = pcl_util::TrimPointsOutsideWorkspace(pObject, pCloud);
 	pcl::VoxelGrid<pcl::PointXYZ> vg_filter;
 	vg_filter.setInputCloud(pCloudInside);
 	vg_filter.setLeafSize(0.005f, 0.005f, 0.005f);
@@ -56,20 +49,7 @@ pcl_util::pcl_ptr PclHandStateReader::DefaultPreprocess(pcl_util::pcl_ptr pCloud
 	return pCloudFiltered;
 }
 
-bool PclHandStateReader::initialize() {
-	std::cout << "prerocessing..." << std::endl;
-	auto pCloud = DefaultPreprocess(m_pPclGrabber->Capture());
-	std::cout << "estimating radius ..." << std::endl;
-	float sphereRadius = 0;
-	bool estimation_success = EstimateSphereRadius(0.001f * m_pObject->getPosition(), pCloud, sphereRadius);
-	m_radiusObject = sphereRadius;
-	m_radiusColliderContact = sphereRadius + thickness_collider_contact;
-	m_radiusColliderClick = m_radiusColliderContact + thickness_collider_click;
-	std::cout << "Estimation finished. balloon size is:" << RadiusObject() << std::endl;
-	return estimation_success;
-}
-
-bool PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pcl_util::pcl_ptr pCloud, float& radius) {	
+bool PclHandStateReader::EstimateSphereRadius(pcl_util::pcl_ptr pCloud, const Eigen::Vector3f& center) {
 
 	auto cluster_indices = pcl_util::EuclidianClusterExtraction(pCloud, tol_cluster_dist, min_cluster_size_balloon, max_cluster_size);
 	if (cluster_indices.empty()) {
@@ -98,7 +78,10 @@ bool PclHandStateReader::EstimateSphereRadius(const Eigen::Vector3f &center, pcl
 	std::cout << "posBalloon: " << center.transpose() << std::endl;
 	std::cout << "nearest point distance:" << pcl_util::squareDist(center, *itr_pt_nearest);
 	std::cout << "farthest point distance:" << pcl_util::squareDist(center, *itr_pt_farthest);
-	radius = sqrtf(pcl_util::squareDist(center, *itr_pt_farthest));
+	float radiusEstimated = sqrtf(pcl_util::squareDist(center, *itr_pt_farthest));
+	m_radiusObject = radiusEstimated;
+	m_radiusColliderContact = m_radiusObject + thickness_collider_contact;
+	m_radiusColliderClick = m_radiusColliderContact + thickness_collider_click;
 	return true;
 }
 
@@ -179,11 +162,11 @@ float PclHandStateReader::RadiusColliderClick() {
 	return m_radiusColliderClick;
 }
 
-bool PclHandStateReader::Read(HandState& state) {
+bool PclHandStateReader::Read(HandState& state, pcl_ptr pCloud, const Eigen::Vector3f& center) {
 	return EstimateHandState(
 		state,
-		m_pObject->getPosition(),
-		DefaultPreprocess(m_pPclGrabber->Capture())
+		center,
+		pCloud
 	);
 }
 

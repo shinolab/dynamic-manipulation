@@ -252,22 +252,21 @@ if(BUILD_PCL_APPS)
         pcl_viewer
     )
 
-    add_executable(graspable
+    add_executable(
+        graspable
         graspable.cpp
-        balloon_interface.hpp
-        balloon_interface.cpp
     )
-    target_link_libraries(graspable
-        pcl_util
-        ${PCL_LIBRARIES}
-        pcl_viewer
-        pcl_grabber
+    target_link_libraries(
+        graspable
+        DynamicManipulation
         StereoTracker
         CameraDevice
         ImgProcUtil
-        DynamicManipulation
-        ActionHandler
         HandStateReader
+        pcl_util
+        pcl_grabber
+        pcl_viewer
+        ActionHandler
     )
 
 endif()

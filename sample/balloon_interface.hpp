@@ -19,18 +19,21 @@ namespace dynaman {
 	class balloon_interface {
 	public:
 		using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
-		enum class HoldState { FREE, TOUCH, HOLD };
 
 		balloon_interface(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<HandStateReader> pHandStateReader
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<Manipulator> pManipulator,
+			std::shared_ptr<PclHandStateReader> pHandStateReader
 		);
 
 		~balloon_interface() = default;
 
 		static std::shared_ptr<balloon_interface> Create(
 			FloatingObjectPtr pObject,
-			std::shared_ptr<HandStateReader> pHandStateReader
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<Manipulator> pManipulator,
+			std::shared_ptr<PclHandStateReader> pHandStateReader
 		);
 		void Open();
 		void Run();
@@ -39,14 +42,13 @@ namespace dynaman {
 		bool IsOpen();
 		bool IsRunning();
 
-		//EventHandler eval;
-		HoldState DetermineHoldState(std::deque<std::pair<DWORD, bool>> contact_queue);
-		void OnHold();
 
 	private:
 		const int size_queue = 10;
 		std::deque<std::pair<DWORD, bool>> m_contact_queue;
-		std::shared_ptr<HandStateReader> m_pHandStateReader;
+		std::shared_ptr<PclHandStateReader> m_pHandStateReader;
+		std::shared_ptr<Manipulator> m_pManipulator;
+		std::shared_ptr<ActionHandler> m_pActionHandler;
 		FloatingObjectPtr m_pObject;
 		bool m_is_running;
 		bool m_is_open;

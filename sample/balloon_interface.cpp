@@ -2,20 +2,20 @@
 #include <utility>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include "manipulator.hpp"
 #include "pcl_util.hpp"
 #include "HandStateReader.hpp"
+#include "ActionHandler.hpp"
 #include "balloon_interface.hpp"
 
-namespace {
-	const int thres_hold_num = 10;
-	const int thres_touch_num = 1;
-}
 
 using namespace dynaman;
 
 balloon_interface::balloon_interface(
 	FloatingObjectPtr pObject,
-	std::shared_ptr<HandStateReader> pHandStateReader
+	std::shared_ptr<Manipulator> pManipulator,
+	std::shared_ptr<PclHandStateReader> pHandStateReader,
+	std::shared_ptr<ActionHandler> pActionHandler
 ):m_is_running(false),
 m_is_open(false),
 m_contact_queue(thres_hold_num, std::make_pair(0, false)),
@@ -25,7 +25,7 @@ m_pObject(pObject)
 
 std::shared_ptr<balloon_interface> balloon_interface::Create(
 	FloatingObjectPtr pObject,
-	std::shared_ptr<HandStateReader> pHandStateReader
+	std::shared_ptr<PclHandStateReader> pHandStateReader
 ) {
 	return std::make_shared<balloon_interface>(pObject, pHandStateReader);
 }
@@ -38,7 +38,7 @@ void balloon_interface::Open() {
 				std::lock_guard<std::mutex> lock(m_mtx_is_open);
 				m_is_open = true;
 			}
-			m_pHandStateReader->Initialize();
+			
 			
 			while (IsOpen()) 
 			{
@@ -95,31 +95,4 @@ bool balloon_interface::IsRunning() {
 	return m_is_running;
 }
 
-balloon_interface::HoldState balloon_interface::DetermineHoldState(
-	std::deque<std::pair<DWORD, bool>> contact_queue
-) {
-	int countContact = 0;
-	for (auto ic = contact_queue.rbegin(); ic != contact_queue.rend(); ic++) {
-		if ((*ic).second == true) {
-			countContact++;
-		}
-		else {
-			break;
-		}
-	}
-	if (countContact >= thres_hold_num) {
-		return HoldState::HOLD;
-	}
-	else if (countContact >= thres_touch_num) {
-		return HoldState::TOUCH;
-	}	
-	return HoldState::FREE;
-}
-
-
-void balloon_interface::OnHold() {
-	std::cout << "HOLDING.";
-	auto currentPositionGlobal = m_pObject->AveragePosition();
-	m_pObject->updateStatesTarget(currentPositionGlobal);
-}
 

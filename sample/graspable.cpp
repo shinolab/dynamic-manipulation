@@ -13,45 +13,11 @@
 #include "pcl_viewer.hpp"
 #include "pcl_grabber.hpp"
 #include "HandStateReader.hpp"
+#include "ActionHandler.hpp"
 #include "balloon_interface.hpp"
 
 using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
-pcl_ptr make_sphere(const Eigen::Vector3f& center, float radius) {
-	int num_long = 50;
-	int num_lat = 25;
-	int num_points = num_long * num_lat;
-	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-	cloud->points.resize(num_points);
-	cloud->height = num_lat;
-	cloud->width = num_long;
-	for (int i_lat = 0; i_lat < num_lat; i_lat++)
-	{
-		for (int i_long = 0; i_long < num_long; i_long++) {
-			int i_vert = i_lat * num_long + i_long;
-			float theta = M_PI * i_lat / num_lat;
-			float phi = 2 * M_PI * i_long / num_long;
-			cloud->points[i_vert].x = center.x() + radius * sin(theta) * cos(phi);
-			cloud->points[i_vert].y = center.y() + radius * sin(theta) * sin(phi);
-			cloud->points[i_vert].z = center.z() + radius * cos(theta);
-		}
-	}
-	return cloud;
-}
-
-pcl_ptr points_to_pcl(const std::vector<Eigen::Vector3f>& points) {
-	pcl_ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-	cloud->width = points.size();
-	cloud->height = 1;
-	cloud->is_dense = false;
-	cloud->points.resize(points.size());
-	for (int iv = 0; iv < points.size(); iv++) {
-		cloud->points[iv].x = points[iv].x();
-		cloud->points[iv].y = points[iv].y();
-		cloud->points[iv].z = points[iv].z();
-	}
-	return cloud;
-}
 
 int main(int argc, char** argv) {
 
@@ -83,6 +49,7 @@ int main(int argc, char** argv) {
 		0
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	std::this_thread::sleep_for(std::chrono::seconds(5)); // wait until stabilized
 
 	Eigen::Matrix3f rot_rs;
 	rot_rs <<
@@ -90,31 +57,73 @@ int main(int argc, char** argv) {
 		-0.71529, -0.0103563, -0.698751,
 		0.0168372, -0.999855, -0.00241686;
 	Eigen::Vector3f pos_rs(-409.233, 460.217, -7.72512);
-	
-	auto grabber = rs2_pcl_grabber::Create(0.001f*pos_rs, rot_rs, "827312072688", 0.15f, 1.0f);
+
+	auto grabber = rs2_pcl_grabber::Create(0.001f * pos_rs, rot_rs, "825513025618", 0.15f, 1.0f);
 	grabber->Open();
 
-	std::this_thread::sleep_for(std::chrono::seconds(5)); // wait until stabilized
-
-	auto binterface = dynaman::balloon_interface::Create(
-		pObject,
-		dynaman::PclHandStateReader::Create(pObject, grabber)
+	auto pHandStateReader = dynaman::PclHandStateReader::Create(
+		0.001f * pObject->Radius()
 	);
-	binterface->Open();
-	binterface->Run();
-	std::this_thread::sleep_for(std::chrono::seconds(5)); 
+	auto pCloudInit = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
+	for (int i = 0; i < 10; i++) {
+		if (pHandStateReader->EstimateSphereRadius(pCloudInit, 0.001f * pObject->getPosition())) {
+			std::cout << "Estimation succeeded." << std::endl;
+			std::cout << "Balloon Radius: " << pHandStateReader->RadiusObject() << std::endl;
+			break;
+		}
+	}
+
+	auto pActionHandler = dynaman::ActionHandler::create();
+	pActionHandler->setOnHold(
+		[&pManipulator]() {
+			pManipulator->FinishManipulation();
+		}
+	);
+	pActionHandler->setOnRelease(
+		[&pManipulator, &pAupa, &pTracker, &pObject]() {
+			pManipulator->StartManipulation(pAupa, pTracker, pObject);
+		}
+	);
+	pActionHandler->setAtHeldInit(
+		[&pObject]() {
+			pObject->updateStatesTarget(pObject->AveragePosition());
+		}
+	);
+	pActionHandler->setAtHeldFingerUp(
+		[&pObject]() {
+			pObject->updateStatesTarget(pObject->AveragePosition());
+		}
+	);
+	pActionHandler->setAtHeldFingerDown(
+		[&pObject]() {
+			pObject->updateStatesTarget(pObject->AveragePosition());
+		}
+	);
+
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
-		auto pos_balloon = pObject->getPosition();
-		auto threshold_min = make_sphere(0.001f * pos_balloon, 0.1f);
-		std::vector<pcl_ptr> cloud_ptrs{ 
-			threshold_min, 
+		auto pCloud = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
+		dynaman::HandState handState;
+		auto posBalloon = 0.001f * pObject->getPosition();
+		bool read_ok = pHandStateReader->Read(handState, pCloud, posBalloon);
+		if (read_ok) {
+			pActionHandler->update(handState);
+		}
+		pActionHandler->execute();
+		auto pCloudBalloon = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusObject());
+		auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
+		auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
+		//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
+		std::vector<pcl_util::pcl_ptr> cloudPtrs{
+			//pCloud,
+			pCloudBalloon,
+			pCloudColliderContact,
+			pCloudInsideColliderClick
 		};
-		viewer.draw(cloud_ptrs);
+		viewer.draw(cloudPtrs);
 
-		std::this_thread::sleep_for(std::chrono::microseconds(30));
+		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
-	binterface->Close();
 	grabber->Close();
 	pManipulator->FinishManipulation();
 	return 0;

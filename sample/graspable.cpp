@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
 
 	auto pObject = dynaman::FloatingObject::Create(
 		Eigen::Vector3f(0, 0, 0),
-		Eigen::Vector3f::Constant(-400),
-		Eigen::Vector3f::Constant(400),
+		Eigen::Vector3f::Constant(-250),
+		Eigen::Vector3f::Constant(250),
 		-0.036e-3f,
 		50.f
 	);
@@ -74,24 +74,24 @@ int main(int argc, char** argv) {
 	}
 
 	auto pActionHandler = dynaman::ActionHandler::create();
-	pActionHandler->setOnHold(
-		[&pManipulator]() {
-			pManipulator->FinishManipulation();
-		}
-	);
-	pActionHandler->setOnRelease(
-		[&pManipulator, &pAupa, &pTracker, &pObject]() {
-			pManipulator->StartManipulation(pAupa, pTracker, pObject);
-		}
-	);
+	//pActionHandler->setOnHold(
+	//	[&pManipulator]() {
+	//		pManipulator->FinishManipulation();
+	//	}
+	//);
+	//pActionHandler->setOnRelease(
+	//	[&pManipulator, &pAupa, &pTracker, &pObject]() {
+	//		pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	//	}
+	//);
 	pActionHandler->setAtHeldInit(
 		[&pObject]() {
-			pObject->updateStatesTarget(pObject->AveragePosition());
+			//pObject->updateStatesTarget(pObject->AveragePosition());
 		}
 	);
 	pActionHandler->setAtHeldFingerUp(
 		[&pObject]() {
-			pObject->updateStatesTarget(pObject->AveragePosition());
+			//pObject->updateStatesTarget(pObject->AveragePosition());
 		}
 	);
 	pActionHandler->setAtHeldFingerDown(
@@ -108,19 +108,20 @@ int main(int argc, char** argv) {
 		bool read_ok = pHandStateReader->Read(handState, pCloud, posBalloon);
 		if (read_ok) {
 			pActionHandler->update(handState);
+			auto pCloudBalloon = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusObject());
+			auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
+			auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
+			//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
+			std::vector<pcl_util::pcl_ptr> cloudPtrs{
+				//pCloud,
+				pCloudBalloon,
+				pCloudColliderContact,
+				pCloudInsideColliderClick
+			};
+			viewer.draw(cloudPtrs);
 		}
 		pActionHandler->execute();
-		auto pCloudBalloon = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusObject());
-		auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
-		auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
-		//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
-		std::vector<pcl_util::pcl_ptr> cloudPtrs{
-			//pCloud,
-			pCloudBalloon,
-			pCloudColliderContact,
-			pCloudInsideColliderClick
-		};
-		viewer.draw(cloudPtrs);
+
 
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}

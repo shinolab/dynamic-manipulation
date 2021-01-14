@@ -86,12 +86,12 @@ int main(int argc, char** argv) {
 	//);
 	pActionHandler->setAtHeldInit(
 		[&pObject]() {
-			//pObject->updateStatesTarget(pObject->AveragePosition());
+			pObject->updateStatesTarget(pObject->AveragePosition());
 		}
 	);
 	pActionHandler->setAtHeldFingerUp(
 		[&pObject]() {
-			//pObject->updateStatesTarget(pObject->AveragePosition());
+			pObject->updateStatesTarget(pObject->AveragePosition());
 		}
 	);
 	pActionHandler->setAtHeldFingerDown(

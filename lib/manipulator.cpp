@@ -24,6 +24,7 @@ namespace dynaman {
 		m_loopPeriodTracker(loopPeriodTracker),
 		m_arfModelPtr(arfModelPtr),
 		m_isRunning(false),
+		m_isPaused(false),
 		m_logEnabled(false)
 	{}
 
@@ -153,6 +154,14 @@ namespace dynaman {
 		std::shared_ptr<autd::Controller> pAupa,
 		FloatingObjectPtr pObject
 	) {
+		{
+			std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+			if (m_isPaused) {
+				pAupa->ResetLateralGain();
+				pAupa->AppendGainSync(autd::NullGain::Create());
+				return;
+			}
+		}
 		DWORD timeLoopInit = timeGetTime();
 		Eigen::Vector3f pos, vel, integ;
 		pObject->getStates(pos, vel, integ);
@@ -274,6 +283,16 @@ namespace dynaman {
 			m_controlLogStream.close();
 		}
 		m_pAupa->AppendGainSync(autd::NullGain::Create());
+	}
+
+	void MultiplexManipulator::PauseManipulation() {
+		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+		m_isPaused = true;
+	}
+
+	void MultiplexManipulator::ResumeManipulation() {
+		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+		m_isPaused = false;
 	}
 
 	void MultiplexManipulator::SetGain(

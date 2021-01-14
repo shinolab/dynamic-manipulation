@@ -17,6 +17,8 @@ namespace dynaman {
 			FloatingObjectPtr pObject
 		) = 0;		
 		virtual void FinishManipulation() = 0;
+		virtual void PauseManipulation() = 0;
+		virtual void ResumeManipulation() = 0;
 	};
 
 	class MultiplexManipulator : public Manipulator {
@@ -33,13 +35,14 @@ namespace dynaman {
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
+		bool m_isPaused;
 		std::string m_obsLogName;
 		std::string m_controlLogName;
 		bool m_logEnabled;
-
 		std::thread m_thr_control;
 		std::thread m_thr_track;
 		std::shared_mutex m_mtx_isRunning;
+		std::mutex m_mtx_isPaused;
 		std::mutex m_mtx_gain;
 		std::ofstream m_obsLogStream;
 		std::ofstream m_controlLogStream;
@@ -74,6 +77,10 @@ namespace dynaman {
 		) override;
 
 		void FinishManipulation() override;
+
+		void PauseManipulation() override;
+
+		void ResumeManipulation() override;
 
 		bool IsRunning();
 

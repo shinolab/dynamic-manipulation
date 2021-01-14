@@ -27,6 +27,9 @@ namespace dynaman {
 			const Eigen::Vector3f& center, 
 			pcl_util::pcl_ptr pCloud
 		);
+
+		pcl_util::pcl_ptr ExtractPointsInsideColliderClick(pcl_util::pcl_ptr pCloud, const Eigen::Vector3f& center);
+
 		float RadiusObject();
 		float RadiusColliderContact();
 		float RadiusColliderClick();

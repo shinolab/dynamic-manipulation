@@ -21,6 +21,7 @@ namespace {
 	const int min_cluster_size_finger = 5;
 	const int max_cluster_size = 10000;
 	const int thres_contact_num = 100;
+	const float thres_click_z = 0.1;
 }
 
 using namespace dynaman;
@@ -123,6 +124,23 @@ bool PclHandStateReader::EstimateHandState(
 		return true;
 	}
 	//extract click_collider:
+	auto itr_idx_z_max = std::max_element(
+		pointIdxSearch.begin() + std::distance(pointSquareDists.begin(), itr_contact_min),
+		pointIdxSearch.end(),
+		[&pCloud](int idx_small, int idx_large) {
+			return pCloud->points[idx_small].z < pCloud->points[idx_large].z;
+		}
+	);
+	auto z_diff = pCloud->points[(*itr_idx_z_max)].z - center.z();
+	if (z_diff > thres_click_z) {
+		state = HandState::HOLD_FINGER_UP;
+		return true;
+	}
+	else {
+		state = HandState::HOLD_FINGER_DOWN;
+		return false;
+	}
+
 	int num_points_click = std::distance(itr_click_min, pointSquareDists.end());
 	auto pCloudClick = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
 	pCloudClick->points.resize(num_points_click);

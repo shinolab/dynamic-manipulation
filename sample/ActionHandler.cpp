@@ -131,14 +131,14 @@ void ActionHandler::updateAtHeldInit(
 	case dynaman::HandState::HOLD_FINGER_UP:
 		m_fingerUpCount++;
 		m_fingerDownCount = 0;
-		if (m_fingerUpCount > thres_finger_up_num) {
+		if (m_fingerUpCount >= thres_finger_up_num) {
 			changeStateTo(HoldState::HELD_FINGER_UP);
 		}
 		break;
 	case dynaman::HandState::HOLD_FINGER_DOWN:
 		m_fingerUpCount = 0;
 		m_fingerDownCount++;
-		if (m_fingerDownCount > thres_finger_down_num) {
+		if (m_fingerDownCount >= thres_finger_down_num) {
 			changeStateTo(HoldState::HELD_FINGER_DOWN);
 		}
 		break;
@@ -163,7 +163,7 @@ void ActionHandler::updateAtHeldFingerDown(
 		m_noncontactCount = 0;
 		m_fingerUpCount++;
 		m_fingerDownCount = 0;
-		if (m_fingerUpCount > thres_finger_up_num) {
+		if (m_fingerUpCount >= thres_finger_up_num) {
 			changeStateTo(HoldState::HELD_FINGER_UP);
 		}
 		break;
@@ -197,7 +197,7 @@ void ActionHandler::updateAtHeldFingerUp(
 		m_noncontactCount = 0;
 		m_fingerUpCount = 0;
 		m_fingerDownCount++;
-		if (m_fingerDownCount > thres_finger_up_num) {
+		if (m_fingerDownCount >= thres_finger_up_num) {
 			if (m_previousState == HoldState::HELD_FINGER_DOWN
 				&& timeGetTime() - m_timeStateChange < thres_click_time_ms)
 			{

@@ -132,13 +132,14 @@ bool PclHandStateReader::EstimateHandState(
 		}
 	);
 	auto z_diff = pCloud->points[(*itr_idx_z_max)].z - center.z();
+	//std::cout << "z diff: " << z_diff << std::endl;
 	if (z_diff > thres_click_z) {
 		state = HandState::HOLD_FINGER_UP;
 		return true;
 	}
 	else {
 		state = HandState::HOLD_FINGER_DOWN;
-		return false;
+		return true;
 	}
 
 	int num_points_click = std::distance(itr_click_min, pointSquareDists.end());

@@ -154,13 +154,9 @@ namespace dynaman {
 		std::shared_ptr<autd::Controller> pAupa,
 		FloatingObjectPtr pObject
 	) {
-		{
-			std::lock_guard<std::mutex> lock(m_mtx_isPaused);
-			if (m_isPaused) {
-				pAupa->ResetLateralGain();
-				pAupa->AppendGainSync(autd::NullGain::Create());
-				return;
-			}
+		if (IsPaused()) {
+			std::this_thread::sleep_for(std::chrono::microseconds(10));
+			return;
 		}
 		DWORD timeLoopInit = timeGetTime();
 		Eigen::Vector3f pos, vel, integ;
@@ -257,7 +253,7 @@ namespace dynaman {
 		m_thr_control = std::thread([this]()
 			{
 				while (this->IsRunning()) {
-					this->ExecuteSingleActuation(m_pAupa,  m_pObject);
+					this->ExecuteSingleActuation(m_pAupa, m_pObject);
 				}
 			}
 		);
@@ -313,6 +309,11 @@ namespace dynaman {
 	bool MultiplexManipulator::IsRunning() {
 		std::shared_lock<std::shared_mutex> lk(m_mtx_isRunning);
 		return m_isRunning;
+	}
+
+	bool MultiplexManipulator::IsPaused() {
+		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+		return m_isPaused;
 	}
 
 	void MultiplexManipulator::EnableLog(

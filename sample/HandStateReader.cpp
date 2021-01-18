@@ -14,9 +14,9 @@
 #include "HandStateReader.hpp"
 
 namespace {
-	const float thickness_collider_contact = 0.025;
-	const float thickness_collider_click = 0.03;
-	const float tol_cluster_dist = 0.05f;
+	const float thickness_collider_contact = 0.03;
+	const float thickness_collider_click = 0.025;
+	const float tol_cluster_dist = 0.02f;
 	const int min_cluster_size_balloon = 20;
 	const int min_cluster_size_finger = 5;
 	const int max_cluster_size = 10000;
@@ -116,9 +116,9 @@ bool PclHandStateReader::EstimateHandState(
 		}
 	);
 	int num_points_contact = std::distance(itr_contact_min, itr_click_min);
-	std::cout << "num_contact: " << num_points_contact;
+	//std::cout << "num_contact: " << num_points_contact;
 	if (num_points_contact < thres_contact_num) {
-		std::cout << std::endl;
+		//std::cout << std::endl;
 		state = HandState::NONCONTACT;
 		return true;
 	}
@@ -143,7 +143,7 @@ bool PclHandStateReader::EstimateHandState(
 	);
 	int num_clusters_click = clusterIndicesClickCollider.size();
 	state = (num_clusters_click >= 2 ? HandState::HOLD_FINGER_UP : HandState::HOLD_FINGER_DOWN);
-	std::cout << ", num_click: " << num_points_click << ", num_clusters_click : " << num_clusters_click << std::endl;
+	//std::cout << ", num_click: " << num_points_click << ", num_clusters_click : " << num_clusters_click << std::endl;
 	return true;
 }
 

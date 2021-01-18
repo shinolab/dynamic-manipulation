@@ -84,6 +84,8 @@ namespace dynaman {
 
 		bool IsRunning();
 
+		bool IsPaused();
+
 		void ExecuteSingleObservation(
 			std::shared_ptr<Tracker> pTracker,
 			FloatingObjectPtr pObject

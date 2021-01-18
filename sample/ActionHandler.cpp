@@ -10,10 +10,10 @@ namespace {
 	const int thres_hold_num = 7;
 	const int thres_touch_num = 3;
 	const int thres_hold_time_ms = 300;
-	const int thres_release_num = 3;
+	const int thres_release_num = 2;
 	const int thres_finger_down_num = 3;
 	const int thres_finger_up_num = 3;
-	const int thres_click_time_ms = 500;
+	const int thres_click_time_ms = 10000;
 }
 
 using namespace dynaman;
@@ -109,7 +109,7 @@ void ActionHandler::updateAtTouch(
 		return;
 	}
 	m_contactCount++;
-	if (m_contactCount > thres_hold_num && timeGetTime() - m_timeStateChange > thres_hold_time_ms) {
+	if (m_contactCount >= thres_hold_num && timeGetTime() - m_timeStateChange > thres_hold_time_ms) {
 		changeStateTo(HoldState::HELD_INIT);
 		m_onHold();
 		return;
@@ -123,7 +123,7 @@ void ActionHandler::updateAtHeldInit(
 	{
 	case dynaman::HandState::NONCONTACT:
 		m_noncontactCount++;
-		if (m_noncontactCount > thres_release_num) {
+		if (m_noncontactCount >= thres_release_num) {
 			changeStateTo(HoldState::FREE);
 			m_onRelease();
 		}
@@ -154,7 +154,7 @@ void ActionHandler::updateAtHeldFingerDown(
 	{
 	case dynaman::HandState::NONCONTACT:
 		m_noncontactCount++;
-		if (m_noncontactCount > thres_release_num) {
+		if (m_noncontactCount >= thres_release_num) {
 			changeStateTo(HoldState::FREE);
 			m_onRelease();
 		}
@@ -183,7 +183,7 @@ void ActionHandler::updateAtHeldFingerUp(
 	{
 	case dynaman::HandState::NONCONTACT:
 		m_noncontactCount++;
-		if (m_noncontactCount > thres_release_num) {
+		if (m_noncontactCount >= thres_release_num) {
 			changeStateTo(HoldState::FREE);
 			m_onRelease();
 		}

@@ -14,6 +14,7 @@
 #pragma comment(lib, "winmm")
 
 int main(int argc, char** argv) {
+	Eigen::Vector3f sensor_bias(30, 10, 0);
 	std::string target_image_name("blue_target_no_cover.png");
 	float radius = 50;
 	float weight = 0;
@@ -57,7 +58,7 @@ int main(int argc, char** argv) {
 	);
 	auto pCloudInit = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
 	for (int i = 0; i < 10; i++) {
-		if (pHandStateReader->EstimateSphereRadius(pCloudInit, 0.001f * pObject->getPosition())) {
+		if (pHandStateReader->EstimateSphereRadius(pCloudInit, 0.001f * (pObject->getPosition() + sensor_bias))) {
 			std::cout << "Estimation succeeded." << std::endl;
 			std::cout << "Balloon Radius: " << pHandStateReader->RadiusObject() << std::endl;
 			break;
@@ -67,8 +68,8 @@ int main(int argc, char** argv) {
 	while (viewer) {
 		auto pCloud = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
 		dynaman::HandState handState;
-		Eigen::Vector3f posBalloon = pObject->getPosition();
-		bool read_ok = pHandStateReader->Read(handState, pCloud, 0.001f*posBalloon);
+		Eigen::Vector3f posBalloon = 0.001f * (pObject->getPosition() + sensor_bias);
+		bool read_ok = pHandStateReader->Read(handState, pCloud, posBalloon);
 		if (read_ok) {
 			switch (handState)
 			{
@@ -84,10 +85,10 @@ int main(int argc, char** argv) {
 			default:
 				break;
 			}
-			auto pCloudBalloon = pcl_util::MakeSphere(0.001f * posBalloon, pHandStateReader->RadiusObject());
-			auto pCloudColliderContact = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderContact());
-			auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, 0.001f * posBalloon);
-			//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
+			auto pCloudBalloon = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusObject());
+			auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
+			auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
+			//auto pCloudColliderClick = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderClick());
 			std::vector<pcl_util::pcl_ptr> cloudPtrs{
 				//pCloud,
 				pCloudBalloon,

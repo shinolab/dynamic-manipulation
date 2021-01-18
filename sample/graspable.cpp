@@ -21,6 +21,7 @@ using pcl_ptr = pcl::PointCloud<pcl::PointXYZ>::Ptr;
 
 int main(int argc, char** argv) {
 
+	Eigen::Vector3f sensor_bias(30, 10, 0);
 	std::string target_image_name("blue_target_no_cover.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f(0, 0, 0),
 		Eigen::Vector3f::Constant(-250),
 		Eigen::Vector3f::Constant(250),
-		-0.036e-3f,
+		0,
 		50.f
 	);
 
@@ -66,7 +67,7 @@ int main(int argc, char** argv) {
 	);
 	auto pCloudInit = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
 	for (int i = 0; i < 10; i++) {
-		if (pHandStateReader->EstimateSphereRadius(pCloudInit, 0.001f * pObject->getPosition())) {
+		if (pHandStateReader->EstimateSphereRadius(pCloudInit, 0.001f * (pObject->getPosition() + sensor_bias))) {
 			std::cout << "Estimation succeeded." << std::endl;
 			std::cout << "Balloon Radius: " << pHandStateReader->RadiusObject() << std::endl;
 			break;
@@ -74,56 +75,84 @@ int main(int argc, char** argv) {
 	}
 
 	auto pActionHandler = dynaman::ActionHandler::create();
-	//pActionHandler->setOnHold(
-	//	[&pManipulator]() {
-	//		pManipulator->FinishManipulation();
-	//	}
-	//);
-	//pActionHandler->setOnRelease(
-	//	[&pManipulator, &pAupa, &pTracker, &pObject]() {
-	//		pManipulator->StartManipulation(pAupa, pTracker, pObject);
-	//	}
-	//);
+	pActionHandler->setOnHold(
+		[&pManipulator]() {
+			dynamic_cast<dynaman::MultiplexManipulator*>(pManipulator.get())->SetGain(
+				20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+				0.1 * Eigen::Vector3f::Constant(-4.0f), // gainD
+				0 * Eigen::Vector3f::Constant(-0.05f) //gainI
+			);
+			std::cout << "Translate to HOLD state" << std::endl;
+		}
+	);
+	pActionHandler->setOnRelease(
+		[&pManipulator]() {
+			//pManipulator->ResumeManipulation();
+			dynamic_cast<dynaman::MultiplexManipulator*>(pManipulator.get())->SetGain(
+				20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+				5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+				1 * Eigen::Vector3f::Constant(-0.05f) //gainI
+			);
+			std::cout << "Translate to RELEASE state" << std::endl;
+		}
+	);
+	pActionHandler->setOnClick(
+		[&pManipulator, &pObject, &pAupa, &pTracker]() {
+			std::cout << "CLICK" << std::endl;
+			pManipulator->PauseManipulation();
+			pAupa->AppendGainSync(autd::FocalPointGain::Create(pObject->getPosition(), 255));
+			pAupa->AppendModulationSync(autd::SineModulation::Create(150));
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			pAupa->AppendGainSync(autd::NullGain::Create());
+			pManipulator->ResumeManipulation();
+		}
+	);
 	pActionHandler->setAtHeldInit(
 		[&pObject]() {
-			pObject->updateStatesTarget(pObject->AveragePosition());
+			pObject->updateStatesTarget(pObject->getPosition());
+			//pObject->resetIntegral();
 		}
 	);
 	pActionHandler->setAtHeldFingerUp(
 		[&pObject]() {
-			pObject->updateStatesTarget(pObject->AveragePosition());
+			pObject->updateStatesTarget(pObject->getPosition());
+			std::cout << "Finger UP" << std::endl;
+			//pObject->resetIntegral();
 		}
 	);
 	pActionHandler->setAtHeldFingerDown(
 		[&pObject]() {
-			pObject->updateStatesTarget(pObject->AveragePosition());
+			pObject->updateStatesTarget(pObject->getPosition());
+			std::cout << "Finger DOWN" << std::endl;
+			//pObject->resetIntegral();
 		}
 	);
 
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
 		auto pCloud = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
-		dynaman::HandState handState;
-		auto posBalloon = 0.001f * pObject->getPosition();
+		dynaman::HandState handState = dynaman::HandState::NONCONTACT;
+		auto posBalloon = 0.001f * (pObject->getPosition() + sensor_bias);
 		bool read_ok = pHandStateReader->Read(handState, pCloud, posBalloon);
+		pActionHandler->update(handState);
+		pActionHandler->execute();
+
 		if (read_ok) {
-			pActionHandler->update(handState);
 			auto pCloudBalloon = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusObject());
 			auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
 			auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
 			//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
 			std::vector<pcl_util::pcl_ptr> cloudPtrs{
-				//pCloud,
-				pCloudBalloon,
-				pCloudColliderContact,
-				pCloudInsideColliderClick
+				pCloud,
+				pCloudBalloon
+				//pCloudColliderContact,
+				//pCloudInsideColliderClick
 			};
 			viewer.draw(cloudPtrs);
 		}
-		pActionHandler->execute();
 
 
-		std::this_thread::sleep_for(std::chrono::microseconds(10));
+		std::this_thread::sleep_for(std::chrono::microseconds(1));
 	}
 	grabber->Close();
 	pManipulator->FinishManipulation();

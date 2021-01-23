@@ -136,6 +136,15 @@ target_link_libraries(WorkspaceEvalTest
     DynamicManipulation
 )
 
+add_executable(CircularEvalTest CircularEvalTest.cpp)
+target_link_libraries(
+    CircularEvalTest
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 add_executable(Stationary stationary.cpp)
 target_link_libraries(Stationary
     StereoTracker

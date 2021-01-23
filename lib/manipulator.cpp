@@ -155,7 +155,9 @@ namespace dynaman {
 		FloatingObjectPtr pObject
 	) {
 		if (IsPaused()) {
-			std::this_thread::sleep_for(std::chrono::microseconds(10));
+			pAupa->AppendGainSync(autd::FocalPointGain::Create(pObject->getPosition()));
+			pAupa->AppendModulationSync(autd::SineModulation::Create(150));
+			std::this_thread::sleep_for(std::chrono::milliseconds(30));
 			return;
 		}
 		DWORD timeLoopInit = timeGetTime();

@@ -100,10 +100,7 @@ int main(int argc, char** argv) {
 		[&pManipulator, &pObject, &pAupa, &pTracker]() {
 			std::cout << "CLICK" << std::endl;
 			pManipulator->PauseManipulation();
-			pAupa->AppendGainSync(autd::FocalPointGain::Create(pObject->getPosition(), 255));
-			pAupa->AppendModulationSync(autd::SineModulation::Create(150));
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			pAupa->AppendGainSync(autd::NullGain::Create());
 			pManipulator->ResumeManipulation();
 		}
 	);

@@ -100,17 +100,16 @@ target_link_libraries(DrawUtil ${OpenCV_LIBS})
 #     DynamicManipulation
 # )
 
-# add_executable(demo_arf
-#     demo_arf.cpp
-#     haptic_icon.hpp
-# )
-# target_link_libraries(demo_arf
-#     StereoTracker
-#     CameraDevice
-#     ImgProcUtil
-#     Strategies
-#     DynamicManipulation
-# )
+add_executable(demo_arf
+    demo_arf.cpp
+    haptic_icon.hpp
+)
+target_link_libraries(demo_arf
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
 
 # add_executable(test_findDuty test_findDuty.cpp)
 # target_link_libraries(test_findDuty

@@ -3,9 +3,7 @@
 #include "additionalGain.hpp"
 #include "haptic_icon.hpp"
 #include "geometryUtil.hpp"
-#include "haptic_icon_strategies/multiplex_strategy.hpp"
-#include "haptic_icon_strategies/simple_strategy.hpp"
-#include "odcs.hpp"
+#include "manipulator.hpp"
 #include <fstream>
 #include <chrono>
 #include <thread>
@@ -15,8 +13,10 @@ int main(int argc, char** argv) {
 	std::string target_image_name("blue_target_no_cover.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
-	Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
-	Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
+	//Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
+	//Eigen::Quaternionf quo_sensor(0.695684f, -0.718283f, -0.0089647f, 0.00359883f);
+	Eigen::Vector3f pos_sensor(-130.83, -874.526, 8.1065);
+	Eigen::Quaternionf quo_sensor(0.699819, -0.714301, -0.00510867, -0.00126173);
 	Eigen::Vector3f sensor_bias(0.0f, 0.0f, 0.0f);
 	int lowerb = 10, upperb = 255, hist_size = 30;
 	std::cout << "initializing an extractor ..." << std::endl;
@@ -38,9 +38,11 @@ int main(int argc, char** argv) {
 	std::cout << "initializing a tracker..." << std::endl;
 	dynaman::stereoTracker tracker(stereoCamPtr, extractorPtrLeft, extractorPtrRight, pos_sensor, quo_sensor, sensor_bias);
 	
-
-	dynaman::odcs manipulator(tracker);
-	haptic_icon::Initialize(manipulator);
+	auto pAupa = std::make_shared<autd::Controller>();
+	pAupa->Open(autd::LinkType::ETHERCAT);
+	if (!pAupa->isOpen())
+		return ENXIO;
+	haptic_icon::SetGeometry(pAupa);
 
 	auto objPtr = dynaman::FloatingObject::Create(
 		Eigen::Vector3f::Zero(),
@@ -52,19 +54,21 @@ int main(int argc, char** argv) {
 	auto initTime = timeGetTime();
 	Eigen::VectorXi amplitudes(11);
 	amplitudes <<
-		0, 0, 0, 0, 155, 0, 0, 0, 0, 0, 0;
-	while (timeGetTime() - initTime < 5000) {
+		0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 0;
+	while (timeGetTime() - initTime < 30000) {
 		DWORD observationTime;
 		Eigen::Vector3f pos;
 		bool tracked = tracker.observe(observationTime, pos, objPtr);
 		if (tracked) {
 			Eigen::MatrixXf points = pos.replicate(1, 11);
-			manipulator.ocsPtr->_autd.AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
-			manipulator.ocsPtr->_autd.AppendModulationSync(autd::Modulation::Create(150));
+			pAupa->AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
+			pAupa->AppendModulationSync(autd::SineModulation::Create(200));
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
-	manipulator.Close();
+	
+	pAupa->Close();
+	stereoCamPtr->close();
 
 	return 0;
 }

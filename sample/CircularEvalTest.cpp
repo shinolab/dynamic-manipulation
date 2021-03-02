@@ -18,7 +18,8 @@ int main(int argc, char** argv) {
 
 	// params of the circular trajectory
 	float orbit_radius = 150;
-	float orbit_period = 3.0f;
+	float omega = 7.0 * pi / 8.0f;
+	float orbit_period = 2.0 * pi / omega;
 	float inclination = pi / 2.0f;
 	float raan = 0.0f;
 	Eigen::Vector3f posCenter(0.0f, 0.0f, 0.0f);

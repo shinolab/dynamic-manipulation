@@ -77,7 +77,8 @@ namespace dynaman {
 		Eigen::VectorXf b(1);
 		b << 1;
 		Eigen::VectorXf resultActive;
-		EigenCgalQpSolver(resultActive,
+		EigenCgalQpSolver(
+			resultActive,
 			A,
 			b,
 			F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(numAupaActive, numAupaActive),

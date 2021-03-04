@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	auto initTime = timeGetTime();
 	Eigen::VectorXi amplitudes(11);
 	amplitudes <<
-		0, 0, 0, 0, 255, 0, 0, 0, 0, 0, 0;
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255;
 	while (timeGetTime() - initTime < 30000) {
 		DWORD observationTime;
 		Eigen::Vector3f pos;

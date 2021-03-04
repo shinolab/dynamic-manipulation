@@ -86,11 +86,6 @@ add_library(Projector STATIC
 	projector.cpp
 )
 
-add_library(winMultiplexer STATIC
-	../inc/winMultiplexer.hpp
-	winMultiplexer.cpp
-)
-
 add_library(QPSolver
 	../inc/QPSolver.h
 	QPSolver.cpp
@@ -103,7 +98,6 @@ target_link_libraries(DynamicManipulation
 	${OpenCV_LIBS}
 	LinearArfModel
 	QPSolver
-	winMultiplexer
 	GeometryUtil
 	Trajectory
 )

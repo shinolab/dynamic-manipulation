@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0074 NEW)
 
 # Eigen3
@@ -152,12 +152,23 @@ target_link_libraries(Stationary
     DynamicManipulation
 )
 
-add_executable(testVibration testVibration.cpp)
-target_link_libraries(testVibration
+add_library(
+    vibrator
+    vibrator.hpp
+    vibrator.cpp
+    )
+target_link_libraries(
+    vibrator
     StereoTracker
     CameraDevice
     ImgProcUtil
     DynamicManipulation
+)
+
+add_executable(testVibration testVibration.cpp)
+target_link_libraries(
+    testVibration
+    vibrator
 )
 
 add_executable(testVibrationSimple testVibrationSimple.cpp)
@@ -166,6 +177,12 @@ target_link_libraries(testVibrationSimple
     CameraDevice
     ImgProcUtil
     DynamicManipulation
+)
+
+add_executable(testVibrationJnd testVibrationJnd.cpp)
+target_link_libraries(
+    testVibrationJnd
+    vibrator
 )
 
 option(BUILD_PCL_APPS "build examples that use pcl" ON)

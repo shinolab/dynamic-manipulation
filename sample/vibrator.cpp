@@ -46,7 +46,7 @@ namespace dynaman{
 							);
 						}
 						else {
-							gain = autd::FocalPointGain::Create(pos, 255);
+							gain = autd::FocalPointGain::Create(pos);
 						}
 						m_aupa->AppendGainSync(gain);
 						m_aupa->AppendModulationSync(autd::SineModulation::Create(m_freq, m_amp, 0.5f * m_amp));
@@ -88,7 +88,7 @@ namespace dynaman{
 	}
 
 	float Vibrator::decibel_to_amp(float db) {
-		return pow(10.0f, db / 15);
+		return pow(10.0f, db / 15.0f);
 	}
 
 	float Vibrator::amp_to_decibel(float amplitude) {

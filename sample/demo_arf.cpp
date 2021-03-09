@@ -54,19 +54,21 @@ int main(int argc, char** argv) {
 	auto initTime = timeGetTime();
 	Eigen::VectorXi amplitudes(11);
 	amplitudes <<
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255;
-	while (timeGetTime() - initTime < 30000) {
+		255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+	float amp_single = 1;
+	while (timeGetTime() - initTime < 10000) {
 		DWORD observationTime;
 		Eigen::Vector3f pos;
 		bool tracked = tracker.observe(observationTime, pos, objPtr);
 		if (tracked) {
 			Eigen::MatrixXf points = pos.replicate(1, 11);
-			pAupa->AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
-			pAupa->AppendModulationSync(autd::SineModulation::Create(200));
+			//pAupa->AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
+			pAupa->AppendGainSync(autd::FocalPointGain::Create(pos));
+			pAupa->AppendModulationSync(autd::SineModulation::Create(200, amp_single, 0.5 * amp_single));
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
-	
+	pAupa->AppendGainSync(autd::NullGain::Create());
 	pAupa->Close();
 	stereoCamPtr->close();
 

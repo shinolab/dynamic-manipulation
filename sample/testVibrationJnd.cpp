@@ -69,15 +69,15 @@ Answer ask(bool ref_first) {
 		std::cout << "Ask which one is STRONGER ? [first/second/same]" << std::endl;
 		std::string key;
 		std::cin >> key;
-		if (key == "first") {
+		if (key == "1") {
 			ans = (ref_first ? Answer::EVAL_WEAK : Answer::EVAL_STRONG);
 			break;
 		}
-		else if (key == "second") {
+		else if (key == "2") {
 			ans = (ref_first ? Answer::EVAL_STRONG : Answer::EVAL_WEAK);
 			break;
 		}
-		else if (key == "same") {
+		else if (key == "s") {
 			ans = Answer::SAME;
 			break;
 		}
@@ -93,16 +93,22 @@ void present_stimulation(
 	int duration_ms,
 	FloatingObjectPtr pObject)
 {
-	std::cout << "current amp is: " << first_amp << " (" << Vibrator::amp_to_decibel(first_amp) << "(dB)). press q to abort, or press n to ascend." << std::endl;
+	std::cout
+		<< "first/second amp are: " 
+		<< first_amp << " (" << Vibrator::amp_to_decibel(first_amp) << "(dB))"
+		<< " / " <<second_amp << " (" << Vibrator::amp_to_decibel(second_amp) << "(dB)) "
+		<< std::endl;
 	vibrator.SetAmplitude(first_amp);
 	vibrator.SetFrequency(freq);
 	Beep(440, 500);
-	std::this_thread::sleep_for(std::chrono::milliseconds(400));
 	vibrator.Start(pObject);
 	std::this_thread::sleep_for(std::chrono::milliseconds(duration_ms));
 	vibrator.Stop();
-	std::this_thread::sleep_for(std::chrono::milliseconds(400));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	vibrator.SetAmplitude(second_amp);
+	vibrator.Start(pObject);
+	std::this_thread::sleep_for(std::chrono::milliseconds(duration_ms));
+	vibrator.Stop();
 	Beep(520, 400);
 }
 
@@ -129,13 +135,16 @@ void run_series(
 	Series series,
 	std::ofstream& ofs
 ) {
+	
 	ofs << series_to_string(series) <<",";
 	float db_init, db_end;
 	if (series == Series::ASCEND) {
+		std::cout << "Ascending Series has started." << std::endl;
 		db_init = db_min;
 		db_end = db_max;
 	}
 	else if (series == Series::DESCEND) {
+		std::cout << "Descending Series has started." << std::endl;
 		db_init = db_max;
 		db_end = db_min;
 	}
@@ -151,7 +160,7 @@ void run_series(
 		ofs << db_ref << ",(" << amp_ref << ")," << db_eval << ",(" << amp_eval << ")";
 		bool detected = false;
 		auto answer = ask(is_ref_first);
-		ofs << "," << answer_to_string(answer);
+		ofs << "," << answer_to_string(answer) << ",";
 		if (is_final(answer, series)) {
 			Beep(800, 400);
 			ofs << std::endl;
@@ -171,13 +180,13 @@ void run_series(
 int main(int argc, char** argv)
 {
 	//Experiment conditions
-	const float db_step = 1;
+	const float db_step = 0.5;
 	const int num_trial = 3;
 	const int tactile_period_ms = 1000;
 	std::vector<int> freq_list{ 200 };
-	std::vector<float> db_ref_list{ -13 };
-	std::vector<float> db_offset_max_list{ 6, 7, 8 };
-	std::vector<float> db_offset_min_list{ 5, 6, 7 };
+	std::vector<float> db_ref_list{ -6 };
+	std::vector<float> db_offset_max_list{ 5, 5.5, 6};
+	std::vector<float> db_offset_min_list{ 5, 5.5, 6};
 
 	bool ref_first = true;
 	std::string ref_order;
@@ -199,7 +208,7 @@ int main(int argc, char** argv)
 	std::cout << "Enter the participant's name:";
 	std::cin >> prefix_log;
 	std::cout << std::endl << "Name: " << prefix_log << std::endl;
-	prefix_log += (ref_first ? "_rf_" : "_rs_");
+	prefix_log += (ref_first ? "_r1" : "_r2");
 	std::cout << "Now initializing ..." << std::endl;
 
 	if (num_trial != db_offset_max_list.size() || num_trial != db_offset_min_list.size()) {
@@ -230,10 +239,13 @@ int main(int argc, char** argv)
 		50.f
 	);
 	Vibrator vibrator(prefix_log, pAupa, pTracker);
+	vibrator.SetAmplitude(0.0f);
+	vibrator.SetFrequency(100);
 	vibrator.Start(pObject);
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	vibrator.Stop();
-	std::ofstream ofs(prefix_log + "_jnd.txt", std::ios_base::app);
+
+	std::ofstream ofs_level(prefix_log + "_jnd.txt", std::ios_base::app);
 	for (auto itr_freq = freq_list.begin(); itr_freq != freq_list.end(); itr_freq++) 
 	{
 		int idx_freq = std::distance(freq_list.begin(), itr_freq);
@@ -243,8 +255,6 @@ int main(int argc, char** argv)
 		std::shuffle(db_offset_min_list.begin(), db_offset_min_list.end(), engine);
 		std::cout << "Current frqeuency is: " << freq << std::endl;
 		for (int i_trial = 0; i_trial < num_trial; i_trial++) {
-			//ascending series
-			std::cout << "Ascending Series has started." << std::endl;
 			auto db_ref = db_ref_list[idx_freq];
 			float db_min = db_ref - db_offset_min_list[i_trial];
 			float db_max = db_ref + db_offset_max_list[i_trial];
@@ -259,11 +269,9 @@ int main(int argc, char** argv)
 				ref_first,
 				pObject,
 				Series::ASCEND,
-				ofs
+				ofs_level
 			);
 
-			//descending series
-			std::cout << "Descending Series has started." << std::endl;
 			run_series(
 				vibrator,
 				db_ref,
@@ -274,11 +282,12 @@ int main(int argc, char** argv)
 				tactile_period_ms,
 				ref_first,
 				pObject,
-				Series::ASCEND,
-				ofs
+				Series::DESCEND,
+				ofs_level
 			);
-		}
-		
+		}	
 	}
+	ofs_level.close();
+	pAupa->Close();
 	return 0;
 }

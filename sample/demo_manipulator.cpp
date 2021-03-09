@@ -11,7 +11,7 @@ using namespace dynaman;
 int main(int argc, char** argv ) {
 
 	/*user-defined configurations*/
-	Eigen::Vector3f pos_init(0, -50, 0);
+	Eigen::Vector3f pos_init(0, 0, 0);
 	std::string target_image_name("blue_target_no_cover.png");
 	/*end of user-defined configurations*/
 
@@ -33,14 +33,15 @@ int main(int argc, char** argv ) {
 	haptic_icon::SetGeometry(pAupa);
 
 	auto pManipulator = MultiplexManipulator::Create(
-		100 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		20 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100, //freqLM
 		10,
 		5,
 		0
 	);
+
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);

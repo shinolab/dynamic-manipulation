@@ -185,6 +185,18 @@ target_link_libraries(
     vibrator
 )
 
+add_executable(
+    testVelTrans
+    testVelTrans.cpp
+    )
+target_link_libraries(
+    testVelTrans
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)

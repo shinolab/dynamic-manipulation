@@ -25,9 +25,10 @@ Eigen::Vector3f TrajectoryConstantState::accel(DWORD sys_time_ms) {
 	return accelTgt;
 }
 
-std::shared_ptr<Trajectory> TrajectoryConstantState::Create(Eigen::Vector3f const &positionTarget,
-	Eigen::Vector3f const &velocityTarget,
-	Eigen::Vector3f const &accelTarget) {
+std::shared_ptr<Trajectory> TrajectoryConstantState::Create(
+	const Eigen::Vector3f &positionTarget,
+	const Eigen::Vector3f &velocityTarget,
+	const Eigen::Vector3f &accelTarget) {
 	return std::make_shared<TrajectoryConstantState>(
 		positionTarget,
 		velocityTarget,

@@ -36,15 +36,17 @@ namespace dynaman {
 		std::shared_ptr<Trajectory> trajectoryPtr;
 
 	public:
-		FloatingObject(Eigen::Vector3f const& _positionTarget,
-			Eigen::Vector3f const& lowerbound,
-			Eigen::Vector3f const& upperbound,
+		FloatingObject(
+			const Eigen::Vector3f& _positionTarget,
+			const Eigen::Vector3f& lowerbound,
+			const Eigen::Vector3f& upperbound,
 			float _additionalMass = 0.1e-3f,
 			float _radius = 90.f);
 
-		static FloatingObjectPtr Create(Eigen::Vector3f const& posTgt,
-			Eigen::Vector3f const& lowerbound,
-			Eigen::Vector3f const& upperbound,
+		static FloatingObjectPtr Create(
+			const Eigen::Vector3f& posTgt,
+			const Eigen::Vector3f& lowerbound,
+			const Eigen::Vector3f& upperbound,
 			float _additionalMass = 0.1e-3f,
 			float radius = 90.f);
 
@@ -66,9 +68,10 @@ namespace dynaman {
 		void resetIntegral();
 
 		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
-		void updateStatesTarget(Eigen::Vector3f& _positionTarget,
-			Eigen::Vector3f& _velocityTarget = Eigen::Vector3f(0, 0, 0),
-			Eigen::Vector3f& _accelTarget = Eigen::Vector3f(0, 0, 0));
+		void updateStatesTarget(
+			const Eigen::Vector3f& _positionTarget,
+			const Eigen::Vector3f& _velocityTarget = Eigen::Vector3f(0, 0, 0),
+			const Eigen::Vector3f& _accelTarget = Eigen::Vector3f(0, 0, 0));
 
 		bool isConverged(float tolPos, float tolVel);
 		bool IsTracked();

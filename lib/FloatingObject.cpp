@@ -147,7 +147,10 @@ namespace dynaman {
 		integral << 0, 0, 0;
 	}
 
-	void FloatingObject::updateStatesTarget(Eigen::Vector3f& _positionTarget, Eigen::Vector3f& _velocityTarget, Eigen::Vector3f& _accelTarget)
+	void FloatingObject::updateStatesTarget(
+		const Eigen::Vector3f& _positionTarget,
+		const Eigen::Vector3f& _velocityTarget,
+		const Eigen::Vector3f& _accelTarget)
 	{
 		auto constTrajPtr = TrajectoryConstantState::Create(_positionTarget, _velocityTarget, _accelTarget);
 		SetTrajectory(constTrajPtr);

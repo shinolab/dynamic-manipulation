@@ -16,19 +16,23 @@ int main(int argc, char** argv) {
 
 	/*user-defined configurations*/
 	const int numTrial = 5;
-	const float err_tol = 10;
+	const float err_tol = 15;
 	const float wait_time_tol = 30000;
+	const int count_wait_max = 10;
 
 	std::string str_radius;
 	std::string str_dist;
+	std::string str_amp;
 	std::cout << "Enter radius:" << std::endl;
 	std::cin >> str_radius;
 	std::cout << "Enter distance:" << std::endl;
 	std::cin >> str_dist;
+	std::cout << "Enter amplitude (0-255)" << std::endl;
+	std::cin >> str_amp;
 
 	int radius = std::atoi(str_radius.c_str());
 	int dist_travel = std::atoi(str_dist.c_str());
-
+	int amplitude = std::atoi(str_amp.c_str());
 	auto timer = std::time(NULL);
 	auto p_time = localtime(&timer);
 	char str_time[sizeof("YYYYmmdd_HHMMSS")];
@@ -37,17 +41,18 @@ int main(int argc, char** argv) {
 	std::string prefix = std::string(str_time) + "_r" + str_radius + "_d" + str_dist;
 	std::string config_name = prefix + "_config.txt";
 	std::ofstream ofs_config(config_name);
-	ofs_config << radius << "," << dist_travel;
+	ofs_config << radius << "," << dist_travel << "," << amplitude;
 	ofs_config.close();
 
 	const Eigen::Vector3f pos_init(-dist_travel, 0, 0);
 	const Eigen::Vector3f posCenter(0, 0, 0);
 
 	auto stabilized_at_init = [&pos_init, &err_tol](const Eigen::Vector3f& pos) {
-		return (pos - pos_init).norm() < err_tol;
+		auto error = (pos - pos_init).norm();
+		std::cout << error << std::endl;
+		return error < err_tol;
 	};
 	auto cond_finish = [&pos_init](const Eigen::Vector3f& pos, const float dist_travel) {
-		std::cout << pos.x() << ", " << pos_init.x() << "," << dist_travel << std::endl;
 		return pos.x() >= pos_init.x() + dist_travel;
 	};
 
@@ -95,9 +100,9 @@ int main(int argc, char** argv) {
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 		auto timeWaitStart = timeGetTime();
 		auto count_wait = 0;
-		while (count_wait < 10)
+		while (count_wait < count_wait_max)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			if (timeGetTime() - timeWaitStart > wait_time_tol) {
 				std::cout << "wait time tolerance exceeded." << std::endl;
 				break;
@@ -105,7 +110,7 @@ int main(int argc, char** argv) {
 			stabilized_at_init(pObject->getPosition()) ? count_wait++ : count_wait = 0;
 		}
 		Eigen::VectorXi amplitudes(num_device);
-		amplitudes << 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+		amplitudes << 0, amplitude , 0, 0, 0, 0, 0, 0, 0, 0, 0;
 		std::atomic<bool> is_finished(false);
 		std::string logfilename = prefix + "_" + std::to_string(i_trial) + ".csv";
 		auto thr_log = std::thread(

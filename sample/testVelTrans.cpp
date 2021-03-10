@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <ctime>
 #include "autd3.hpp"
 #include "additionalGain.hpp"
 #include "StereoTracker.hpp"
@@ -15,24 +16,40 @@ int main(int argc, char** argv) {
 
 	/*user-defined configurations*/
 	const int numTrial = 5;
-	const Eigen::Vector3f pos_init(-200, 0, 0);
-	const Eigen::Vector3f posCenter(0, 0, 0);
-	const float dist_travel = 200;
 	const float err_tol = 10;
 	const float wait_time_tol = 30000;
+
+	std::string str_radius;
+	std::string str_dist;
+	std::cout << "Enter radius:" << std::endl;
+	std::cin >> str_radius;
+	std::cout << "Enter distance:" << std::endl;
+	std::cin >> str_dist;
+
+	int radius = std::atoi(str_radius.c_str());
+	int dist_travel = std::atoi(str_dist.c_str());
+
+	auto timer = std::time(NULL);
+	auto p_time = localtime(&timer);
+	char str_time[sizeof("YYYYmmdd_HHMMSS")];
+	std::strftime(str_time, sizeof(str_time), "%Y%m%d_%H%M%S", p_time);
+	
+	std::string prefix = std::string(str_time) + "_r" + str_radius + "_d" + str_dist;
+	std::string config_name = prefix + "_config.txt";
+	std::ofstream ofs_config(config_name);
+	ofs_config << radius << "," << dist_travel;
+	ofs_config.close();
+
+	const Eigen::Vector3f pos_init(-dist_travel, 0, 0);
+	const Eigen::Vector3f posCenter(0, 0, 0);
 
 	auto stabilized_at_init = [&pos_init, &err_tol](const Eigen::Vector3f& pos) {
 		return (pos - pos_init).norm() < err_tol;
 	};
-
 	auto cond_finish = [&pos_init](const Eigen::Vector3f& pos, const float dist_travel) {
 		std::cout << pos.x() << ", " << pos_init.x() << "," << dist_travel << std::endl;
 		return pos.x() >= pos_init.x() + dist_travel;
 	};
-
-	std::cout << "Enter prefix:" << std::endl;
-	std::string prefix;
-	std::cin >> prefix;
 
 	std::string target_image_name("blue_target_no_cover.png");
 	/*end of user-defined configurations*/
@@ -42,7 +59,7 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
 		-0.036e-3f,
-		50.f
+		radius
 	);
 
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);

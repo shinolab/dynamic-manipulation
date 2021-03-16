@@ -15,24 +15,31 @@ using namespace dynaman;
 int main(int argc, char** argv) {
 
 	/*user-defined configurations*/
-	const int numTrial = 5;
-	const float err_tol = 15;
-	const float wait_time_tol = 30000;
+	const int numTrial = 1;
+	const float err_tol = 10;
+	const float wait_time_tol = 20000;
 	const int count_wait_max = 10;
 
 	std::string str_radius;
 	std::string str_dist;
-	std::string str_amp;
+	std::string str_power;
 	std::cout << "Enter radius:" << std::endl;
 	std::cin >> str_radius;
 	std::cout << "Enter distance:" << std::endl;
 	std::cin >> str_dist;
-	std::cout << "Enter amplitude (0-255)" << std::endl;
-	std::cin >> str_amp;
+	std::cout << "Enter power (0-1)" << std::endl;
+	std::cin >> str_power;
 
 	int radius = std::atoi(str_radius.c_str());
 	int dist_travel = std::atoi(str_dist.c_str());
-	int amplitude = std::atoi(str_amp.c_str());
+	auto power = std::atof(str_power.c_str());
+	auto amplitude = static_cast<int>(255 * std::powf(power, 1.0f / 1.5f));
+
+	std::cout
+		<< "radius: " << radius << std::endl
+		<< "distance: " << dist_travel << std::endl
+		<< "power (amplitude): " << power << "(" << amplitude << ")" << std::endl;
+
 	auto timer = std::time(NULL);
 	auto p_time = localtime(&timer);
 	char str_time[sizeof("YYYYmmdd_HHMMSS")];
@@ -44,7 +51,7 @@ int main(int argc, char** argv) {
 	ofs_config << radius << "," << dist_travel << "," << amplitude;
 	ofs_config.close();
 
-	const Eigen::Vector3f pos_init(-dist_travel, 0, 0);
+	const Eigen::Vector3f pos_init(-dist_travel/2, 20, 0);
 	const Eigen::Vector3f posCenter(0, 0, 0);
 
 	auto stabilized_at_init = [&pos_init, &err_tol](const Eigen::Vector3f& pos) {
@@ -78,8 +85,11 @@ int main(int argc, char** argv) {
 
 	auto pManipulator = MultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		2.5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+		//20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		//5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		//1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100, //freqLM
 		10,
 		5,
@@ -109,8 +119,7 @@ int main(int argc, char** argv) {
 			}
 			stabilized_at_init(pObject->getPosition()) ? count_wait++ : count_wait = 0;
 		}
-		Eigen::VectorXi amplitudes(num_device);
-		amplitudes << 0, amplitude , 0, 0, 0, 0, 0, 0, 0, 0, 0;
+
 		std::atomic<bool> is_finished(false);
 		std::string logfilename = prefix + "_" + std::to_string(i_trial) + ".csv";
 		auto thr_log = std::thread(
@@ -134,7 +143,16 @@ int main(int argc, char** argv) {
 		auto timeActuateInit = timeGetTime();
 		while (timeGetTime() - timeActuateInit < 10000) {
 			Eigen::Vector3f pos_object = pObject->getPosition();
-			auto gain = autd::DeviceSpecificFocalPointGain::Create(pos_object, amplitudes);
+			std::map<int, autd::GainPtr> gain_map;
+			for (int i_aupa = 0; i_aupa < pAupa->geometry()->numDevices(); i_aupa++) {
+				gain_map.insert(
+					std::make_pair(
+						i_aupa,
+						i_aupa == 1 ? autd::FocalPointGain::Create(pos_object, amplitude):autd::NullGain::Create()
+					)
+				);
+			}
+			auto gain = autd::GroupedGain::Create(gain_map);
 			pAupa->AppendGainSync(gain);
 			if (cond_finish(pos_object, dist_travel)) {
 				std::cout << "condition satisfied." << std::endl;

@@ -67,7 +67,7 @@ namespace dynaman {
 			int loopPeriodAupa = 10,
 			int loopPeriodTracker = 5,
 			float lambda = 0.f,
-			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusOnSphereExperimental>()
+			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()//std::make_shared<arfModelFocusOnSphereExperimental>()
 		);
 
 		int StartManipulation(

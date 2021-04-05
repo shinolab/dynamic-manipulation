@@ -155,7 +155,7 @@ float run_series(
 				duration_ms
 			);
 			bool is_correct = ask(idx_tgt, num_stimulus);
-			ofs << amp_ref << "," "(" << Vibrator::amp_to_decibel(amp_ref) <<"dB)," << amp_tgt << ",(" << Vibrator::amp_to_decibel(amp_tgt) << "dB)" << (is_correct ? "C" : "W") << "," << std::endl;
+			ofs << amp_ref << "," << "(" << Vibrator::amp_to_decibel(amp_ref) <<"dB)," << amp_tgt << ",(" << Vibrator::amp_to_decibel(amp_tgt) << "dB)," << (is_correct ? "C" : "W") << "," << std::endl;
 			if (!is_correct) {
 				break;
 			}
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
 	const int num_stimulus = 3;
 	int freq = 200;
 	const float db_ref = -6;
-	const float db_max = -3.2;
+	const float db_max = -2.8;
 	const float db_min = db_ref;
 
 	std::string prefix_log;
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
 
-	std::string target_image_name("blue_target_no_cover.png");
+	std::string target_image_name("blue_target_r50mm.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 
 	auto pObject = dynaman::FloatingObject::Create(

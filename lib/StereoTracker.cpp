@@ -138,7 +138,7 @@ namespace dynaman {
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
 		Eigen::Vector3f posObserved;
 		cv::cv2eigen(1000*cv::Mat(cvPos).reshape(1, 3), posObserved);
-		pos = _quo * (posObserved + _bias) + _pos;
+		pos = _quo * posObserved + _pos + _bias;
 		return true;
 	}
 

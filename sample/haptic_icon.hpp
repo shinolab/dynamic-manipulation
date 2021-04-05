@@ -28,7 +28,10 @@ namespace haptic_icon {
 			* Eigen::AngleAxisf(euler_angles.z(), Eigen::Vector3f::UnitZ()) * centerLocal;
 	}
 
-	std::shared_ptr<dynaman::Tracker> CreateTracker(const std::string& target_image_name) {
+	std::shared_ptr<dynaman::Tracker> CreateTracker(
+		const std::string& target_image_name,
+		const Eigen::Vector3f sensor_offset = Eigen::Vector3f::Zero()
+	) {
 		std::string leftCamId("32434751");
 		std::string rightCamId("43435351");
 		//Eigen::Vector3f pos_sensor(-124.664, -861.249,  13.1787);// ver.202008
@@ -41,7 +44,8 @@ namespace haptic_icon {
 			imgProc::hue_backproject_extractor::create(target_image_name),
 			imgProc::hue_backproject_extractor::create(target_image_name),
 			pos_sensor,
-			quo_sensor
+			quo_sensor,
+			sensor_offset
 		);
 	}
 

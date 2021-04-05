@@ -13,11 +13,11 @@ using namespace dynaman;
 int main(int argc, char** argv) {
 
 	//configurations
-	auto direction = Eigen::Vector3f::UnitY();
-	std::string target_image_name("blue_target_no_cover.png");
-	std::string obsLogName("20210106_WorkspaceEval_02.csv");
-	std::string controlLogName("20210106_WorkspaceEvalControl_02.csv");
-	float dist_step = 25;
+	auto direction = Eigen::Vector3f::UnitX();
+	std::string target_image_name("blue_target_r50mm.png");
+	std::string obsLogName("20210404_WorkspaceEval_px.csv");
+	std::string controlLogName("20210404_WorkspaceEvalControl_px.csv");
+	float dist_step = 50;
 	float dist_max = 0;
 	Eigen::Vector3f posInit(0, 0, 0);
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 		auto posTgt = static_cast<Eigen::Vector3f>(posInit + i_step * dist_step * direction);
 		pObject->updateStatesTarget(posTgt);
 		std::cout << "set distance: " << i_step * dist_step << " mm" << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(15));
+		std::this_thread::sleep_for(std::chrono::seconds(20));
 	}
 
 	pManipulator->FinishManipulation();

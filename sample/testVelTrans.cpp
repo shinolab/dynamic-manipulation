@@ -14,11 +14,13 @@ using namespace dynaman;
 
 int main(int argc, char** argv) {
 
+	
 	/*user-defined configurations*/
 	const int numTrial = 1;
-	const float err_tol = 10;
+	const float err_tol = 15;
 	const float wait_time_tol = 20000;
 	const int count_wait_max = 10;
+	const Eigen::Vector3f sensor_offset(0, 0, 0);
 
 	std::string str_radius;
 	std::string str_dist;
@@ -33,7 +35,7 @@ int main(int argc, char** argv) {
 	int radius = std::atoi(str_radius.c_str());
 	int dist_travel = std::atoi(str_dist.c_str());
 	auto power = std::atof(str_power.c_str());
-	auto amplitude = static_cast<int>(255 * std::powf(power, 1.0f / 1.5f));
+	auto amplitude = static_cast<int>(255 * std::powf(power, 1.0f / 1.6f));
 
 	std::cout
 		<< "radius: " << radius << std::endl
@@ -45,13 +47,13 @@ int main(int argc, char** argv) {
 	char str_time[sizeof("YYYYmmdd_HHMMSS")];
 	std::strftime(str_time, sizeof(str_time), "%Y%m%d_%H%M%S", p_time);
 	
-	std::string prefix = std::string(str_time) + "_r" + str_radius + "_d" + str_dist;
+	std::string prefix = std::string(str_time) + "_r" + str_radius + "_d" + str_dist + "_a" + std::to_string(amplitude);
 	std::string config_name = prefix + "_config.txt";
 	std::ofstream ofs_config(config_name);
 	ofs_config << radius << "," << dist_travel << "," << amplitude;
 	ofs_config.close();
 
-	const Eigen::Vector3f pos_init(-dist_travel/2, 20, 0);
+	const Eigen::Vector3f pos_init(-dist_travel/2,	0, 0);
 	const Eigen::Vector3f posCenter(0, 0, 0);
 
 	auto stabilized_at_init = [&pos_init, &err_tol](const Eigen::Vector3f& pos) {
@@ -63,7 +65,10 @@ int main(int argc, char** argv) {
 		return pos.x() >= pos_init.x() + dist_travel;
 	};
 
-	std::string target_image_name("blue_target_no_cover.png");
+	//std::string target_image_name("blue_target_no_cover.png");
+	std::string target_image_name("blue_target_r50mm.png");
+	//std::string target_image_name("blue_target_r65mm.png");
+	//std::string target_image_name("blue_target_r80mm.png");
 	/*end of user-defined configurations*/
 
 	auto pObject = dynaman::FloatingObject::Create(
@@ -74,7 +79,7 @@ int main(int argc, char** argv) {
 		radius
 	);
 
-	auto pTracker = haptic_icon::CreateTracker(target_image_name);
+	auto pTracker = haptic_icon::CreateTracker(target_image_name, sensor_offset);
 	pTracker->open();
 
 	auto pAupa = std::make_shared<autd::Controller>();
@@ -84,12 +89,12 @@ int main(int argc, char** argv) {
 	haptic_icon::SetGeometry(pAupa);
 
 	auto pManipulator = MultiplexManipulator::Create(
-		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		2.5 * Eigen::Vector3f::Constant(-4.0f), // gainD
-		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		//20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		//5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		//2.5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		//1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100, //freqLM
 		10,
 		5,
@@ -140,9 +145,11 @@ int main(int argc, char** argv) {
 			}
 		);
 		pManipulator->FinishManipulation();
+		pAupa->AppendModulationSync(autd::Modulation::Create(255));
 		auto timeActuateInit = timeGetTime();
 		while (timeGetTime() - timeActuateInit < 10000) {
 			Eigen::Vector3f pos_object = pObject->getPosition();
+			//Eigen::Vector3f offset(0, -10, 0);
 			std::map<int, autd::GainPtr> gain_map;
 			for (int i_aupa = 0; i_aupa < pAupa->geometry()->numDevices(); i_aupa++) {
 				gain_map.insert(

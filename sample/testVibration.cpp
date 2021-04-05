@@ -23,8 +23,8 @@ int main(int argc, char** argv)
 	const int tactile_period_ms = 1000;
 	std::vector<int> freq_list{200};
 	std::vector<float> db_mid_list{ -13 };
-	std::vector<float> db_offset_max_list{ 6, 7, 8 };
-	std::vector<float> db_offset_min_list{ 5, 6, 7 };
+	std::vector<float> db_offset_max_list{ 2, 3, 4 };
+	std::vector<float> db_offset_min_list{ 4, 5, 6 };
 	std::vector<bool> reverse_list{ false, true };
 	if (num_trial != db_offset_max_list.size() || num_trial != db_offset_min_list.size()) {
 		std::cerr << "error found in configuration parameter." << std::endl;
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
 
-	std::string target_image_name("blue_target_no_cover.png");
+	std::string target_image_name("blue_target_r50mm.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 
 	auto pObject = dynaman::FloatingObject::Create(

@@ -48,7 +48,7 @@ class arfModelFocusOnSphereExperimental : public arfModelLinearBase
 public:
 	arfModelFocusOnSphereExperimental();
 	Eigen::MatrixXf arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd);
-	Eigen::MatrixXf arf(const Eigen::MatrixXf &_posRel, const Eigen::MatrixXf &_eulerAnglesAUTD) override;
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf &eulerAnglesAUTD) override;
 	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
 	
 private:
@@ -68,6 +68,19 @@ private:
 	Eigen::MatrixXf tableArfVertical;
 	Eigen::MatrixXf tableArfHorizontal;
 
+};
+
+class arfModelFocusSphereExp50mm : public arfModelLinearBase {
+public:
+	arfModelFocusSphereExp50mm();
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& eulerAngles) override;
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
+	Eigen::MatrixXf arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd);
+
+private:
+	Eigen::VectorXf tableDistance;
+	Eigen::VectorXf tableAngle;
+	Eigen::MatrixXf tableArf;
 };
 
 namespace arfModel

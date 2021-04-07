@@ -13,12 +13,12 @@ using namespace dynaman;
 int main(int argc, char** argv) {
 
 	//configurations
-	auto direction = Eigen::Vector3f::UnitX();
+	auto direction = -Eigen::Vector3f::UnitX();
 	std::string target_image_name("blue_target_r50mm.png");
-	std::string obsLogName("20210404_WorkspaceEval_px.csv");
-	std::string controlLogName("20210404_WorkspaceEvalControl_px.csv");
+	std::string obsLogName("20210405_WorkspaceEval_mx2.csv");
+	std::string controlLogName("20210405_WorkspaceEvalControl_mx2.csv");
 	float dist_step = 50;
-	float dist_max = 0;
+	float dist_max = 450;
 	Eigen::Vector3f posInit(0, 0, 0);
 
 	//Create Floating Object
@@ -52,12 +52,11 @@ int main(int argc, char** argv) {
 		obsLogName,
 		controlLogName
 	);
-	//Recorder recorder;
-	//recorder.Start(pObject, filename, 33);
+
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
 	std::this_thread::sleep_for(std::chrono::seconds(20)); // wait for I-gain adjustment
-	for (int i_step = 0; i_step * dist_step < dist_max; i_step++) {
+	for (int i_step = 1; i_step * dist_step < dist_max; i_step++) {
 		auto posTgt = static_cast<Eigen::Vector3f>(posInit + i_step * dist_step * direction);
 		pObject->updateStatesTarget(posTgt);
 		std::cout << "set distance: " << i_step * dist_step << " mm" << std::endl;
@@ -65,7 +64,6 @@ int main(int argc, char** argv) {
 	}
 
 	pManipulator->FinishManipulation();
-	//recorder.Stop();
 	pAupa->Close();
 	return 0;
 

@@ -19,7 +19,7 @@ int main(int argc, char** argv ) {
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
-		-0.036e-3f,
+		0,//-0.036e-3f,
 		50.f
 	);
 
@@ -33,8 +33,8 @@ int main(int argc, char** argv ) {
 	haptic_icon::SetGeometry(pAupa);
 
 	auto pManipulator = MultiplexManipulator::Create(
-		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		30 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		6 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100, //freqLM
 		10,

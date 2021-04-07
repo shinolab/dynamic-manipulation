@@ -14,12 +14,12 @@ int main(int argc, char** argv) {
 
 	//configurations
 	auto direction = Eigen::Vector3f::UnitX();
-	std::string target_image_name("blue_target_no_cover.png");
-	std::string obsLogName("20210106_MobTestObsLog_x.csv");
-	std::string controlLogName("20210106_MobTestControlLog_x.csv");
-	float dist = 200;
-	Eigen::Vector3f posInit(0, -50, 0);
-	Eigen::Vector3f posStart = posInit - dist * direction;
+	std::string target_image_name("blue_target_r50mm.png");
+	std::string obsLogName("20210406_MobTestObsLog_x.csv");
+	std::string controlLogName("20210406_MobTestControlLog_x.csv");
+	float dist = 250;
+	Eigen::Vector3f posInit(0, 0, 0);
+	Eigen::Vector3f posStart = posInit;- dist * direction;
 	Eigen::Vector3f posEnd = posInit + dist * direction;
 	int numTrial = 11;
 

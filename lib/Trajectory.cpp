@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include <memory>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -321,3 +322,68 @@ Eigen::Vector3f TrajectoryHeart::accel(DWORD sys_time_ms) {
 	);
 }
 
+std::shared_ptr<Trajectory> TrajectoryConstCruise::Create(
+	float force,
+	float radius,
+	float beta,
+	DWORD sys_time_init,
+	const Eigen::Vector3f& posInit,
+	const Eigen::Vector3f& posEnd
+) {
+	return std::make_shared<TrajectoryConstCruise>(force, radius, beta, sys_time_init, posInit, posEnd);
+}
+
+float TrajectoryConstCruise::terminal_velocity() {
+	return 36914 * std::sqrt(_force) / _radius;
+}
+
+float TrajectoryConstCruise::muvt() {
+	return terminal_velocity() * 0.15f / _radius;
+}
+
+float TrajectoryConstCruise::time_to_accel() {
+	return std::logf((1 + _beta) / (1 - _beta)) / 2.0f / muvt();
+}
+
+float TrajectoryConstCruise::dist_to_accel() {
+	return -3.333 * std::logf((1 - _beta * _beta)) * _radius;
+}
+
+Eigen::Vector3f TrajectoryConstCruise::pos(DWORD time_ms) {
+	float dt = (time_ms - _sys_time_init) / 1000.f;
+	float dist = (_posEnd - _posInit).norm();
+	if (dt < time_to_accel()) {
+		std::cout << "accel" << std::endl;
+		dist = -terminal_velocity() * dt + _radius / 0.15 * std::logf((exp(2.f * muvt() * dt) + 1) / 2.0f);
+	}
+	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
+		std::cout << "cruise" << std::endl;
+		dist = dist_to_accel() + _beta * terminal_velocity() * (dt - time_to_accel());
+	}
+	return dist * (_posEnd - _posInit).normalized() + _posInit;
+}
+
+Eigen::Vector3f TrajectoryConstCruise::vel(DWORD time_ms) {
+	float dt = (time_ms - _sys_time_init) / 1000.f;
+	float speed = 0;
+	if (dt < time_to_accel()) {
+		speed = terminal_velocity() * (1 - 2 / (exp(2 * muvt() * dt) + 1));
+	}
+	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
+		speed = _beta * terminal_velocity();
+	}
+	return speed * (_posEnd - _posInit).normalized();
+}
+
+Eigen::Vector3f TrajectoryConstCruise::accel(DWORD time_ms) {
+	float dt = (time_ms - _sys_time_init) / 1000.f;
+	float a = 0;
+	if (dt < time_to_accel()) {
+		float m =  1.168e-9f * 4 * M_PI *_radius * _radius * _radius / 3.0f;
+		a =  _force / m;
+	}
+	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
+		a = 0.15f * _beta *_beta * terminal_velocity() * terminal_velocity() / _radius;
+	}
+	return a * (_posEnd - _posInit).normalized();
+}

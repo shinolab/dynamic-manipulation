@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
 	haptic_icon::SetGeometry(pAupa);
 
 	auto pManipulator = MultiplexManipulator::Create(
-		30 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		6 * Eigen::Vector3f::Constant(-4.0f), // gainD
+		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+		4 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		100, //freqLM
 		10,
@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
 		0
 	);
 	dynamic_cast<MultiplexManipulator*>(pManipulator.get())->EnableLog(
-		"20210407_logObs_circle3.csv",
-		"20210407_logControl_circle3.csv"
+		"20210407_logObs_bang_1s_z.csv",
+		"20210407_logControl_bang_1s_z.csv"
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
@@ -51,13 +51,46 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(250.f, 0.f, 0.f);
 	Eigen::Vector3f posLeft(-250.f, 0.f, 0.f);
-	Eigen::Vector3f posHigh(0.f, 0.f, 200.f);
+	Eigen::Vector3f posHigh(0.f, 0.f, 300.f);
 	Eigen::Vector3f posLow(0.f, 0.f, -200.f);
-	// params for circular trajectory
+// params for circular trajectory
 	float orbit_radius = 150;
 	float orbit_period = 3.f;
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 	std::this_thread::sleep_for(std::chrono::seconds(2));
+	pObject->updateStatesTarget(posHigh);
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+	for (int i = 0; i < 8; i++) {
+		pObject->SetTrajectory(
+			TrajectoryBangBang::Create(
+				1.f,
+				timeGetTime(),
+				posHigh,
+				posLow
+			)
+		);
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+		pObject->SetTrajectory(
+			TrajectoryBangBang::Create(
+				1.f,
+				timeGetTime(),
+				posLow,
+				posHigh
+			)
+		);
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+	}
+
+	//pObject->SetTrajectory(
+	//	TrajectoryConstCruise::Create(
+	//		0.5,
+	//		50.f,
+	//		0.632f,
+	//		timeGetTime(),
+	//		posLeft,
+	//		posRight
+	//	)
+	//);
 	//traslation maneuver:
 	//pObject->SetTrajectory(dynaman::TrajectoryInfShape::Create(
 	//	posCenter,
@@ -85,9 +118,9 @@ int main(int argc, char** argv) {
 	//std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	//pObject->updateStatesTarget(posCenter);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posLow, posCenter));
 	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
+	//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	//pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	//std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 	//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
 	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));

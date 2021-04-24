@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8)
 
 set(CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0074 NEW)
@@ -206,6 +206,15 @@ target_link_libraries(
     DynamicManipulation
 )
 
+add_executable(demo_catch demo_catch.cpp)
+target_link_libraries(
+    demo_catch
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)
@@ -313,6 +322,41 @@ if(BUILD_PCL_APPS)
         pcl_grabber
         pcl_viewer
         ActionHandler
+    )
+
+    add_executable(
+        demo_grasp
+        demo_grasp.cpp
+    )
+    target_link_libraries(
+        demo_grasp
+        DynamicManipulation
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        HandStateReader
+        pcl_util
+        pcl_grabber
+        pcl_viewer
+        ActionHandler
+    )
+
+    add_executable(
+        demo_hand_state
+        demo_hand_state.cpp
+    )
+    target_link_libraries(
+        demo_hand_state
+        DynamicManipulation
+        StereoTracker
+        CameraDevice
+        ImgProcUtil
+        HandStateReader
+        pcl_util
+        pcl_grabber
+        pcl_viewer
+        ActionHandler
+        DrawUtil
     )
 
 endif()

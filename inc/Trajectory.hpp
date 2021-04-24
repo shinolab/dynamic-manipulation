@@ -65,7 +65,6 @@ namespace dynaman {
 
 	class TrajectoryBang : public Trajectory {
 	private:
-	private:
 		float timeToGo;
 		float timeInit;
 		Eigen::Vector3f posInit;
@@ -222,6 +221,49 @@ namespace dynaman {
 		Eigen::Vector3f vel(DWORD sys_time_ms) override;
 
 		Eigen::Vector3f accel(DWORD sys_time_ms)override;
+	};
+
+	class TrajectoryConstCruise : public Trajectory {
+	private:
+		float _force;
+		float _radius;
+		float _beta;
+		DWORD _sys_time_init;
+		Eigen::Vector3f _posInit;
+		Eigen::Vector3f _posEnd;
+
+	public:
+		TrajectoryConstCruise(
+			float force,
+			float radius,
+			float beta,
+			DWORD sys_time_init,
+			Eigen::Vector3f const& posInit,
+			Eigen::Vector3f const& posEnd
+		)
+			:_force(force),
+			_radius(radius),
+			_beta(beta),
+			_sys_time_init(sys_time_init),
+			_posInit(posInit),
+			_posEnd(posEnd) {}
+
+		static std::shared_ptr<Trajectory> Create(
+			float force,
+			float radius,
+			float beta,
+			DWORD sys_time_init_ms,
+			const Eigen::Vector3f& posInit,
+			const Eigen::Vector3f& posEnd
+		);
+
+		Eigen::Vector3f pos(DWORD time_ms) override;
+		Eigen::Vector3f vel(DWORD time_ms) override;
+		Eigen::Vector3f accel(DWORD time_ms) override;
+		float terminal_velocity();
+		float muvt();
+		float time_to_accel();
+		float dist_to_accel();
 	};
 }
 

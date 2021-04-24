@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv) {
 
-	std::string target_image_name("blue_target_no_cover.png");
+	std::string target_image_name("blue_target_r50mm.png");
 	std::string leftCamId("32434751");
 	std::string rightCamId("43435351");
 	//Eigen::Vector3f pos_sensor(-125.652f, -871.712f, 13.3176f);
@@ -48,13 +48,14 @@ int main(int argc, char** argv) {
 		Eigen::Vector3f::Zero(),
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
-		-0.036e-3f,
+		0,//-0.036e-3f,
 		50.f);
+	std::this_thread::sleep_for(std::chrono::seconds(30));
 
 	auto initTime = timeGetTime();
 	Eigen::VectorXi amplitudes(11);
 	amplitudes <<
-		255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+		0, 205, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 	float amp_single = 1;
 	while (timeGetTime() - initTime < 10000) {
 		DWORD observationTime;
@@ -62,9 +63,14 @@ int main(int argc, char** argv) {
 		bool tracked = tracker.observe(observationTime, pos, objPtr);
 		if (tracked) {
 			Eigen::MatrixXf points = pos.replicate(1, 11);
-			//pAupa->AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
-			pAupa->AppendGainSync(autd::FocalPointGain::Create(pos));
-			pAupa->AppendModulationSync(autd::SineModulation::Create(200, amp_single, 0.5 * amp_single));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			pAupa->AppendGainSync(autd::DeviceSpecificFocalPointGain::Create(points, amplitudes));
+			//pAupa->AppendGainSync(autd::FocalPointGain::Create(pos));
+			//pAupa->AppendModulationSync(autd::SineModulation::Create(200, amp_single, 0.5 * amp_single));
+			//std::this_thread::sleep_for(std::chrono::seconds(5));
+			pAupa->AppendModulationSync(autd::Modulation::Create(255));
+			std::this_thread::sleep_for(std::chrono::seconds(5));
+
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}

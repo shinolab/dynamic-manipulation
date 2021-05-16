@@ -6,20 +6,7 @@
 //-------------------------------------------------------------------------------------------------------------------
 
 
-//#include <xiAPIplus/xiapiplus.h> 
-	
-	// forward declarations
-	void ReportException(XI_RETURN res, const char* location);
-	
-	//-------------------------------------------------------------------------------------------------------------------
-	// xiApi is_extension parameters
-	
-	void xiAPIplus::EnableCamEnumGoldenEnabled()
-	{
-		XI_RETURN res=xiSetParamInt(NULL, XI_PRM_CAM_ENUM_GOLDEN_ENABLED, XI_ON);
-		if (res) ReportException(res,"EnableCamEnumGoldenEnabled");
-	}
-
+//#include <xiAPIplus/xiapiplus.h>
 
 	//-------------------------------------------------------------------------------------------------------------------
 	// xiApi public parameters
@@ -33,57 +20,112 @@
 	 
 	
 	// Exposure time in microseconds (XI_PRM_EXPOSURE)
-	// integer type
-	int xiAPIplus_Camera::GetExposureTime()
+	float xiAPIplus_Camera::GetExposureTime()
 	{
-		int val=0;
+		float val=0;
 		
 		CheckCamHandle("GetExposureTime");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE, &val);
+		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_EXPOSURE, &val);
 		CheckResult(res,"GetExposureTime");
 		return val;
 	}
-	int xiAPIplus_Camera::GetExposureTime_Maximum()
+
+	float xiAPIplus_Camera::GetExposureTime_Maximum()
 	{
-		int val=0;
+		float val=0;
 		
 		CheckCamHandle("GetExposureTime" "_Maximum");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_MAX, &val);
+		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_MAX, &val);
 		CheckResult(res,"GetExposureTime" "_Maximum");
 		return val;
 	}
-	
-	int xiAPIplus_Camera::GetExposureTime_Minimum()
+
+	float xiAPIplus_Camera::GetExposureTime_Minimum()
 	{
-		int val=0;
+		float val=0;
 		
 		CheckCamHandle("GetExposureTime" "_Minimum");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_MIN, &val);
+		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_MIN, &val);
 		CheckResult(res,"GetExposureTime" "_Minimum");
 		return val;
 	}
 
-	int xiAPIplus_Camera::GetExposureTime_Increment()
+	float xiAPIplus_Camera::GetExposureTime_Increment()
 	{
-		int val=0;
+		float val=0;
 		
 		CheckCamHandle("GetExposureTime" "_Increment");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_INCREMENT, &val);
+		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_EXPOSURE XI_PRM_INFO_INCREMENT, &val);
 		CheckResult(res,"GetExposureTime" "_Increment");
 		return val;
 	}
 	
-	void xiAPIplus_Camera::SetExposureTime(int ExposureTime)
+	void xiAPIplus_Camera::SetExposureTime(float ExposureTime)
 	{
 		
-		CheckCamHandleInt("SetExposureTime",ExposureTime);
+		CheckCamHandle("SetExposureTime");
 		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_EXPOSURE, ExposureTime);
+		XI_RETURN res=xiSetParamFloat(camera_handle, XI_PRM_EXPOSURE, ExposureTime);
 		CheckResult(res,"SetExposureTime");
+	}
+	 
+	
+	// Selector for Exposure parameter (XI_PRM_EXPOSURE_TIME_SELECTOR)
+	XI_EXPOSURE_TIME_SELECTOR_TYPE xiAPIplus_Camera::GetExposureTimeSelector()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetExposureTimeSelector");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE_TIME_SELECTOR, &val);
+		CheckResult(res,"GetExposureTimeSelector");
+		return (XI_EXPOSURE_TIME_SELECTOR_TYPE)val;
+	}
+	
+	XI_EXPOSURE_TIME_SELECTOR_TYPE xiAPIplus_Camera::GetExposureTimeSelector_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetExposureTimeSelector" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE_TIME_SELECTOR XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetExposureTimeSelector" "_Maximum");
+		return (XI_EXPOSURE_TIME_SELECTOR_TYPE)val;
+	}
+	
+	XI_EXPOSURE_TIME_SELECTOR_TYPE xiAPIplus_Camera::GetExposureTimeSelector_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetExposureTimeSelector" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE_TIME_SELECTOR XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetExposureTimeSelector" "_Minimum");
+		return (XI_EXPOSURE_TIME_SELECTOR_TYPE)val;
+	}
+	
+	int xiAPIplus_Camera::GetExposureTimeSelector_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetExposureTimeSelector" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXPOSURE_TIME_SELECTOR XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetExposureTimeSelector" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetExposureTimeSelector(XI_EXPOSURE_TIME_SELECTOR_TYPE ExposureTimeSelector)
+	{
+		
+		CheckCamHandleInt("SetExposureTimeSelector",(int)ExposureTimeSelector);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_EXPOSURE_TIME_SELECTOR, ExposureTimeSelector);
+		CheckResult(res,"SetExposureTimeSelector");
 	}
 	 
 	
@@ -1804,6 +1846,61 @@
 	}	
 	 
 	
+	// Selector for Exposure parameter (XI_PRM_INTERLINE_EXPOSURE_MODE)
+	XI_INTERLINE_EXPOSURE_MODE_TYPE xiAPIplus_Camera::GetInterlineExposureMode()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetInterlineExposureMode");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_INTERLINE_EXPOSURE_MODE, &val);
+		CheckResult(res,"GetInterlineExposureMode");
+		return (XI_INTERLINE_EXPOSURE_MODE_TYPE)val;
+	}
+	
+	XI_INTERLINE_EXPOSURE_MODE_TYPE xiAPIplus_Camera::GetInterlineExposureMode_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetInterlineExposureMode" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_INTERLINE_EXPOSURE_MODE XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetInterlineExposureMode" "_Maximum");
+		return (XI_INTERLINE_EXPOSURE_MODE_TYPE)val;
+	}
+	
+	XI_INTERLINE_EXPOSURE_MODE_TYPE xiAPIplus_Camera::GetInterlineExposureMode_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetInterlineExposureMode" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_INTERLINE_EXPOSURE_MODE XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetInterlineExposureMode" "_Minimum");
+		return (XI_INTERLINE_EXPOSURE_MODE_TYPE)val;
+	}
+	
+	int xiAPIplus_Camera::GetInterlineExposureMode_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetInterlineExposureMode" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_INTERLINE_EXPOSURE_MODE XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetInterlineExposureMode" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetInterlineExposureMode(XI_INTERLINE_EXPOSURE_MODE_TYPE InterlineExposureMode)
+	{
+		
+		CheckCamHandleInt("SetInterlineExposureMode",(int)InterlineExposureMode);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_INTERLINE_EXPOSURE_MODE, InterlineExposureMode);
+		CheckResult(res,"SetInterlineExposureMode");
+	}
+	 
+	
 	// Image flat field correction (XI_PRM_FFC)
 	bool xiAPIplus_Camera::IsFlatFieldCorrection()
 	{
@@ -2871,61 +2968,6 @@
 		
 		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_LIMIT_BANDWIDTH_MODE, BandwidthLimitMode);
 		CheckResult(res,"SetBandwidthLimitMode");
-	}
-	 
-	
-	// Image sensor line period in us (XI_PRM_SENSOR_LINE_PERIOD)
-	float xiAPIplus_Camera::GetSensorLinePeriod()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetSensorLinePeriod");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_SENSOR_LINE_PERIOD, &val);
-		CheckResult(res,"GetSensorLinePeriod");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetSensorLinePeriod_Maximum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetSensorLinePeriod" "_Maximum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_SENSOR_LINE_PERIOD XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetSensorLinePeriod" "_Maximum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetSensorLinePeriod_Minimum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetSensorLinePeriod" "_Minimum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_SENSOR_LINE_PERIOD XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetSensorLinePeriod" "_Minimum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetSensorLinePeriod_Increment()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetSensorLinePeriod" "_Increment");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_SENSOR_LINE_PERIOD XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetSensorLinePeriod" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetSensorLinePeriod(float SensorLinePeriod)
-	{
-		
-		CheckCamHandle("SetSensorLinePeriod");
-		
-		XI_RETURN res=xiSetParamFloat(camera_handle, XI_PRM_SENSOR_LINE_PERIOD, SensorLinePeriod);
-		CheckResult(res,"SetSensorLinePeriod");
 	}
 	 
 	
@@ -5055,6 +5097,36 @@
 		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEFAULT_CC_MATRIX, ColorCorrectionMatrixDefault);
 		CheckResult(res,"SetColorCorrectionMatrixDefault");
 	}
+	 
+	
+	// Normalize color correction matrix (XI_PRM_CC_MATRIX_NORM)
+	bool xiAPIplus_Camera::IsColorCorrectionMatrixNorm()
+	{
+		int val=0;
+		
+		CheckCamHandle("IsColorCorrectionMatrixNorm");
+		
+		xiGetParamInt(camera_handle, XI_PRM_CC_MATRIX_NORM, &val);
+		return (val!=0);
+	}
+	
+	void xiAPIplus_Camera::EnableColorCorrectionMatrixNorm()
+	{
+		
+		CheckCamHandle("IsColorCorrectionMatrixNorm");
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CC_MATRIX_NORM, XI_ON);
+		CheckResult(res,"EnableColorCorrectionMatrixNorm");
+	}
+
+	void xiAPIplus_Camera::DisableColorCorrectionMatrixNorm()
+	{
+		
+		CheckCamHandle("DisableColorCorrectionMatrixNorm");
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CC_MATRIX_NORM, XI_OFF);
+		CheckResult(res,"DisableColorCorrectionMatrixNorm");
+	}	
 	
 
 	//-------------------------------------------------------------------------------------------------------------------
@@ -5852,111 +5924,111 @@
 	
 	// Debounce time (x * 10us) (XI_PRM_DEBOUNCE_T0)
 	// integer type
-	int xiAPIplus_Camera::GetGPIDebounceFirstEdge()
+	int xiAPIplus_Camera::GetGPIDebounceFallingEdge()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceFirstEdge");
+		CheckCamHandle("GetGPIDebounceFallingEdge");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0, &val);
-		CheckResult(res,"GetGPIDebounceFirstEdge");
+		CheckResult(res,"GetGPIDebounceFallingEdge");
 		return val;
 	}
-	int xiAPIplus_Camera::GetGPIDebounceFirstEdge_Maximum()
+	int xiAPIplus_Camera::GetGPIDebounceFallingEdge_Maximum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceFirstEdge" "_Maximum");
+		CheckCamHandle("GetGPIDebounceFallingEdge" "_Maximum");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0 XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetGPIDebounceFirstEdge" "_Maximum");
+		CheckResult(res,"GetGPIDebounceFallingEdge" "_Maximum");
 		return val;
 	}
 	
-	int xiAPIplus_Camera::GetGPIDebounceFirstEdge_Minimum()
+	int xiAPIplus_Camera::GetGPIDebounceFallingEdge_Minimum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceFirstEdge" "_Minimum");
+		CheckCamHandle("GetGPIDebounceFallingEdge" "_Minimum");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0 XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetGPIDebounceFirstEdge" "_Minimum");
+		CheckResult(res,"GetGPIDebounceFallingEdge" "_Minimum");
 		return val;
 	}
 
-	int xiAPIplus_Camera::GetGPIDebounceFirstEdge_Increment()
+	int xiAPIplus_Camera::GetGPIDebounceFallingEdge_Increment()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceFirstEdge" "_Increment");
+		CheckCamHandle("GetGPIDebounceFallingEdge" "_Increment");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0 XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetGPIDebounceFirstEdge" "_Increment");
+		CheckResult(res,"GetGPIDebounceFallingEdge" "_Increment");
 		return val;
 	}
 	
-	void xiAPIplus_Camera::SetGPIDebounceFirstEdge(int GPIDebounceFirstEdge)
+	void xiAPIplus_Camera::SetGPIDebounceFallingEdge(int GPIDebounceFallingEdge)
 	{
 		
-		CheckCamHandleInt("SetGPIDebounceFirstEdge",GPIDebounceFirstEdge);
+		CheckCamHandleInt("SetGPIDebounceFallingEdge",GPIDebounceFallingEdge);
 		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0, GPIDebounceFirstEdge);
-		CheckResult(res,"SetGPIDebounceFirstEdge");
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEBOUNCE_T0, GPIDebounceFallingEdge);
+		CheckResult(res,"SetGPIDebounceFallingEdge");
 	}
 	 
 	
 	// Debounce time (x * 10us) (XI_PRM_DEBOUNCE_T1)
 	// integer type
-	int xiAPIplus_Camera::GetGPIDebounceSecondEdge()
+	int xiAPIplus_Camera::GetGPIDebounceRisingEdge()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceSecondEdge");
+		CheckCamHandle("GetGPIDebounceRisingEdge");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1, &val);
-		CheckResult(res,"GetGPIDebounceSecondEdge");
+		CheckResult(res,"GetGPIDebounceRisingEdge");
 		return val;
 	}
-	int xiAPIplus_Camera::GetGPIDebounceSecondEdge_Maximum()
+	int xiAPIplus_Camera::GetGPIDebounceRisingEdge_Maximum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceSecondEdge" "_Maximum");
+		CheckCamHandle("GetGPIDebounceRisingEdge" "_Maximum");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1 XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetGPIDebounceSecondEdge" "_Maximum");
+		CheckResult(res,"GetGPIDebounceRisingEdge" "_Maximum");
 		return val;
 	}
 	
-	int xiAPIplus_Camera::GetGPIDebounceSecondEdge_Minimum()
+	int xiAPIplus_Camera::GetGPIDebounceRisingEdge_Minimum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceSecondEdge" "_Minimum");
+		CheckCamHandle("GetGPIDebounceRisingEdge" "_Minimum");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1 XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetGPIDebounceSecondEdge" "_Minimum");
+		CheckResult(res,"GetGPIDebounceRisingEdge" "_Minimum");
 		return val;
 	}
 
-	int xiAPIplus_Camera::GetGPIDebounceSecondEdge_Increment()
+	int xiAPIplus_Camera::GetGPIDebounceRisingEdge_Increment()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetGPIDebounceSecondEdge" "_Increment");
+		CheckCamHandle("GetGPIDebounceRisingEdge" "_Increment");
 		
 		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1 XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetGPIDebounceSecondEdge" "_Increment");
+		CheckResult(res,"GetGPIDebounceRisingEdge" "_Increment");
 		return val;
 	}
 	
-	void xiAPIplus_Camera::SetGPIDebounceSecondEdge(int GPIDebounceSecondEdge)
+	void xiAPIplus_Camera::SetGPIDebounceRisingEdge(int GPIDebounceRisingEdge)
 	{
 		
-		CheckCamHandleInt("SetGPIDebounceSecondEdge",GPIDebounceSecondEdge);
+		CheckCamHandleInt("SetGPIDebounceRisingEdge",GPIDebounceRisingEdge);
 		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1, GPIDebounceSecondEdge);
-		CheckResult(res,"SetGPIDebounceSecondEdge");
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEBOUNCE_T1, GPIDebounceRisingEdge);
+		CheckResult(res,"SetGPIDebounceRisingEdge");
 	}
 	 
 	
@@ -6227,52 +6299,6 @@
 	}
 	 
 	
-	// Lens focus distance in cm. (XI_PRM_LENS_FOCUS_DISTANCE)
-	float xiAPIplus_Camera::GetLensFocusDistance()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetLensFocusDistance");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_LENS_FOCUS_DISTANCE, &val);
-		CheckResult(res,"GetLensFocusDistance");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetLensFocusDistance_Maximum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetLensFocusDistance" "_Maximum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_LENS_FOCUS_DISTANCE XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetLensFocusDistance" "_Maximum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetLensFocusDistance_Minimum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetLensFocusDistance" "_Minimum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_LENS_FOCUS_DISTANCE XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetLensFocusDistance" "_Minimum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetLensFocusDistance_Increment()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetLensFocusDistance" "_Increment");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_LENS_FOCUS_DISTANCE XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetLensFocusDistance" "_Increment");
-		return val;
-	}
-	 
-	
 	// Lens focal distance in mm. (XI_PRM_LENS_FOCAL_LENGTH)
 	float xiAPIplus_Camera::GetLensFocalLength()
 	{
@@ -6427,17 +6453,6 @@
 		XI_RETURN res=xiSetParamFloat(camera_handle, XI_PRM_LENS_FEATURE, LensFeature);
 		CheckResult(res,"SetLensFeature");
 	}
-	 
-	
-	// Write/Read data sequences to/from lens (XI_PRM_LENS_COMM_DATA)
-	void xiAPIplus_Camera::GetLensCommData(char* buffer, int buffer_length)
-	{
-		
-		CheckCamHandle("GetLensCommData");
-		
-		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_LENS_COMM_DATA, buffer, buffer_length);
-		CheckResult(res,"GetLensCommData");
-	}
 	
 
 	//-------------------------------------------------------------------------------------------------------------------
@@ -6579,17 +6594,6 @@
 		
 		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_DEVICE_SENS_SN, buffer, buffer_length);
 		CheckResult(res,"GetSensorSerialNumber");
-	}
-	 
-	
-	// Return unique device ID (XI_PRM_DEVICE_ID)
-	void xiAPIplus_Camera::GetDeviceId(char* buffer, int buffer_length)
-	{
-		
-		CheckCamHandle("GetDeviceId");
-		
-		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_DEVICE_ID, buffer, buffer_length);
-		CheckResult(res,"GetDeviceId");
 	}
 	 
 	
@@ -7581,7 +7585,7 @@
 	}
 	 
 	
-	// Defines how time stamp reset engine will be armed (XI_PRM_TS_RST_MODE)
+	// Defines how TimeStamp reset engine will be armed (XI_PRM_TS_RST_MODE)
 	XI_TS_RST_MODE xiAPIplus_Camera::GetTimestampResetMode()
 	{
 		int val=0;
@@ -7984,7 +7988,7 @@
 	}
 	 
 	
-	// Number of buffers to commit to low level (XI_PRM_ACQ_TRANSPORT_BUFFER_COMMIT)
+	// Total number of buffers to be committed to transport layer. Increasing can enhance transport capacity. E.g. on USB (XI_PRM_ACQ_TRANSPORT_BUFFER_COMMIT)
 	// integer type
 	int xiAPIplus_Camera::GetAcquisitionTransportBufferCommit()
 	{
@@ -8077,6 +8081,137 @@
 		
 		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEVICE_RESET, DeviceReset);
 		CheckResult(res,"SetDeviceReset");
+	}
+	 
+	
+	// Enable/disable the ConcatenatedImages feature (XI_PRM_CONCAT_IMG_MODE)
+	bool xiAPIplus_Camera::IsConcatenatedImagesMode()
+	{
+		int val=0;
+		
+		CheckCamHandle("IsConcatenatedImagesMode");
+		
+		xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_MODE, &val);
+		return (val!=0);
+	}
+	
+	void xiAPIplus_Camera::EnableConcatenatedImagesMode()
+	{
+		
+		CheckCamHandle("IsConcatenatedImagesMode");
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CONCAT_IMG_MODE, XI_ON);
+		CheckResult(res,"EnableConcatenatedImagesMode");
+	}
+
+	void xiAPIplus_Camera::DisableConcatenatedImagesMode()
+	{
+		
+		CheckCamHandle("DisableConcatenatedImagesMode");
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CONCAT_IMG_MODE, XI_OFF);
+		CheckResult(res,"DisableConcatenatedImagesMode");
+	}	
+	 
+	
+	// Number of images concatenated in one payload (XI_PRM_CONCAT_IMG_COUNT)
+	// integer type
+	int xiAPIplus_Camera::GetConcatenatedImagesCount()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesCount");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_COUNT, &val);
+		CheckResult(res,"GetConcatenatedImagesCount");
+		return val;
+	}
+	int xiAPIplus_Camera::GetConcatenatedImagesCount_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesCount" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_COUNT XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetConcatenatedImagesCount" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetConcatenatedImagesCount_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesCount" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_COUNT XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetConcatenatedImagesCount" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetConcatenatedImagesCount_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesCount" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_COUNT XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetConcatenatedImagesCount" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetConcatenatedImagesCount(int ConcatenatedImagesCount)
+	{
+		
+		CheckCamHandleInt("SetConcatenatedImagesCount",ConcatenatedImagesCount);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CONCAT_IMG_COUNT, ConcatenatedImagesCount);
+		CheckResult(res,"SetConcatenatedImagesCount");
+	}
+	 
+	
+	// Offset between headers and images in bytes on transport (XI_PRM_CONCAT_IMG_TRANSPORT_IMG_OFFSET)
+	// integer type
+	int xiAPIplus_Camera::GetConcatenatedImagesTransportImgOffset()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesTransportImgOffset");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_TRANSPORT_IMG_OFFSET, &val);
+		CheckResult(res,"GetConcatenatedImagesTransportImgOffset");
+		return val;
+	}
+	int xiAPIplus_Camera::GetConcatenatedImagesTransportImgOffset_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesTransportImgOffset" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_TRANSPORT_IMG_OFFSET XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetConcatenatedImagesTransportImgOffset" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetConcatenatedImagesTransportImgOffset_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesTransportImgOffset" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_TRANSPORT_IMG_OFFSET XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetConcatenatedImagesTransportImgOffset" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetConcatenatedImagesTransportImgOffset_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetConcatenatedImagesTransportImgOffset" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CONCAT_IMG_TRANSPORT_IMG_OFFSET XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetConcatenatedImagesTransportImgOffset" "_Increment");
+		return val;
 	}
 	
 
@@ -8196,113 +8331,113 @@
 	}
 	 
 	
-	// Select image correction function (XI_PRM_IMAGE_CORRECTION_SELECTOR)
-	XI_IMAGE_CORRECTION_SELECTOR xiAPIplus_Camera::GetImageCorrectionSelector()
+	// Correction of column black offset (XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION)
+	XI_SWITCH xiAPIplus_Camera::GetColumnBlackOffsetCorrection()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionSelector");
+		CheckCamHandle("GetColumnBlackOffsetCorrection");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_CORRECTION_SELECTOR, &val);
-		CheckResult(res,"GetImageCorrectionSelector");
-		return (XI_IMAGE_CORRECTION_SELECTOR)val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION, &val);
+		CheckResult(res,"GetColumnBlackOffsetCorrection");
+		return (XI_SWITCH)val;
 	}
 	
-	XI_IMAGE_CORRECTION_SELECTOR xiAPIplus_Camera::GetImageCorrectionSelector_Maximum()
+	XI_SWITCH xiAPIplus_Camera::GetColumnBlackOffsetCorrection_Maximum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionSelector" "_Maximum");
+		CheckCamHandle("GetColumnBlackOffsetCorrection" "_Maximum");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_CORRECTION_SELECTOR XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetImageCorrectionSelector" "_Maximum");
-		return (XI_IMAGE_CORRECTION_SELECTOR)val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetColumnBlackOffsetCorrection" "_Maximum");
+		return (XI_SWITCH)val;
 	}
 	
-	XI_IMAGE_CORRECTION_SELECTOR xiAPIplus_Camera::GetImageCorrectionSelector_Minimum()
+	XI_SWITCH xiAPIplus_Camera::GetColumnBlackOffsetCorrection_Minimum()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionSelector" "_Minimum");
+		CheckCamHandle("GetColumnBlackOffsetCorrection" "_Minimum");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_CORRECTION_SELECTOR XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetImageCorrectionSelector" "_Minimum");
-		return (XI_IMAGE_CORRECTION_SELECTOR)val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetColumnBlackOffsetCorrection" "_Minimum");
+		return (XI_SWITCH)val;
 	}
 	
-	int xiAPIplus_Camera::GetImageCorrectionSelector_Increment()
+	int xiAPIplus_Camera::GetColumnBlackOffsetCorrection_Increment()
 	{
 		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionSelector" "_Increment");
+		CheckCamHandle("GetColumnBlackOffsetCorrection" "_Increment");
 		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_CORRECTION_SELECTOR XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetImageCorrectionSelector" "_Increment");
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetColumnBlackOffsetCorrection" "_Increment");
 		return val;
 	}
 	
-	void xiAPIplus_Camera::SetImageCorrectionSelector(XI_IMAGE_CORRECTION_SELECTOR ImageCorrectionSelector)
+	void xiAPIplus_Camera::SetColumnBlackOffsetCorrection(XI_SWITCH ColumnBlackOffsetCorrection)
 	{
 		
-		CheckCamHandleInt("SetImageCorrectionSelector",(int)ImageCorrectionSelector);
+		CheckCamHandleInt("SetColumnBlackOffsetCorrection",(int)ColumnBlackOffsetCorrection);
 		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_IMAGE_CORRECTION_SELECTOR, ImageCorrectionSelector);
-		CheckResult(res,"SetImageCorrectionSelector");
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_COLUMN_BLACK_OFFSET_CORRECTION, ColumnBlackOffsetCorrection);
+		CheckResult(res,"SetColumnBlackOffsetCorrection");
 	}
 	 
 	
-	// Select image correction selected function value (XI_PRM_IMAGE_CORRECTION_VALUE)
-	float xiAPIplus_Camera::GetImageCorrectionValue()
+	// Correction of row black offset (XI_PRM_ROW_BLACK_OFFSET_CORRECTION)
+	XI_SWITCH xiAPIplus_Camera::GetRowBlackOffsetCorrection()
 	{
-		float val=0;
+		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionValue");
+		CheckCamHandle("GetRowBlackOffsetCorrection");
 		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_IMAGE_CORRECTION_VALUE, &val);
-		CheckResult(res,"GetImageCorrectionValue");
-		return val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_ROW_BLACK_OFFSET_CORRECTION, &val);
+		CheckResult(res,"GetRowBlackOffsetCorrection");
+		return (XI_SWITCH)val;
 	}
-
-	float xiAPIplus_Camera::GetImageCorrectionValue_Maximum()
+	
+	XI_SWITCH xiAPIplus_Camera::GetRowBlackOffsetCorrection_Maximum()
 	{
-		float val=0;
+		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionValue" "_Maximum");
+		CheckCamHandle("GetRowBlackOffsetCorrection" "_Maximum");
 		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_IMAGE_CORRECTION_VALUE XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetImageCorrectionValue" "_Maximum");
-		return val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_ROW_BLACK_OFFSET_CORRECTION XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetRowBlackOffsetCorrection" "_Maximum");
+		return (XI_SWITCH)val;
 	}
-
-	float xiAPIplus_Camera::GetImageCorrectionValue_Minimum()
+	
+	XI_SWITCH xiAPIplus_Camera::GetRowBlackOffsetCorrection_Minimum()
 	{
-		float val=0;
+		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionValue" "_Minimum");
+		CheckCamHandle("GetRowBlackOffsetCorrection" "_Minimum");
 		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_IMAGE_CORRECTION_VALUE XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetImageCorrectionValue" "_Minimum");
-		return val;
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_ROW_BLACK_OFFSET_CORRECTION XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetRowBlackOffsetCorrection" "_Minimum");
+		return (XI_SWITCH)val;
 	}
-
-	float xiAPIplus_Camera::GetImageCorrectionValue_Increment()
+	
+	int xiAPIplus_Camera::GetRowBlackOffsetCorrection_Increment()
 	{
-		float val=0;
+		int val=0;
 		
-		CheckCamHandle("GetImageCorrectionValue" "_Increment");
+		CheckCamHandle("GetRowBlackOffsetCorrection" "_Increment");
 		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_IMAGE_CORRECTION_VALUE XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetImageCorrectionValue" "_Increment");
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_ROW_BLACK_OFFSET_CORRECTION XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetRowBlackOffsetCorrection" "_Increment");
 		return val;
 	}
 	
-	void xiAPIplus_Camera::SetImageCorrectionValue(float ImageCorrectionValue)
+	void xiAPIplus_Camera::SetRowBlackOffsetCorrection(XI_SWITCH RowBlackOffsetCorrection)
 	{
 		
-		CheckCamHandle("SetImageCorrectionValue");
+		CheckCamHandleInt("SetRowBlackOffsetCorrection",(int)RowBlackOffsetCorrection);
 		
-		XI_RETURN res=xiSetParamFloat(camera_handle, XI_PRM_IMAGE_CORRECTION_VALUE, ImageCorrectionValue);
-		CheckResult(res,"SetImageCorrectionValue");
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_ROW_BLACK_OFFSET_CORRECTION, RowBlackOffsetCorrection);
+		CheckResult(res,"SetRowBlackOffsetCorrection");
 	}
 	
 
@@ -8672,91 +8807,6 @@
 	}
 	 
 	
-	// Overwrites black level comming from transport data. (XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR)
-	float xiAPIplus_Camera::GetTransDataBlackLevelOvr()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetTransDataBlackLevelOvr");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR, &val);
-		CheckResult(res,"GetTransDataBlackLevelOvr");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetTransDataBlackLevelOvr_Maximum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetTransDataBlackLevelOvr" "_Maximum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetTransDataBlackLevelOvr" "_Maximum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetTransDataBlackLevelOvr_Minimum()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetTransDataBlackLevelOvr" "_Minimum");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetTransDataBlackLevelOvr" "_Minimum");
-		return val;
-	}
-
-	float xiAPIplus_Camera::GetTransDataBlackLevelOvr_Increment()
-	{
-		float val=0;
-		
-		CheckCamHandle("GetTransDataBlackLevelOvr" "_Increment");
-		
-		XI_RETURN res=xiGetParamFloat(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetTransDataBlackLevelOvr" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetTransDataBlackLevelOvr(float TransDataBlackLevelOvr)
-	{
-		
-		CheckCamHandle("SetTransDataBlackLevelOvr");
-		
-		XI_RETURN res=xiSetParamFloat(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR, TransDataBlackLevelOvr);
-		CheckResult(res,"SetTransDataBlackLevelOvr");
-	}
-	 
-	
-	// Enables/disables black level overwrite. (XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR_EN)
-	bool xiAPIplus_Camera::IsTransDataBlackLevelOvrEnable()
-	{
-		int val=0;
-		
-		CheckCamHandle("IsTransDataBlackLevelOvrEnable");
-		
-		xiGetParamInt(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR_EN, &val);
-		return (val!=0);
-	}
-	
-	void xiAPIplus_Camera::EnableTransDataBlackLevelOvrEnable()
-	{
-		
-		CheckCamHandle("IsTransDataBlackLevelOvrEnable");
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR_EN, XI_ON);
-		CheckResult(res,"EnableTransDataBlackLevelOvrEnable");
-	}
-
-	void xiAPIplus_Camera::DisableTransDataBlackLevelOvrEnable()
-	{
-		
-		CheckCamHandle("DisableTransDataBlackLevelOvrEnable");
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_TRANS_DATA_BLACK_LEVEL_OVR_EN, XI_OFF);
-		CheckResult(res,"DisableTransDataBlackLevelOvrEnable");
-	}	
-	 
-	
 	// Last image black level counts (same as in XI_IMG). Setting can be used only for Offline Processing. (XI_PRM_IMAGE_BLACK_LEVEL)
 	// integer type
 	int xiAPIplus_Camera::GetImageBlackLevel()
@@ -8801,12 +8851,463 @@
 		CheckResult(res,"GetImageBlackLevel" "_Increment");
 		return val;
 	}
+	 
+	
+	// Defines image area of sensor as output. (XI_PRM_IMAGE_AREA)
+	XI_IMAGE_AREA_SELECTOR xiAPIplus_Camera::GetImageArea()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetImageArea");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_AREA, &val);
+		CheckResult(res,"GetImageArea");
+		return (XI_IMAGE_AREA_SELECTOR)val;
+	}
+	
+	XI_IMAGE_AREA_SELECTOR xiAPIplus_Camera::GetImageArea_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetImageArea" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_AREA XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetImageArea" "_Maximum");
+		return (XI_IMAGE_AREA_SELECTOR)val;
+	}
+	
+	XI_IMAGE_AREA_SELECTOR xiAPIplus_Camera::GetImageArea_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetImageArea" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_AREA XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetImageArea" "_Minimum");
+		return (XI_IMAGE_AREA_SELECTOR)val;
+	}
+	
+	int xiAPIplus_Camera::GetImageArea_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetImageArea" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_IMAGE_AREA XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetImageArea" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetImageArea(XI_IMAGE_AREA_SELECTOR ImageArea)
+	{
+		
+		CheckCamHandleInt("SetImageArea",(int)ImageArea);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_IMAGE_AREA, ImageArea);
+		CheckResult(res,"SetImageArea");
+	}
+	 
+	
+	// Sets DualADC Mode (XI_PRM_DUAL_ADC_MODE)
+	XI_DUAL_ADC_MODE xiAPIplus_Camera::GetDualADCMode()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCMode");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_MODE, &val);
+		CheckResult(res,"GetDualADCMode");
+		return (XI_DUAL_ADC_MODE)val;
+	}
+	
+	XI_DUAL_ADC_MODE xiAPIplus_Camera::GetDualADCMode_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCMode" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_MODE XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetDualADCMode" "_Maximum");
+		return (XI_DUAL_ADC_MODE)val;
+	}
+	
+	XI_DUAL_ADC_MODE xiAPIplus_Camera::GetDualADCMode_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCMode" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_MODE XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetDualADCMode" "_Minimum");
+		return (XI_DUAL_ADC_MODE)val;
+	}
+	
+	int xiAPIplus_Camera::GetDualADCMode_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCMode" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_MODE XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetDualADCMode" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetDualADCMode(XI_DUAL_ADC_MODE DualADCMode)
+	{
+		
+		CheckCamHandleInt("SetDualADCMode",(int)DualADCMode);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DUAL_ADC_MODE, DualADCMode);
+		CheckResult(res,"SetDualADCMode");
+	}
+	 
+	
+	// Sets DualADC Gain Ratio (XI_PRM_DUAL_ADC_GAIN_RATIO)
+	// integer type
+	int xiAPIplus_Camera::GetDualADCGainRatio()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCGainRatio");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_GAIN_RATIO, &val);
+		CheckResult(res,"GetDualADCGainRatio");
+		return val;
+	}
+	int xiAPIplus_Camera::GetDualADCGainRatio_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCGainRatio" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_GAIN_RATIO XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetDualADCGainRatio" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetDualADCGainRatio_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCGainRatio" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_GAIN_RATIO XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetDualADCGainRatio" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetDualADCGainRatio_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCGainRatio" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_GAIN_RATIO XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetDualADCGainRatio" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetDualADCGainRatio(int DualADCGainRatio)
+	{
+		
+		CheckCamHandleInt("SetDualADCGainRatio",DualADCGainRatio);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DUAL_ADC_GAIN_RATIO, DualADCGainRatio);
+		CheckResult(res,"SetDualADCGainRatio");
+	}
+	 
+	
+	// Sets DualADC Threshold value (XI_PRM_DUAL_ADC_THRESHOLD)
+	// integer type
+	int xiAPIplus_Camera::GetDualADCThreshold()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCThreshold");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_THRESHOLD, &val);
+		CheckResult(res,"GetDualADCThreshold");
+		return val;
+	}
+	int xiAPIplus_Camera::GetDualADCThreshold_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCThreshold" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_THRESHOLD XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetDualADCThreshold" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetDualADCThreshold_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCThreshold" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_THRESHOLD XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetDualADCThreshold" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetDualADCThreshold_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetDualADCThreshold" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DUAL_ADC_THRESHOLD XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetDualADCThreshold" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetDualADCThreshold(int DualADCThreshold)
+	{
+		
+		CheckCamHandleInt("SetDualADCThreshold",DualADCThreshold);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DUAL_ADC_THRESHOLD, DualADCThreshold);
+		CheckResult(res,"SetDualADCThreshold");
+	}
+	 
+	
+	// Sets Compression Region Selector (XI_PRM_COMPRESSION_REGION_SELECTOR)
+	// integer type
+	int xiAPIplus_Camera::GetCompressionRegionSelector()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionSelector");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_SELECTOR, &val);
+		CheckResult(res,"GetCompressionRegionSelector");
+		return val;
+	}
+	int xiAPIplus_Camera::GetCompressionRegionSelector_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionSelector" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_SELECTOR XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetCompressionRegionSelector" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetCompressionRegionSelector_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionSelector" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_SELECTOR XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetCompressionRegionSelector" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetCompressionRegionSelector_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionSelector" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_SELECTOR XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetCompressionRegionSelector" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetCompressionRegionSelector(int CompressionRegionSelector)
+	{
+		
+		CheckCamHandleInt("SetCompressionRegionSelector",CompressionRegionSelector);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_SELECTOR, CompressionRegionSelector);
+		CheckResult(res,"SetCompressionRegionSelector");
+	}
+	 
+	
+	// Sets Compression Region Start (XI_PRM_COMPRESSION_REGION_START)
+	// integer type
+	int xiAPIplus_Camera::GetCompressionRegionStart()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionStart");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_START, &val);
+		CheckResult(res,"GetCompressionRegionStart");
+		return val;
+	}
+	int xiAPIplus_Camera::GetCompressionRegionStart_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionStart" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_START XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetCompressionRegionStart" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetCompressionRegionStart_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionStart" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_START XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetCompressionRegionStart" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetCompressionRegionStart_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionStart" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_START XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetCompressionRegionStart" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetCompressionRegionStart(int CompressionRegionStart)
+	{
+		
+		CheckCamHandleInt("SetCompressionRegionStart",CompressionRegionStart);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_START, CompressionRegionStart);
+		CheckResult(res,"SetCompressionRegionStart");
+	}
+	 
+	
+	// Sets Compression Region Gain (XI_PRM_COMPRESSION_REGION_GAIN)
+	// integer type
+	int xiAPIplus_Camera::GetCompressionRegionGain()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionGain");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_GAIN, &val);
+		CheckResult(res,"GetCompressionRegionGain");
+		return val;
+	}
+	int xiAPIplus_Camera::GetCompressionRegionGain_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionGain" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_GAIN XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetCompressionRegionGain" "_Maximum");
+		return val;
+	}
+	
+	int xiAPIplus_Camera::GetCompressionRegionGain_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionGain" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_GAIN XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetCompressionRegionGain" "_Minimum");
+		return val;
+	}
+
+	int xiAPIplus_Camera::GetCompressionRegionGain_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetCompressionRegionGain" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_GAIN XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetCompressionRegionGain" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetCompressionRegionGain(int CompressionRegionGain)
+	{
+		
+		CheckCamHandleInt("SetCompressionRegionGain",CompressionRegionGain);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_COMPRESSION_REGION_GAIN, CompressionRegionGain);
+		CheckResult(res,"SetCompressionRegionGain");
+	}
 	
 
 	//-------------------------------------------------------------------------------------------------------------------
 	// ---- Parameter Group: Version info
 	//-------------------------------------------------------------------------------------------------------------------
 
+	 
+	
+	// Selects module/unit, which version we get. (XI_PRM_VERSION_SELECTOR)
+	XI_VERSION xiAPIplus_Camera::GetVersionSelector()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetVersionSelector");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_VERSION_SELECTOR, &val);
+		CheckResult(res,"GetVersionSelector");
+		return (XI_VERSION)val;
+	}
+	
+	XI_VERSION xiAPIplus_Camera::GetVersionSelector_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetVersionSelector" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_VERSION_SELECTOR XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetVersionSelector" "_Maximum");
+		return (XI_VERSION)val;
+	}
+	
+	XI_VERSION xiAPIplus_Camera::GetVersionSelector_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetVersionSelector" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_VERSION_SELECTOR XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetVersionSelector" "_Minimum");
+		return (XI_VERSION)val;
+	}
+	
+	int xiAPIplus_Camera::GetVersionSelector_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetVersionSelector" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_VERSION_SELECTOR XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetVersionSelector" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetVersionSelector(XI_VERSION VersionSelector)
+	{
+		
+		CheckCamHandleInt("SetVersionSelector",(int)VersionSelector);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_VERSION_SELECTOR, VersionSelector);
+		CheckResult(res,"SetVersionSelector");
+	}
+	 
+	
+	// Returns version of selected module/unit(XI_PRM_VERSION_SELECTOR). (XI_PRM_VERSION)
+	void xiAPIplus_Camera::GetVersion(char* buffer, int buffer_length)
+	{
+		
+		CheckCamHandle("GetVersion");
+		
+		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_VERSION, buffer, buffer_length);
+		CheckResult(res,"GetVersion");
+	}
 	 
 	
 	// Returns version of API. (XI_PRM_API_VERSION)
@@ -8894,6 +9395,17 @@
 		
 		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_HW_REVISION, buffer, buffer_length);
 		CheckResult(res,"GetHWRevision");
+	}
+	 
+	
+	// Returns version of factory set. (XI_PRM_FACTORY_SET_VERSION)
+	void xiAPIplus_Camera::GetVersionFactSet(char* buffer, int buffer_length)
+	{
+		
+		CheckCamHandle("GetVersionFactSet");
+		
+		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_FACTORY_SET_VERSION, buffer, buffer_length);
+		CheckResult(res,"GetVersionFactSet");
 	}
 	
 
@@ -8996,123 +9508,6 @@
 	}	
 	 
 	
-	// Enable enumeration of golden devices (XI_PRM_CAM_ENUM_GOLDEN_ENABLED)
-	bool xiAPIplus_Camera::IsCamEnumGoldenEnabled()
-	{
-		int val=0;
-		
-		xiGetParamInt(camera_handle, XI_PRM_CAM_ENUM_GOLDEN_ENABLED, &val);
-		return (val!=0);
-	}
-	
-	void xiAPIplus_Camera::EnableCamEnumGoldenEnabled()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CAM_ENUM_GOLDEN_ENABLED, XI_ON);
-		CheckResult(res,"EnableCamEnumGoldenEnabled");
-	}
-
-	void xiAPIplus_Camera::DisableCamEnumGoldenEnabled()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CAM_ENUM_GOLDEN_ENABLED, XI_OFF);
-		CheckResult(res,"DisableCamEnumGoldenEnabled");
-	}	
-	 
-	
-	// Resets USB device if started as bootloader (XI_PRM_RESET_USB_IF_BOOTLOADER)
-	bool xiAPIplus_Camera::IsResetUSBIfBootloader()
-	{
-		int val=0;
-		
-		xiGetParamInt(camera_handle, XI_PRM_RESET_USB_IF_BOOTLOADER, &val);
-		return (val!=0);
-	}
-	
-	void xiAPIplus_Camera::EnableResetUSBIfBootloader()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_RESET_USB_IF_BOOTLOADER, XI_ON);
-		CheckResult(res,"EnableResetUSBIfBootloader");
-	}
-
-	void xiAPIplus_Camera::DisableResetUSBIfBootloader()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_RESET_USB_IF_BOOTLOADER, XI_OFF);
-		CheckResult(res,"DisableResetUSBIfBootloader");
-	}	
-	 
-	
-	// Number of camera simulators to be available. (XI_PRM_CAM_SIMULATORS_COUNT)
-	// integer type
-	int xiAPIplus_Camera::GetCameraSimulatorsCount()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CAM_SIMULATORS_COUNT, &val);
-		CheckResult(res,"GetCameraSimulatorsCount");
-		return val;
-	}
-	int xiAPIplus_Camera::GetCameraSimulatorsCount_Maximum()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CAM_SIMULATORS_COUNT XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetCameraSimulatorsCount" "_Maximum");
-		return val;
-	}
-	
-	int xiAPIplus_Camera::GetCameraSimulatorsCount_Minimum()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CAM_SIMULATORS_COUNT XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetCameraSimulatorsCount" "_Minimum");
-		return val;
-	}
-
-	int xiAPIplus_Camera::GetCameraSimulatorsCount_Increment()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_CAM_SIMULATORS_COUNT XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetCameraSimulatorsCount" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetCameraSimulatorsCount(int CameraSimulatorsCount)
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CAM_SIMULATORS_COUNT, CameraSimulatorsCount);
-		CheckResult(res,"SetCameraSimulatorsCount");
-	}
-	 
-	
-	// Camera sensor will not be initialized when 1=XI_ON is set. (XI_PRM_CAM_SENSOR_INIT_DISABLED)
-	bool xiAPIplus_Camera::IsCameraSensorInitDisabled()
-	{
-		int val=0;
-		
-		xiGetParamInt(camera_handle, XI_PRM_CAM_SENSOR_INIT_DISABLED, &val);
-		return (val!=0);
-	}
-	
-	void xiAPIplus_Camera::EnableCameraSensorInitDisabled()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CAM_SENSOR_INIT_DISABLED, XI_ON);
-		CheckResult(res,"EnableCameraSensorInitDisabled");
-	}
-
-	void xiAPIplus_Camera::DisableCameraSensorInitDisabled()
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_CAM_SENSOR_INIT_DISABLED, XI_OFF);
-		CheckResult(res,"DisableCameraSensorInitDisabled");
-	}	
-	 
-	
 	// Number of threads per image processor (XI_PRM_PROC_NUM_THREADS)
 	// integer type
 	int xiAPIplus_Camera::GetProcessorNumberThreads()
@@ -9155,51 +9550,6 @@
 		
 		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_PROC_NUM_THREADS, ProcessorNumberThreads);
 		CheckResult(res,"SetProcessorNumberThreads");
-	}
-	 
-	
-	// Set processing engine (XI_PRM_PROC_ENGINE)
-	XI_PROC_ENGINE xiAPIplus_Camera::GetProcessingEngine()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_PROC_ENGINE, &val);
-		CheckResult(res,"GetProcessingEngine");
-		return (XI_PROC_ENGINE)val;
-	}
-	
-	XI_PROC_ENGINE xiAPIplus_Camera::GetProcessingEngine_Maximum()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_PROC_ENGINE XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetProcessingEngine" "_Maximum");
-		return (XI_PROC_ENGINE)val;
-	}
-	
-	XI_PROC_ENGINE xiAPIplus_Camera::GetProcessingEngine_Minimum()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_PROC_ENGINE XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetProcessingEngine" "_Minimum");
-		return (XI_PROC_ENGINE)val;
-	}
-	
-	int xiAPIplus_Camera::GetProcessingEngine_Increment()
-	{
-		int val=0;
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_PROC_ENGINE XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetProcessingEngine" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetProcessingEngine(XI_PROC_ENGINE ProcessingEngine)
-	{
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_PROC_ENGINE, ProcessingEngine);
-		CheckResult(res,"SetProcessingEngine");
 	}
 	
 
@@ -9601,297 +9951,6 @@
 
 	 
 	
-	// Selection of extended feature. (XI_PRM_EXTENDED_FEATURE_SELECTOR)
-	XI_EXT_FEATURE_SELECTOR xiAPIplus_Camera::GetExtendedFeatureSelector()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeatureSelector");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE_SELECTOR, &val);
-		CheckResult(res,"GetExtendedFeatureSelector");
-		return (XI_EXT_FEATURE_SELECTOR)val;
-	}
-	
-	XI_EXT_FEATURE_SELECTOR xiAPIplus_Camera::GetExtendedFeatureSelector_Maximum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeatureSelector" "_Maximum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE_SELECTOR XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetExtendedFeatureSelector" "_Maximum");
-		return (XI_EXT_FEATURE_SELECTOR)val;
-	}
-	
-	XI_EXT_FEATURE_SELECTOR xiAPIplus_Camera::GetExtendedFeatureSelector_Minimum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeatureSelector" "_Minimum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE_SELECTOR XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetExtendedFeatureSelector" "_Minimum");
-		return (XI_EXT_FEATURE_SELECTOR)val;
-	}
-	
-	int xiAPIplus_Camera::GetExtendedFeatureSelector_Increment()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeatureSelector" "_Increment");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE_SELECTOR XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetExtendedFeatureSelector" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetExtendedFeatureSelector(XI_EXT_FEATURE_SELECTOR ExtendedFeatureSelector)
-	{
-		
-		CheckCamHandleInt("SetExtendedFeatureSelector",(int)ExtendedFeatureSelector);
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE_SELECTOR, ExtendedFeatureSelector);
-		CheckResult(res,"SetExtendedFeatureSelector");
-	}
-	 
-	
-	// Extended feature value. (XI_PRM_EXTENDED_FEATURE)
-	// integer type
-	int xiAPIplus_Camera::GetExtendedFeature()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeature");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE, &val);
-		CheckResult(res,"GetExtendedFeature");
-		return val;
-	}
-	int xiAPIplus_Camera::GetExtendedFeature_Maximum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeature" "_Maximum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetExtendedFeature" "_Maximum");
-		return val;
-	}
-	
-	int xiAPIplus_Camera::GetExtendedFeature_Minimum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeature" "_Minimum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetExtendedFeature" "_Minimum");
-		return val;
-	}
-
-	int xiAPIplus_Camera::GetExtendedFeature_Increment()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetExtendedFeature" "_Increment");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetExtendedFeature" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetExtendedFeature(int ExtendedFeature)
-	{
-		
-		CheckCamHandleInt("SetExtendedFeature",ExtendedFeature);
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_EXTENDED_FEATURE, ExtendedFeature);
-		CheckResult(res,"SetExtendedFeature");
-	}
-	 
-	
-	// Selects device unit. (XI_PRM_DEVICE_UNIT_SELECTOR)
-	XI_DEVICE_UNIT_SELECTOR xiAPIplus_Camera::GetDeviceUnitSelector()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitSelector");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_SELECTOR, &val);
-		CheckResult(res,"GetDeviceUnitSelector");
-		return (XI_DEVICE_UNIT_SELECTOR)val;
-	}
-	
-	XI_DEVICE_UNIT_SELECTOR xiAPIplus_Camera::GetDeviceUnitSelector_Maximum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitSelector" "_Maximum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_SELECTOR XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetDeviceUnitSelector" "_Maximum");
-		return (XI_DEVICE_UNIT_SELECTOR)val;
-	}
-	
-	XI_DEVICE_UNIT_SELECTOR xiAPIplus_Camera::GetDeviceUnitSelector_Minimum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitSelector" "_Minimum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_SELECTOR XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetDeviceUnitSelector" "_Minimum");
-		return (XI_DEVICE_UNIT_SELECTOR)val;
-	}
-	
-	int xiAPIplus_Camera::GetDeviceUnitSelector_Increment()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitSelector" "_Increment");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_SELECTOR XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetDeviceUnitSelector" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetDeviceUnitSelector(XI_DEVICE_UNIT_SELECTOR DeviceUnitSelector)
-	{
-		
-		CheckCamHandleInt("SetDeviceUnitSelector",(int)DeviceUnitSelector);
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_SELECTOR, DeviceUnitSelector);
-		CheckResult(res,"SetDeviceUnitSelector");
-	}
-	 
-	
-	// Selects register of selected device unit(XI_PRM_DEVICE_UNIT_SELECTOR). (XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR)
-	// integer type
-	int xiAPIplus_Camera::GetDeviceUnitRegisterSelector()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegisterSelector");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR, &val);
-		CheckResult(res,"GetDeviceUnitRegisterSelector");
-		return val;
-	}
-	int xiAPIplus_Camera::GetDeviceUnitRegisterSelector_Maximum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegisterSelector" "_Maximum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetDeviceUnitRegisterSelector" "_Maximum");
-		return val;
-	}
-	
-	int xiAPIplus_Camera::GetDeviceUnitRegisterSelector_Minimum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegisterSelector" "_Minimum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetDeviceUnitRegisterSelector" "_Minimum");
-		return val;
-	}
-
-	int xiAPIplus_Camera::GetDeviceUnitRegisterSelector_Increment()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegisterSelector" "_Increment");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetDeviceUnitRegisterSelector" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetDeviceUnitRegisterSelector(int DeviceUnitRegisterSelector)
-	{
-		
-		CheckCamHandleInt("SetDeviceUnitRegisterSelector",DeviceUnitRegisterSelector);
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_SELECTOR, DeviceUnitRegisterSelector);
-		CheckResult(res,"SetDeviceUnitRegisterSelector");
-	}
-	 
-	
-	// Sets/gets register value of selected device unit(XI_PRM_DEVICE_UNIT_SELECTOR). (XI_PRM_DEVICE_UNIT_REGISTER_VALUE)
-	// integer type
-	int xiAPIplus_Camera::GetDeviceUnitRegister()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegister");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_VALUE, &val);
-		CheckResult(res,"GetDeviceUnitRegister");
-		return val;
-	}
-	int xiAPIplus_Camera::GetDeviceUnitRegister_Maximum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegister" "_Maximum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_VALUE XI_PRM_INFO_MAX, &val);
-		CheckResult(res,"GetDeviceUnitRegister" "_Maximum");
-		return val;
-	}
-	
-	int xiAPIplus_Camera::GetDeviceUnitRegister_Minimum()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegister" "_Minimum");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_VALUE XI_PRM_INFO_MIN, &val);
-		CheckResult(res,"GetDeviceUnitRegister" "_Minimum");
-		return val;
-	}
-
-	int xiAPIplus_Camera::GetDeviceUnitRegister_Increment()
-	{
-		int val=0;
-		
-		CheckCamHandle("GetDeviceUnitRegister" "_Increment");
-		
-		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_VALUE XI_PRM_INFO_INCREMENT, &val);
-		CheckResult(res,"GetDeviceUnitRegister" "_Increment");
-		return val;
-	}
-	
-	void xiAPIplus_Camera::SetDeviceUnitRegister(int DeviceUnitRegister)
-	{
-		
-		CheckCamHandleInt("SetDeviceUnitRegister",DeviceUnitRegister);
-		
-		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_DEVICE_UNIT_REGISTER_VALUE, DeviceUnitRegister);
-		CheckResult(res,"SetDeviceUnitRegister");
-	}
-	 
-	
-	// Callback address of pointer that is called upon long tasks (e.g. XI_PRM_WRITE_FILE_FFS). (XI_PRM_API_PROGRESS_CALLBACK)
-	void xiAPIplus_Camera::GetApiProgressCallback(char* buffer, int buffer_length)
-	{
-		
-		XI_RETURN res=xiGetParamString(camera_handle, XI_PRM_API_PROGRESS_CALLBACK, buffer, buffer_length);
-		CheckResult(res,"GetApiProgressCallback");
-	}
-	
-	void xiAPIplus_Camera::SetApiProgressCallback(char* new_value)
-	{
-		
-		XI_RETURN res=xiSetParamString(camera_handle, XI_PRM_API_PROGRESS_CALLBACK, new_value, (DWORD)strlen(new_value));
-		CheckResult(res,"SetApiProgressCallback");
-	}
-	 
-	
 	// Selects the internal acquisition signal to read using XI_PRM_ACQUISITION_STATUS. (XI_PRM_ACQUISITION_STATUS_SELECTOR)
 	XI_ACQUISITION_STATUS_SELECTOR xiAPIplus_Camera::GetAcquisitionStatusSelector()
 	{
@@ -10246,6 +10305,133 @@
 	}
 	
 
+	//-------------------------------------------------------------------------------------------------------------------
+	// ---- Parameter Group: User Set Control
+	//-------------------------------------------------------------------------------------------------------------------
+
+	 
+	
+	// Selects the feature User Set to load, save or configure. (XI_PRM_USER_SET_SELECTOR)
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetSelector()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetSelector");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_SELECTOR, &val);
+		CheckResult(res,"GetUserSetSelector");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetSelector_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetSelector" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_SELECTOR XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetUserSetSelector" "_Maximum");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetSelector_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetSelector" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_SELECTOR XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetUserSetSelector" "_Minimum");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	int xiAPIplus_Camera::GetUserSetSelector_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetSelector" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_SELECTOR XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetUserSetSelector" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetUserSetSelector(XI_USER_SET_SELECTOR UserSetSelector)
+	{
+		
+		CheckCamHandleInt("SetUserSetSelector",(int)UserSetSelector);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_USER_SET_SELECTOR, UserSetSelector);
+		CheckResult(res,"SetUserSetSelector");
+	}
+	 
+	
+	// Loads the User Set specified by User Set Selector to the device and makes it active. (XI_PRM_USER_SET_LOAD)
+	void xiAPIplus_Camera::SetUserSetLoad(int UserSetLoad)
+	{
+		
+		CheckCamHandleInt("SetUserSetLoad",UserSetLoad);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_USER_SET_LOAD, UserSetLoad);
+		CheckResult(res,"SetUserSetLoad");
+	}
+	 
+	
+	// Selects the feature User Set to load and make active by default when the device is reset. Change might affect default mode in other applications, e.g. CamTool. (XI_PRM_USER_SET_DEFAULT)
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetDefault()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetDefault");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_DEFAULT, &val);
+		CheckResult(res,"GetUserSetDefault");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetDefault_Maximum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetDefault" "_Maximum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_DEFAULT XI_PRM_INFO_MAX, &val);
+		CheckResult(res,"GetUserSetDefault" "_Maximum");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	XI_USER_SET_SELECTOR xiAPIplus_Camera::GetUserSetDefault_Minimum()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetDefault" "_Minimum");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_DEFAULT XI_PRM_INFO_MIN, &val);
+		CheckResult(res,"GetUserSetDefault" "_Minimum");
+		return (XI_USER_SET_SELECTOR)val;
+	}
+	
+	int xiAPIplus_Camera::GetUserSetDefault_Increment()
+	{
+		int val=0;
+		
+		CheckCamHandle("GetUserSetDefault" "_Increment");
+		
+		XI_RETURN res=xiGetParamInt(camera_handle, XI_PRM_USER_SET_DEFAULT XI_PRM_INFO_INCREMENT, &val);
+		CheckResult(res,"GetUserSetDefault" "_Increment");
+		return val;
+	}
+	
+	void xiAPIplus_Camera::SetUserSetDefault(XI_USER_SET_SELECTOR UserSetDefault)
+	{
+		
+		CheckCamHandleInt("SetUserSetDefault",(int)UserSetDefault);
+		
+		XI_RETURN res=xiSetParamInt(camera_handle, XI_PRM_USER_SET_DEFAULT, UserSetDefault);
+		CheckResult(res,"SetUserSetDefault");
+	}
+	
+
 
 //-------------------------------------------------------------------------------------------------------------------
 // Error codes xiApi
@@ -10333,6 +10519,8 @@ xiapi_errorcode_t xiAPIplus_errorcodes_list[]=
 		XI_PARAM_NOT_SETTABLE             ,  "Parameter value cannot be set (might be out of range or invalid).",
 		XI_SAFE_POLICY_NOT_SUPPORTED      ,  "Safe buffer policy is not supported. E.g. when transport target is set to GPU (GPUDirect).",
 		XI_GPUDIRECT_NOT_AVAILABLE        ,  "GPUDirect is not available. E.g. platform isn't supported or CUDA toolkit isn't installed.",
+		XI_INCORRECT_SENS_ID_CHECK        ,  "Incorrect sensor board unique identifier checksum.",
+		XI_INCORRECT_FPGA_TYPE            ,  "Incorrect or unknown FPGA firmware type used for camera.",
 		XI_PROC_OTHER_ERROR               ,  "Processing error - other",
 		XI_PROC_PROCESSING_ERROR          ,  "Error while image processing.",
 		XI_PROC_INPUT_FORMAT_UNSUPPORTED  ,  "Input format is not supported for processing.",
@@ -10341,6 +10529,630 @@ xiapi_errorcode_t xiAPIplus_errorcodes_list[]=
 		
 };
 
+
+
+
+xiAPIplus_Enumerators::xiAPIplus_Enumerators()
+{
+	Init();
+}
+
+void xiAPIplus_Enumerators::Init()
+{
+
+	// Downsampling value enumerator.
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_1x1",                             1, "1 sensor pixel = 1 image pixel"});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_2x2",                             2, "2x2 sensor pixels = 1 image pixel"});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_3x3",                             3, "Downsampling 3x3."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_4x4",                             4, "4x4 sensor pixels = 1 image pixel"});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_5x5",                             5, "Downsampling 5x5."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_6x6",                             6, "Downsampling 6x6."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_7x7",                             7, "Downsampling 7x7."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_8x8",                             8, "Downsampling 8x8."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_9x9",                             9, "Downsampling 9x9."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_10x10",                           10, "Downsampling 10x10."});
+	XI_DOWNSAMPLING_VALUE_ITEMS.push_back({"XI_DWN_16x16",                           16, "Downsampling 16x16."});
+
+	// Test Pattern Generator
+	XI_TEST_PATTERN_GENERATOR_ITEMS.push_back({"XI_TESTPAT_GEN_SENSOR",                  0, "Sensor test pattern generator"});
+	XI_TEST_PATTERN_GENERATOR_ITEMS.push_back({"XI_TESTPAT_GEN_FPGA",                    1, " FPGA Test Pattern Generator"});
+
+	// Module/Unit version selector
+	XI_VERSION_ITEMS.push_back({"XI_VER_API",                             0, "version of API"});
+	XI_VERSION_ITEMS.push_back({"XI_VER_DRV",                             1, "version of device driver"});
+	XI_VERSION_ITEMS.push_back({"XI_VER_MCU1",                            2, "version of MCU1 firmware."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_MCU2",                            3, "version of MCU2 firmware."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_MCU3",                            4, "version of MCU3 firmware."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_FPGA1",                           5, "version of FPGA1 firmware."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_XMLMAN",                          6, "version of XML manifest."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_HW_REV",                          7, "version of hardware revision."});
+	XI_VERSION_ITEMS.push_back({"XI_VER_FACTORY_SET",                     8, "version of factory set."});
+
+	// Test Pattern Type
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_OFF",                         0, " Testpattern turned off."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_BLACK",                       1, " Image is filled with darkest possible image."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_WHITE",                       2, " Image is filled with brightest possible image."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_GREY_HORIZ_RAMP",             3, " Image is filled horizontally with an image that goes from the darkest possible value to the brightest."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_GREY_VERT_RAMP",              4, " Image is filled vertically with an image that goes from the darkest possible value to the brightest."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_GREY_HORIZ_RAMP_MOVING",      5, " Image is filled horizontally with an image that goes from the darkest possible value to the brightest and moves from left to right."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_GREY_VERT_RAMP_MOVING",       6, " Image is filled vertically with an image that goes from the darkest possible value to the brightest and moves from left to right."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_HORIZ_LINE_MOVING",           7, " A moving horizontal line is superimposed on the live image."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_VERT_LINE_MOVING",            8, " A moving vertical line is superimposed on the live image."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_COLOR_BAR",                   9, " Image is filled with stripes of color including White, Black, Red, Green, Blue, Cyan, Magenta and Yellow."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_FRAME_COUNTER",               10, " A frame counter is superimposed on the live image."});
+	XI_TEST_PATTERN_ITEMS.push_back({"XI_TESTPAT_DEVICE_SPEC_COUNTER",         11, " 128bit counter."});
+
+	// Decimation Pattern Format
+	XI_DEC_PATTERN_ITEMS.push_back({"XI_DEC_MONO",                            1, "adjacent pixels are decimated"});
+	XI_DEC_PATTERN_ITEMS.push_back({"XI_DEC_BAYER",                           2, "	Bayer pattern is preserved during pixel decimation"});
+
+	// Binning Pattern Format
+	XI_BIN_PATTERN_ITEMS.push_back({"XI_BIN_MONO",                            1, "adjacent pixels are combined"});
+	XI_BIN_PATTERN_ITEMS.push_back({"XI_BIN_BAYER",                           2, "Bayer pattern is preserved during pixel combining"});
+
+	// Binning Engine Selector
+	XI_BIN_SELECTOR_ITEMS.push_back({"XI_BIN_SELECT_SENSOR",                   0, "parameters for image sensor binning are selected"});
+	XI_BIN_SELECTOR_ITEMS.push_back({"XI_BIN_SELECT_DEVICE_FPGA",              1, "parameters for device (camera) FPGA decimation are selected"});
+	XI_BIN_SELECTOR_ITEMS.push_back({"XI_BIN_SELECT_HOST_CPU",                 2, "parameters for Host CPU binning are selected"});
+
+	// Selects binning mode; to be used with
+	XI_BIN_MODE_ITEMS.push_back({"XI_BIN_MODE_SUM",                        0, "The response from the combined pixels will be added, resulting in increased sensitivity."});
+	XI_BIN_MODE_ITEMS.push_back({"XI_BIN_MODE_AVERAGE",                    1, "The response from the combined pixels will be averaged, resulting in increased signal/noise ratio."});
+
+	// Decimation Engine Selector
+	XI_DEC_SELECTOR_ITEMS.push_back({"XI_DEC_SELECT_SENSOR",                   0, "parameters for image sensor decimation are selected"});
+	XI_DEC_SELECTOR_ITEMS.push_back({"XI_DEC_SELECT_DEVICE_FPGA",              1, "parameters for device (camera) FPGA decimation are selected"});
+	XI_DEC_SELECTOR_ITEMS.push_back({"XI_DEC_SELECT_HOST_CPU",                 2, "parameters for Host CPU decimation are selected"});
+
+	// Sensor tap count enumerator.
+	XI_SENSOR_TAP_CNT_ITEMS.push_back({"XI_TAP_CNT_1",                           1, "1 sensor tap selected."});
+	XI_SENSOR_TAP_CNT_ITEMS.push_back({"XI_TAP_CNT_2",                           2, "2 sensor taps selected."});
+	XI_SENSOR_TAP_CNT_ITEMS.push_back({"XI_TAP_CNT_4",                           4, "4 sensor taps selected."});
+
+	// Bit depth enumerator.
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_8",                               8, "8 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_9",                               9, "9 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_10",                              10, "10 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_11",                              11, "11 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_12",                              12, "12 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_14",                              14, "14 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_16",                              16, "16 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_24",                              24, "24 bit per pixel"});
+	XI_BIT_DEPTH_ITEMS.push_back({"XI_BPP_32",                              32, "32 bit per pixel"});
+
+	// Debug level enumerator.
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_DETAIL",                           0, "(see Note1)"});
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_TRACE",                            1, "Prints errors, warnings and important informations"});
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_WARNING",                          2, "Prints all errors and warnings"});
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_ERROR",                            3, "Prints all errors"});
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_FATAL",                            4, "Prints only important errors"});
+	XI_DEBUG_LEVEL_ITEMS.push_back({"XI_DL_DISABLED",                         100, "Prints no messages"});
+
+	// Image output format enumerator.
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_MONO8",                               0, "8 bits per pixel. 	[Intensity] (see Note5,Note6)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_MONO16",                              1, "16 bits per pixel. [Intensity LSB] [Intensity MSB] (see Note5,Note6)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB24",                               2, "RGB data format. [Blue][Green][Red] (see Note5)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB32",                               3, "RGBA data format. 	[Blue][Green][Red][0] (see Note5)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB_PLANAR",                          4, "RGB planar data format. [Red][Red]...[Green][Green]...[Blue][Blue]... (see Note5)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW8",                                5, "8 bits per pixel raw data from sensor. 	[pixel byte] raw data from transport (camera output)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW16",                               6, "16 bits per pixel raw data from sensor. 	[pixel byte low] [pixel byte high] 16 bits (depacked) raw data"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_FRM_TRANSPORT_DATA",                  7, "Data from transport layer (e.g. packed). Depends on data on the transport layer (see Note7)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB48",                               8, "RGB data format. [Blue low byte][Blue high byte][Green low][Green high][Red low][Red high] (see Note5)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB64",                               9, "RGBA data format. [Blue low byte][Blue high byte][Green low][Green high][Red low][Red high][0][0] (Note5)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RGB16_PLANAR",                        10, "RGB16 planar data format"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW8X2",                              11, "8 bits per pixel raw data from sensor(2 components in a row). [ch1 pixel byte] [ch2 pixel byte] 8 bits raw data from 2 channels (e.g. high gain and low gain channels of sCMOS cameras)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW8X4",                              12, "8 bits per pixel raw data from sensor(4 components in a row). 	[ch1 pixel byte [ch2 pixel byte] [ch3 pixel byte] [ch4 pixel byte] 8 bits raw data from 4 channels (e.g. sCMOS cameras)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW16X2",                             13, "16 bits per pixel raw data from sensor(2 components in a row). 	[ch1 pixel byte low] [ch1 pixel byte high] [ch2 pixel byte low] [ch2 pixel byte high] 16 bits (depacked) raw data from 2 channels (e.g. high gain and low gain channels of sCMOS cameras)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW16X4",                             14, "16 bits per pixel raw data from sensor(4 components in a row). 	[ch1 pixel byte low] [ch1 pixel byte high] [ch2 pixel byte low] [ch2 pixel byte high] [ch3 pixel byte low] [ch3 pixel byte high] [ch4 pixel byte low] [ch4 pixel byte high] 16 bits (depacked) raw data from 4 channels (e.g. sCMOS cameras)"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW32",                               15, "32 bits per pixel raw data from sensor in integer format (LSB first). 4 bytes (LSB first) pixel (depacked) raw data"});
+	XI_IMG_FORMAT_ITEMS.push_back({"XI_RAW32FLOAT",                          16, "32 bits per pixel raw data from sensor in single-precision floating point format. 4 bytes per pixel (depacked) raw data"});
+
+	// Bayer color matrix enumerator.
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_NONE",                            0, "Result pixels have no filters applied in this format"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_BAYER_RGGB",                      1, "Regular RGGB"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_CMYG",                            2, "AK Sony sens"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_RGR",                             3, "2R+G readout"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_BAYER_BGGR",                      4, "BGGR readout"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_BAYER_GRBG",                      5, "GRBG readout"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_BAYER_GBRG",                      6, "GBRG readout"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_POLAR_A_BAYER_BGGR",              7, "BGGR polarized 4x4 macropixel"});
+	XI_COLOR_FILTER_ARRAY_ITEMS.push_back({"XI_CFA_POLAR_A",                         8, "Polarized 2x2 macropixel"});
+
+	// structure containing information about buffer policy(can be safe, data will be copied to user/app buffer or unsafe, user will get internally allocated buffer without data copy).
+	XI_BP_ITEMS.push_back({"XI_BP_UNSAFE",                           0, "User gets pointer to internally allocated circle buffer and data may be overwritten by device."});
+	XI_BP_ITEMS.push_back({"XI_BP_SAFE",                             1, "Data from device will be copied to user allocated buffer or xiApi allocated memory."});
+
+	// structure containing information about trigger source
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_OFF",                             0, "Capture of next image is automatically started after previous."});
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_EDGE_RISING",                     1, "Capture is started on rising edge of selected input."});
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_EDGE_FALLING",                    2, "Capture is started on falling edge of selected input"});
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_SOFTWARE",                        3, "Capture is started with software trigger."});
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_LEVEL_HIGH",                      4, "Specifies that the trigger is considered valid as long as the level of the source signal is high."});
+	XI_TRG_SOURCE_ITEMS.push_back({"XI_TRG_LEVEL_LOW",                       5, "Specifies that the trigger is considered valid as long as the level of the source signal is low."});
+
+	// structure containing information about trigger functionality
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_FRAME_START",                 0, "Trigger starts the capture of one frame"});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_EXPOSURE_ACTIVE",             1, "Trigger controls the start and length of the exposure."});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_FRAME_BURST_START",           2, "Trigger starts the capture of the bursts of frames in an acquisition."});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_FRAME_BURST_ACTIVE",          3, "Trigger controls the duration of the capture of the bursts of frames in an acquisition."});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_MULTIPLE_EXPOSURES",          4, "Trigger which when first trigger starts exposure and consequent pulses are gating exposure(active HI)"});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_EXPOSURE_START",              5, "Trigger controls the start of the exposure of one Frame."});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_MULTI_SLOPE_PHASE_CHANGE",    6, "Trigger controls the multi slope phase in one Frame (phase0 -> phase1) or (phase1 -> phase2)."});
+	XI_TRG_SELECTOR_ITEMS.push_back({"XI_TRG_SEL_ACQUISITION_START",           7, "Trigger starts acquisition of first frame."});
+
+	// Trigger overlap modes
+	XI_TRG_OVERLAP_ITEMS.push_back({"XI_TRG_OVERLAP_OFF",                     0, "No trigger overlap is permitted. If camera is in read-out phase, all triggers are rejected."});
+	XI_TRG_OVERLAP_ITEMS.push_back({"XI_TRG_OVERLAP_READ_OUT",                1, "Trigger is accepted only when sensor is ready to start next exposure with defined exposure time. Trigger is rejected when sensor is not ready for new exposure with defined exposure time. (see Note1)"});
+	XI_TRG_OVERLAP_ITEMS.push_back({"XI_TRG_OVERLAP_PREV_FRAME",              2, "Trigger is accepted by camera any time. If sensor is not ready for the next exposure - the trigger is latched and sensor starts exposure as soon as exposure can be started with defined exposure time."});
+
+	// structure containing information about acquisition timing modes
+	XI_ACQ_TIMING_MODE_ITEMS.push_back({"XI_ACQ_TIMING_MODE_FREE_RUN",            0, "camera acquires images at a maximum possible framerate"});
+	XI_ACQ_TIMING_MODE_ITEMS.push_back({"XI_ACQ_TIMING_MODE_FRAME_RATE",          1, "Selects a mode when sensor frame acquisition frequency is set to parameter FRAMERATE"});
+	XI_ACQ_TIMING_MODE_ITEMS.push_back({"XI_ACQ_TIMING_MODE_FRAME_RATE_LIMIT",    2, "Selects a mode when sensor frame acquisition frequency is limited by parameter FRAMERATE"});
+
+	// Enumerator for data target modes
+	XI_TRANSPORT_DATA_TARGET_MODE_ITEMS.push_back({"XI_TRANSPORT_DATA_TARGET_CPU_RAM",       0, "normal CPU memory buffer is used for image data"});
+	XI_TRANSPORT_DATA_TARGET_MODE_ITEMS.push_back({"XI_TRANSPORT_DATA_TARGET_GPU_RAM",       1, "data is delivered straight to GPU memory using GPUDirect technology"});
+	XI_TRANSPORT_DATA_TARGET_MODE_ITEMS.push_back({"XI_TRANSPORT_DATA_TARGET_UNIFIED",       2, "CUDA managed memory is used for image data."});
+	XI_TRANSPORT_DATA_TARGET_MODE_ITEMS.push_back({"XI_TRANSPORT_DATA_TARGET_ZEROCOPY",      3, "CUDA zerocopy memory is used for image data."});
+
+	// Enumeration for XI_PRM_GPI_SELECTOR for CB cameras.
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_IN1",                      1, "Input1 - Pin3 (Opto Isolated)."});
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_IN2",                      2, "Input2 - Pin4 (Opto Isolated)."});
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_INOUT1",                   3, "Input/Output1 - Pin6"});
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_INOUT2",                   4, "Input/Output2 - Pin7"});
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_INOUT3",                   5, "Input/Output3 - Pin11"});
+	XI_GPI_SEL_CB_ITEMS.push_back({"XI_GPI_SEL_CB_INOUT4",                   6, "Input/Output4 - Pin12"});
+
+	// Enumeration for XI_PRM_GPO_SELECTOR for CB cameras.
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_OUT1",                     1, "Output1 - Pin8 (Opto Isolated)."});
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_OUT2",                     2, "Output2 - Pin9 (Opto Isolated)."});
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_INOUT1",                   3, "Input/Output1 - Pin6"});
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_INOUT2",                   4, "Input/Output2 - Pin7"});
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_INOUT3",                   5, "Input/Output3 - Pin11"});
+	XI_GPO_SEL_CB_ITEMS.push_back({"XI_GPO_SEL_CB_INOUT4",                   6, "Input/Output4 - Pin12"});
+
+	// structure containing information about GPI functionality
+	XI_GPI_MODE_ITEMS.push_back({"XI_GPI_OFF",                             0, "Input is not used for triggering, but can be used to get parameter GPI_LEVEL. This can be used to switch I/O line on some cameras to input mode."});
+	XI_GPI_MODE_ITEMS.push_back({"XI_GPI_TRIGGER",                         1, "Input can be used for triggering"});
+	XI_GPI_MODE_ITEMS.push_back({"XI_GPI_EXT_EVENT",                       2, "External signal input (not implemented)"});
+
+	// Enumerator for GPI port selection.
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT1",                           1, "GPI port 1"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT2",                           2, "GPI port 2"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT3",                           3, "GPI port 3"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT4",                           4, "GPI port 4"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT5",                           5, "GPI port 5"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT6",                           6, "GPI port 6"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT7",                           7, "GPI port 7"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT8",                           8, "GPI port 8"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT9",                           9, "GPI port 9"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT10",                          10, "GPI port 10"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT11",                          11, "GPI port 11"});
+	XI_GPI_SELECTOR_ITEMS.push_back({"XI_GPI_PORT12",                          12, "GPI port 12"});
+
+	// structure containing information about GPO functionality
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_OFF",                             0, "Output is off (zero voltage or switched_off)"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_ON",                              1, "Output is on (voltage or switched_on)"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_FRAME_ACTIVE",                    2, "Output is on while frame exposure,read,transfer."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_FRAME_ACTIVE_NEG",                3, "Output is off while frame exposure,read,transfer."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE",                 4, "Output is on while frame exposure"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE_NEG",             5, "Output is off while frame exposure"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_FRAME_TRIGGER_WAIT",              6, "Output is on while camera is ready for trigger"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_FRAME_TRIGGER_WAIT_NEG",          7, "Output is off while camera is ready for trigger."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_PULSE",                  8, "Output is on short pulse at the beginning of frame exposure."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_PULSE_NEG",              9, "Output is off short pulse at the beginning of frame exposure."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_BUSY",                            10, "Output is on when camera has received trigger until end of transfer"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_BUSY_NEG",                        11, "Output is off when camera has received trigger until end of transfer"});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_HIGH_IMPEDANCE",                  12, "Associated pin is in high impedance (tri-stated) and can be driven externally. E.g. for triggering or reading status by GPI_LEVEL."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_FRAME_BUFFER_OVERFLOW",           13, "Frame buffer overflow status."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE_FIRST_ROW",       14, "Output is on while the first row exposure."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE_FIRST_ROW_NEG",   15, "Output is off while the first row exposure."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE_ALL_ROWS",        16, "Output is on while all rows exposure together."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_EXPOSURE_ACTIVE_ALL_ROWS_NEG",    17, "Output is off while all rows exposure together."});
+	XI_GPO_MODE_ITEMS.push_back({"XI_GPO_TXD",                             18, "Output is connected to TXD of UART module"});
+
+	// Enumerator for GPO port selection.
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT1",                           1, "GPO port 1"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT2",                           2, "GPO port 2"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT3",                           3, "GPO port 3"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT4",                           4, "GPO port 4"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT5",                           5, "GPO port 5"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT6",                           6, "GPO port 6"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT7",                           7, "GPO port 7"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT8",                           8, "GPO port 8"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT9",                           9, "GPO port 9"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT10",                          10, "GPO port 10"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT11",                          11, "GPO port 11"});
+	XI_GPO_SELECTOR_ITEMS.push_back({"XI_GPO_PORT12",                          12, "GPO port 12"});
+
+	// structure containing information about LED functionality
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_HEARTBEAT",                       0, "Set led to blink (1 Hz) if link is OK."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_TRIGGER_ACTIVE",                  1, "Set led to blink if trigger detected."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_EXT_EVENT_ACTIVE",                2, "Set led to blink if external signal detected."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_LINK",                            3, "Set led to blink if link is OK."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_ACQUISITION",                     4, "Set led to blink if data streaming"});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_EXPOSURE_ACTIVE",                 5, "Set led to blink if sensor integration time."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_FRAME_ACTIVE",                    6, "Set led to blink if device busy/not busy."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_OFF",                             7, "Set led to off."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_ON",                              8, "Set led to on."});
+	XI_LED_MODE_ITEMS.push_back({"XI_LED_BLINK",                           9, "Blinking (1Hz)."});
+
+	// Enumerator for LED selection.
+	XI_LED_SELECTOR_ITEMS.push_back({"XI_LED_SEL1",                            1, "LED 1"});
+	XI_LED_SELECTOR_ITEMS.push_back({"XI_LED_SEL2",                            2, "LED 2"});
+	XI_LED_SELECTOR_ITEMS.push_back({"XI_LED_SEL3",                            3, "LED 3"});
+	XI_LED_SELECTOR_ITEMS.push_back({"XI_LED_SEL4",                            4, "LED 4"});
+	XI_LED_SELECTOR_ITEMS.push_back({"XI_LED_SEL5",                            5, "LED 5"});
+
+	// structure contains frames counter
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_TRANSPORT_SKIPPED_FRAMES",    0, "Number of skipped frames on transport layer (e.g. when image gets lost while transmission). Occur when capacity of transport channel does not allow to transfer all data."});
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_API_SKIPPED_FRAMES",          1, "Number of skipped frames on API layer. Occur when application does not process the images as quick as they are received from the camera."});
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_TRANSPORT_TRANSFERRED_FRAMES",2, "Number of delivered buffers since last acquisition start."});
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_FRAME_MISSED_TRIGGER_DUETO_OVERLAP",3, "Number of missed triggers due to overlap. (see Note2)"});
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_FRAME_MISSED_TRIGGER_DUETO_FRAME_BUFFER_OVR",4, "Number of missed triggers due to frame buffer full. (see Note2)"});
+	XI_COUNTER_SELECTOR_ITEMS.push_back({"XI_CNT_SEL_FRAME_BUFFER_OVERFLOW",       5, "Frame buffer full counter. (see Note2)"});
+
+	// structure containing information about timestamp reset arming
+	XI_TS_RST_MODE_ITEMS.push_back({"XI_TS_RST_ARM_ONCE",                     0, "Engine is disabled after TimeStamp has been reset after selected event."});
+	XI_TS_RST_MODE_ITEMS.push_back({"XI_TS_RST_ARM_PERSIST",                  1, "Engine is armed permanently so each selected event will trigger TimeStamp reset. "});
+
+	// structure containing information about possible timestamp reset sources
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_OFF",                          0, "No source selected TimeStamp reset is not armed."});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_1",                    1, "GPI1 rising edge is active (signal after de-bounce module)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_2",                    2, "GPI2 rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_3",                    3, "GPI3 rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_4",                    4, "GPI4 rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_1_INV",                5, "GPI1 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_2_INV",                6, "GPI2 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_3_INV",                7, "GPI3 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_4_INV",                8, "GPI4 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_1",                    9, "TimeStamp reset source selected GPO1"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_2",                    10, "TimeStamp reset source selected GPO2"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_3",                    11, "TimeStamp reset source selected GPO3"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_4",                    12, "TimeStamp reset source selected GPO4"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_1_INV",                13, "TimeStamp reset source selected GPO1 inverted"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_2_INV",                14, "TimeStamp reset source selected GPO2 inverted"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_3_INV",                15, "TimeStamp reset source selected GPO3 inverted"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPO_4_INV",                16, "TimeStamp reset source selected GPO4 inverted"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_TRIGGER",                  17, "TRIGGER to sensor rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_TRIGGER_INV",              18, "TRIGGER to sensor rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_SW",                       19, "TRIGGER to sensor rising edge is active. TimeStamp is reset by software take effect imminently."});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_EXPACTIVE",                20, "Exposure Active signal rising edge "});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_EXPACTIVE_INV",            21, "Exposure Active signal falling edge "});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_FVAL",                     22, "Frame valid signal rising edge (internal signal in camera)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_FVAL_INV",                 23, "Frame valid signal falling edge (internal signal in camera)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_5",                    24, "GPI5 rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_6",                    25, "GPI6 rising edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_5_INV",                26, "GPI5 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_6_INV",                27, "GPI6 falling edge is active"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_7",                    28, "TimeStamp reset source selected GPI7 (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_8",                    29, "TimeStamp reset source selected GPI8 (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_9",                    30, "TimeStamp reset source selected GPI9 (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_10",                   31, "TimeStamp reset source selected GPI10 (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_11",                   32, "TimeStamp reset source selected GPI11 (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_7_INV",                33, "TimeStamp reset source selected GPI7 inverted (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_8_INV",                34, "TimeStamp reset source selected GPI8 inverted (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_9_INV",                35, "TimeStamp reset source selected GPI9 inverted (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_10_INV",               36, "TimeStamp reset source selected GPI10 inverted (after de bounce)"});
+	XI_TS_RST_SOURCE_ITEMS.push_back({"XI_TS_RST_SRC_GPI_11_INV",               37, "TimeStamp reset source selected GPI11 inverted (after de bounce)"});
+
+	// structure containing information about parameters type
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeInteger",                          0, "integer parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeFloat",                            1, "float parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeString",                           2, "string parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeEnum",                             3, "enumerator parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeBoolean",                          4, "boolean parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeCommand",                          5, "command parameter type"});
+	XI_PRM_TYPE_ITEMS.push_back({"xiTypeInteger64",                        6, "64bit integer parameter type"});
+
+	// Turn parameter On/Off
+	XI_SWITCH_ITEMS.push_back({"XI_OFF",                                 0, "Turn parameter off"});
+	XI_SWITCH_ITEMS.push_back({"XI_ON",                                  1, "Turn parameter on"});
+
+	// Temperature selector
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_IMAGE_SENSOR_DIE_RAW",           0, "Image sensor die (non-calibrated)"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_IMAGE_SENSOR_DIE",               1, "Image sensor die (calibrated)"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_SENSOR_BOARD",                   2, "Image sensor PCB"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_INTERFACE_BOARD",                3, "Data interface PCB"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_FRONT_HOUSING",                  4, "Front part of camera housing"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_REAR_HOUSING",                   5, "Rear part of camera housing"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_TEC1_COLD",                      6, "TEC1 cold side temperature"});
+	XI_TEMP_SELECTOR_ITEMS.push_back({"XI_TEMP_TEC1_HOT",                       7, "TEC1 hot side temperature"});
+
+	// Temperature selector
+	XI_TEMP_CTRL_MODE_SELECTOR_ITEMS.push_back({"XI_TEMP_CTRL_MODE_OFF",                  0, "Controlling of elements (TEC/Peltier, Fans) is turned off"});
+	XI_TEMP_CTRL_MODE_SELECTOR_ITEMS.push_back({"XI_TEMP_CTRL_MODE_AUTO",                 1, "Controlling of elements is performed automatically by API or camera in order to reach parameter TARGET_TEMP."});
+	XI_TEMP_CTRL_MODE_SELECTOR_ITEMS.push_back({"XI_TEMP_CTRL_MODE_MANUAL",               2, "Controlling of elements is done manually by application."});
+
+	// Temperature element selector
+	XI_TEMP_ELEMENT_SELECTOR_ITEMS.push_back({"XI_TEMP_ELEM_TEC1",                      11, "TEC1 = TEC/Peltier that is closest to the image sensor"});
+	XI_TEMP_ELEMENT_SELECTOR_ITEMS.push_back({"XI_TEMP_ELEM_TEC2",                      12, "TEC2 = TEC/Peltier location depends on camera model"});
+	XI_TEMP_ELEMENT_SELECTOR_ITEMS.push_back({"XI_TEMP_ELEM_FAN1",                      31, "Temperature element fan current or rotation (FAN1 = Fan)"});
+	XI_TEMP_ELEMENT_SELECTOR_ITEMS.push_back({"XI_TEMP_ELEM_FAN1_THRS_TEMP",            32, "Temperature element fan start rotation threshold temperature"});
+
+	// Data packing(grouping) types.
+	XI_OUTPUT_DATA_PACKING_TYPE_ITEMS.push_back({"XI_DATA_PACK_XI_GROUPING",               0, "Data grouping (10g160, 12g192, 14g224)."});
+	XI_OUTPUT_DATA_PACKING_TYPE_ITEMS.push_back({"XI_DATA_PACK_PFNC_LSB_PACKING",          1, "Data packing (10p, 12p)"});
+
+	// Downsampling types
+	XI_DOWNSAMPLING_TYPE_ITEMS.push_back({"XI_BINNING",                             0, "pixels are interpolated - better image"});
+	XI_DOWNSAMPLING_TYPE_ITEMS.push_back({"XI_SKIPPING",                            1, "pixels are skipped - higher frame rate"});
+
+	// Exposure time selector
+	XI_EXPOSURE_TIME_SELECTOR_TYPE_ITEMS.push_back({"XI_EXPOSURE_TIME_SELECTOR_COMMON",       0, "Selects the common Exposure Time"});
+	XI_EXPOSURE_TIME_SELECTOR_TYPE_ITEMS.push_back({"XI_EXPOSURE_TIME_SELECTOR_GROUP1",       1, "Selects the common Exposure Time for pixel group 1 (for InterlineExposureMode)"});
+	XI_EXPOSURE_TIME_SELECTOR_TYPE_ITEMS.push_back({"XI_EXPOSURE_TIME_SELECTOR_GROUP2",       2, "Selects the common Exposure Time for pixel group 2 (for InterlineExposureMode)"});
+
+	// Interline exposure mode
+	XI_INTERLINE_EXPOSURE_MODE_TYPE_ITEMS.push_back({"XI_INTERLINE_EXPOSURE_MODE_OFF",         0, "Disabled"});
+	XI_INTERLINE_EXPOSURE_MODE_TYPE_ITEMS.push_back({"XI_INTERLINE_EXPOSURE_MODE_ON",          1, "Enabled"});
+
+	// Gain selector
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ALL",                   0, "Gain selector selects all channels. Implementation of gain type depends on camera."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_ALL",            1, "Gain selector selects all analog channels. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_DIGITAL_ALL",           2, "Gain selector selects all digital channels. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_TAP1",           3, "Gain selector selects tap 1. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_TAP2",           4, "Gain selector selects tap 2. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_TAP3",           5, "Gain selector selects tap 3. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_TAP4",           6, "Gain selector selects tap 4. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_N",              7, "Gain selector selects North column analog gain. This is available only on some cameras."});
+	XI_GAIN_SELECTOR_TYPE_ITEMS.push_back({"XI_GAIN_SELECTOR_ANALOG_S",              8, "Gain selector selects South column analog gain. This is available only on some cameras."});
+
+	// Shutter mode types
+	XI_SHUTTER_TYPE_ITEMS.push_back({"XI_SHUTTER_GLOBAL",                      0, "Sensor Global Shutter(CMOS sensor)"});
+	XI_SHUTTER_TYPE_ITEMS.push_back({"XI_SHUTTER_ROLLING",                     1, "Sensor Electronic Rolling Shutter(CMOS sensor)"});
+	XI_SHUTTER_TYPE_ITEMS.push_back({"XI_SHUTTER_GLOBAL_RESET_RELEASE",        2, "Sensor Global Reset Release Shutter(CMOS sensor)"});
+
+	// structure containing information about CMS functionality
+	XI_CMS_MODE_ITEMS.push_back({"XI_CMS_DIS",                             0, "disables color management"});
+	XI_CMS_MODE_ITEMS.push_back({"XI_CMS_EN",                              1, "enables color management (high CPU usage)"});
+	XI_CMS_MODE_ITEMS.push_back({"XI_CMS_EN_FAST",                         2, "enables fast color management (high RAM usage)"});
+
+	// structure containing information about ICC Intents
+	XI_CMS_INTENT_ITEMS.push_back({"XI_CMS_INTENT_PERCEPTUAL",               0, "CMS intent perceptual"});
+	XI_CMS_INTENT_ITEMS.push_back({"XI_CMS_INTENT_RELATIVE_COLORIMETRIC",    1, "CMS intent relative colorimetry"});
+	XI_CMS_INTENT_ITEMS.push_back({"XI_CMS_INTENT_SATURATION",               2, "CMS intent saturation"});
+	XI_CMS_INTENT_ITEMS.push_back({"XI_CMS_INTENT_ABSOLUTE_COLORIMETRIC",    3, "CMS intent absolute colorimetry"});
+
+	// structure containing information about options for selection of camera before opening
+	XI_OPEN_BY_ITEMS.push_back({"XI_OPEN_BY_INST_PATH",                   0, "Open camera by its hardware path"});
+	XI_OPEN_BY_ITEMS.push_back({"XI_OPEN_BY_SN",                          1, "Open camera by its serial number"});
+	XI_OPEN_BY_ITEMS.push_back({"XI_OPEN_BY_USER_ID",                     2, "open camera by its custom user ID"});
+	XI_OPEN_BY_ITEMS.push_back({"XI_OPEN_BY_LOC_PATH",                    3, "Open camera by its hardware location path"});
+
+	// Lens feature selector selects which feature will be accessed.
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_MOTORIZED_FOCUS_SWITCH", 1, "Status of lens motorized focus switch"});
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_MOTORIZED_FOCUS_BOUNDED",2, "On read = 1 if motorized focus is on one of limits."});
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_MOTORIZED_FOCUS_CALIBRATION",3, "(planned feature) On read = 1 if motorized focus is calibrated. Write 1 to start calibration."});
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_IMAGE_STABILIZATION_ENABLED",4, "On read = 1 if image stabilization is enabled. Write 1 to enable image stabilization."});
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_IMAGE_STABILIZATION_SWITCH_STATUS",5, "On read = 1 if image stabilization switch is in position On."});
+	XI_LENS_FEATURE_ITEMS.push_back({"XI_LENS_FEATURE_IMAGE_ZOOM_SUPPORTED",   6, "On read = 1 if lens supports zoom = are not prime."});
+
+	// Sensor feature selector selects which feature will be accessed.
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_ZEROROT_ENABLE",       0, "Zero ROT enable for ONSEMI PYTHON family. For camera model:MQ013xG-ON "});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_BLACK_LEVEL_CLAMP",    1, "Black level offset clamping. for Camera model:MD"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_MD_FPGA_DIGITAL_GAIN_DISABLE",2, "Disable digital component of gain for MD family"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_ACQUISITION_RUNNING",  3, "Sensor acquisition is running status. Could be stopped by setting of 0. For camera model:CB,MC,MX,MT"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_TIMING_MODE",          4, "Set Sensor timing mode"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_PARALLEL_ADC",         5, "Parallel ADC readout"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_BLACK_LEVEL_OFFSET_RAW",6, "Sensor specific register raw black level offset"});
+	XI_SENSOR_FEATURE_SELECTOR_ITEMS.push_back({"XI_SENSOR_FEATURE_SHORT_INTERVAL_SHUTTER",7, "Short Interval Shutter - sensor specific feature"});
+
+	// Camera sensor mode enumerator.
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD0",                            0, "Sensor mode number 0"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD1",                            1, "Sensor mode number 1"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD2",                            2, "Sensor mode number 2"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD3",                            3, "Sensor mode number 3"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD4",                            4, "Sensor mode number 4"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD5",                            5, "Sensor mode number 5"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD6",                            6, "Sensor mode number 6"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD7",                            7, "Sensor mode number 7"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD8",                            8, "Sensor mode number 8"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD9",                            9, "Sensor mode number 9"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD10",                           10, "Sensor mode number 10"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD11",                           11, "Sensor mode number 11"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD12",                           12, "Sensor mode number 12"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD13",                           13, "Sensor mode number 13"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD14",                           14, "Sensor mode number 14"});
+	XI_SENSOR_MODE_ITEMS.push_back({"XI_SENS_MD15",                           15, "Sensor mode number 15"});
+
+	// Defines image sensor area as output.
+	XI_IMAGE_AREA_SELECTOR_ITEMS.push_back({"XI_IMAGE_AREA_ACTIVE",                   0, "All light sensitive pixels suggested by image vendor."});
+	XI_IMAGE_AREA_SELECTOR_ITEMS.push_back({"XI_IMAGE_AREA_ACTIVE_AND_MASKED",        1, "All Active pixels plus masked pixels surrounding the Active area."});
+
+	// Camera channel count enumerator.
+	XI_SENSOR_OUTPUT_CHANNEL_COUNT_ITEMS.push_back({"XI_CHANN_CNT2",                          2, "2 sensor readout channels."});
+	XI_SENSOR_OUTPUT_CHANNEL_COUNT_ITEMS.push_back({"XI_CHANN_CNT4",                          4, "4 sensor readout channels."});
+	XI_SENSOR_OUTPUT_CHANNEL_COUNT_ITEMS.push_back({"XI_CHANN_CNT8",                          8, "8 sensor readout channels."});
+	XI_SENSOR_OUTPUT_CHANNEL_COUNT_ITEMS.push_back({"XI_CHANN_CNT16",                         16, "16 sensor readout channels."});
+	XI_SENSOR_OUTPUT_CHANNEL_COUNT_ITEMS.push_back({"XI_CHANN_CNT32",                         32, "32 sensor readout channels."});
+
+	// Sensor defects correction list selector
+	XI_SENS_DEFFECTS_CORR_LIST_SELECTOR_ITEMS.push_back({"XI_SENS_DEFFECTS_CORR_LIST_SEL_FACTORY", 0, "Factory defect correction list"});
+	XI_SENS_DEFFECTS_CORR_LIST_SELECTOR_ITEMS.push_back({"XI_SENS_DEFFECTS_CORR_LIST_SEL_USER0",   1, "User defect correction list"});
+
+	// Acquisition status Selector
+	XI_ACQUISITION_STATUS_SELECTOR_ITEMS.push_back({"XI_ACQUISITION_STATUS_ACQ_ACTIVE",       0, " Device is currently doing an acquisition of one or many frames."});
+
+	// Select unit where data-pipe is configured
+	XI_DP_UNIT_SELECTOR_ITEMS.push_back({"XI_DP_UNIT_SENSOR",                      0, "Selects device image sensor"});
+	XI_DP_UNIT_SELECTOR_ITEMS.push_back({"XI_DP_UNIT_FPGA",                        1, "Selects device image FPGA"});
+
+	// Select unit processor
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_NONE",                        0, "Default empty processor"});
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_CHANNEL_MUXER",               1, "Channel Muxer (selected processor combines multiple input channels)"});
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_PIXEL_SEQUENCER",             2, "Selects pixel data output sequence"});
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_CHANNEL_1",                   3, "Selects sensor output channel 1"});
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_CHANNEL_2",                   4, "Selects sensor output channel 2"});
+	XI_DP_PROC_SELECTOR_ITEMS.push_back({"XI_DP_PROC_FRAME_BUFFER",                5, "Selects frame buffer memory"});
+
+	// Select processor parameter
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_NONE",                       0, "Empty parameter"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_CHMUX_CHANNEL_SELECTOR",     1, "Defines output of Channel Muxer processor"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_CHMUX_ALPHA",                2, "Channel merger coefficient Alpha"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_CHMUX_BETA",                 3, "Channel merger coefficient Beta"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_PIXSEQ_SELECTOR",            4, "PixSeq Selector"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_CHANNEL_TIMING",             5, "Selected channel timing"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_FRAMEBUF_MODE",              6, "Frame Buffer Mode"});
+	XI_DP_PARAM_SELECTOR_ITEMS.push_back({"XI_DP_PARAM_FRAMEBUF_SIZE",              7, "Frame Buffer Size Bytes"});
+
+	// Select processor parameter value
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_CHANNEL_1",      0, "Selected source channel 1"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_CHANNEL_2",      1, "Selected source channel 2"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_CHANNEL_1_2",    2, "Selected source channel 1 and 2"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_MERGED",         3, "Merged data of two channels"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_CMS_S",          4, "Correlated Multiple Sampling(summing)"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_PIXSEQ_ONE_VALUE",     5, "Output is one value per pixel"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_PIXSEQ_TWO_VALUES",    6, "Output are two values per pixel"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHTIM_HG",             7, "High Gain channel timing"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHTIM_LG",             8, "Low Gain channel timing"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_FRAMEBUF_MODE_DISABLED",9, "Frame buffer is disabled"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_FRAMEBUF_MODE_ENABLED",10, "Frame buffer is on"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_PIXSEQ_FOUR_VALUES",   11, "Output are four values per pixel"});
+	XI_DP_PARAM_VALUE_ITEMS.push_back({"XI_DP_PARAM_VALUE_CHMUX_CMS_A",          12, "Correlated Multiple Sampling(averaging)"});
+
+	// User Set selector options.
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_12_STD_L",                         10, "12bit per channel STD Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_12_STD_H",                         11, "12bit per channel STD High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_14_STD_L",                         12, "14bit per channel STD Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_NONE",                             999, "No preset selected."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_14_STD_H",                         13, "14bit per channel STD High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_CMS_S_L",                     14, "12bit per channel, 2 samples,  CMS(summing) Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_CMS_S_H",                     15, "12bit per channel, 2 samples,  CMS(summing) High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_14_CMS_S_L",                     16, "14bit per channel, 2 samples,  CMS(summing) Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_14_CMS_S_H",                     17, "14bit per channel, 2 samples,  CMS(summing) High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_4_12_CMS_S_L",                     18, "12bit per channel, 4 samples,  CMS(summing) Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_4_12_CMS_S_H",                     19, "12bit per channel, 4 samples,  CMS(summing) High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_4_14_CMS_S_L",                     20, "14bit per channel, 4 samples,  CMS(summing) Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_4_14_CMS_S_H",                     21, "14bit per channel, 4 samples,  CMS(summing) High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_HDR_HL",                      22, "12bit per channel, 2 samples,  HDR High Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_HDR_L",                       23, "12bit per channel, 2 samples,  HDR Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_HDR_H",                       24, "12bit per channel, 2 samples,  HDR High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_4_12_CMS_HDR_HL",                  25, "12bit per channel, 4 samples,  CMS + HDR High Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_14_HDR_L",                       26, "14bit per channel, 2 samples,  HDR Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_14_HDR_H",                       27, "14bit per channel, 2 samples,  HDR High Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_CMS_A_L",                     28, "12bit per channel, 2 samples,  CMS(averaging) Low Gain mode preset."});
+	XI_USER_SET_SELECTOR_ITEMS.push_back({"XI_US_2_12_CMS_A_H",                     29, "12bit per channel, 2 samples,  CMS(averaging) High Gain mode preset."});
+
+	// Mode of DualADC feature
+	XI_DUAL_ADC_MODE_ITEMS.push_back({"XI_DUAL_ADC_MODE_OFF",                   0, "Disable DualADC feature"});
+	XI_DUAL_ADC_MODE_ITEMS.push_back({"XI_DUAL_ADC_MODE_COMBINED",              1, "Set Combined mode"});
+	XI_DUAL_ADC_MODE_ITEMS.push_back({"XI_DUAL_ADC_MODE_NON_COMBINED",          2, "Set NonCombined mode"});
+
+
+	XI_RET_ITEMS.push_back({"XI_OK",                              0, " Function call succeeded"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_HANDLE",                  1, " Invalid handle"});
+	XI_RET_ITEMS.push_back({"XI_READREG",                         2, " Register read error"});
+	XI_RET_ITEMS.push_back({"XI_WRITEREG",                        3, " Register write error"});
+	XI_RET_ITEMS.push_back({"XI_FREE_RESOURCES",                  4, " Freeing resources error"});
+	XI_RET_ITEMS.push_back({"XI_FREE_CHANNEL",                    5, " Freeing channel error"});
+	XI_RET_ITEMS.push_back({"XI_FREE_BANDWIDTH",                  6, " Freeing bandwith error"});
+	XI_RET_ITEMS.push_back({"XI_READBLK",                         7, " Read block error"});
+	XI_RET_ITEMS.push_back({"XI_WRITEBLK",                        8, " Write block error"});
+	XI_RET_ITEMS.push_back({"XI_NO_IMAGE",                        9, " No image"});
+	XI_RET_ITEMS.push_back({"XI_TIMEOUT",                        10, " Timeout"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_ARG",                    11, " Invalid arguments supplied"});
+	XI_RET_ITEMS.push_back({"XI_NOT_SUPPORTED",                  12, " Not supported"});
+	XI_RET_ITEMS.push_back({"XI_ISOCH_ATTACH_BUFFERS",           13, " Attach buffers error"});
+	XI_RET_ITEMS.push_back({"XI_GET_OVERLAPPED_RESULT",          14, " Overlapped result"});
+	XI_RET_ITEMS.push_back({"XI_MEMORY_ALLOCATION",              15, " Memory allocation error"});
+	XI_RET_ITEMS.push_back({"XI_DLLCONTEXTISNULL",               16, " DLL context is NULL"});
+	XI_RET_ITEMS.push_back({"XI_DLLCONTEXTISNONZERO",            17, " DLL context is non zero"});
+	XI_RET_ITEMS.push_back({"XI_DLLCONTEXTEXIST",                18, " DLL context exists"});
+	XI_RET_ITEMS.push_back({"XI_TOOMANYDEVICES",                 19, " Too many devices connected"});
+	XI_RET_ITEMS.push_back({"XI_ERRORCAMCONTEXT",                20, " Camera context error"});
+	XI_RET_ITEMS.push_back({"XI_UNKNOWN_HARDWARE",               21, " Unknown hardware"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_TM_FILE",                22, " Invalid TM file"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_TM_TAG",                 23, " Invalid TM tag"});
+	XI_RET_ITEMS.push_back({"XI_INCOMPLETE_TM",                  24, " Incomplete TM"});
+	XI_RET_ITEMS.push_back({"XI_BUS_RESET_FAILED",               25, " Bus reset error"});
+	XI_RET_ITEMS.push_back({"XI_NOT_IMPLEMENTED",                26, " Not implemented"});
+	XI_RET_ITEMS.push_back({"XI_SHADING_TOOBRIGHT",              27, " Shading is too bright"});
+	XI_RET_ITEMS.push_back({"XI_SHADING_TOODARK",                28, " Shading is too dark"});
+	XI_RET_ITEMS.push_back({"XI_TOO_LOW_GAIN",                   29, " Gain is too low"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_BPL",                    30, " Invalid sensor defect correction list"});
+	XI_RET_ITEMS.push_back({"XI_BPL_REALLOC",                    31, " Error while sensor defect correction list reallocation"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_PIXEL_LIST",             32, " Invalid pixel list"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_FFS",                    33, " Invalid Flash File System"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_PROFILE",                34, " Invalid profile"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_CALIBRATION",            35, " Invalid calibration"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_BUFFER",                 36, " Invalid buffer"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_DATA",                   38, " Invalid data"});
+	XI_RET_ITEMS.push_back({"XI_TGBUSY",                         39, " Timing generator is busy"});
+	XI_RET_ITEMS.push_back({"XI_IO_WRONG",                       40, " Wrong operation open/write/read/close"});
+	XI_RET_ITEMS.push_back({"XI_ACQUISITION_ALREADY_UP",         41, " Acquisition already started"});
+	XI_RET_ITEMS.push_back({"XI_OLD_DRIVER_VERSION",             42, " Old version of device driver installed to the system."});
+	XI_RET_ITEMS.push_back({"XI_GET_LAST_ERROR",                 43, " To get error code please call GetLastError function."});
+	XI_RET_ITEMS.push_back({"XI_CANT_PROCESS",                   44, " Data cannot be processed"});
+	XI_RET_ITEMS.push_back({"XI_ACQUISITION_STOPED",             45, " Acquisition is stopped. It needs to be started to perform operation."});
+	XI_RET_ITEMS.push_back({"XI_ACQUISITION_STOPED_WERR",        46, " Acquisition has been stopped with an error."});
+	XI_RET_ITEMS.push_back({"XI_INVALID_INPUT_ICC_PROFILE",      47, " Input ICC profile missing or corrupted"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_OUTPUT_ICC_PROFILE",     48, " Output ICC profile missing or corrupted"});
+	XI_RET_ITEMS.push_back({"XI_DEVICE_NOT_READY",               49, " Device not ready to operate"});
+	XI_RET_ITEMS.push_back({"XI_SHADING_TOOCONTRAST",            50, " Shading is too contrast"});
+	XI_RET_ITEMS.push_back({"XI_ALREADY_INITIALIZED",            51, " Module already initialized"});
+	XI_RET_ITEMS.push_back({"XI_NOT_ENOUGH_PRIVILEGES",          52, " Application does not have enough privileges (one or more app)"});
+	XI_RET_ITEMS.push_back({"XI_NOT_COMPATIBLE_DRIVER",          53, " Installed driver is not compatible with current software"});
+	XI_RET_ITEMS.push_back({"XI_TM_INVALID_RESOURCE",            54, " TM file was not loaded successfully from resources"});
+	XI_RET_ITEMS.push_back({"XI_DEVICE_HAS_BEEN_RESETED",        55, " Device has been reset, abnormal initial state"});
+	XI_RET_ITEMS.push_back({"XI_NO_DEVICES_FOUND",               56, " No Devices Found"});
+	XI_RET_ITEMS.push_back({"XI_RESOURCE_OR_FUNCTION_LOCKED",    57, " Resource (device) or function locked by mutex"});
+	XI_RET_ITEMS.push_back({"XI_BUFFER_SIZE_TOO_SMALL",          58, " Buffer provided by user is too small"});
+	XI_RET_ITEMS.push_back({"XI_COULDNT_INIT_PROCESSOR",         59, " Could not initialize processor."});
+	XI_RET_ITEMS.push_back({"XI_NOT_INITIALIZED",                60, " The object/module/procedure/process being referred to has not been started."});
+	XI_RET_ITEMS.push_back({"XI_RESOURCE_NOT_FOUND",             61, " Resource not found(could be processor, file, item...)."});
+	XI_RET_ITEMS.push_back({"XI_UNKNOWN_PARAM",                  100, " Unknown parameter"});
+	XI_RET_ITEMS.push_back({"XI_WRONG_PARAM_VALUE",              101, " Wrong parameter value"});
+	XI_RET_ITEMS.push_back({"XI_WRONG_PARAM_TYPE",               103, " Wrong parameter type"});
+	XI_RET_ITEMS.push_back({"XI_WRONG_PARAM_SIZE",               104, " Wrong parameter size"});
+	XI_RET_ITEMS.push_back({"XI_BUFFER_TOO_SMALL",               105, " Input buffer is too small"});
+	XI_RET_ITEMS.push_back({"XI_NOT_SUPPORTED_PARAM",            106, " Parameter is not supported"});
+	XI_RET_ITEMS.push_back({"XI_NOT_SUPPORTED_PARAM_INFO",       107, " Parameter info not supported"});
+	XI_RET_ITEMS.push_back({"XI_NOT_SUPPORTED_DATA_FORMAT",      108, " Data format is not supported"});
+	XI_RET_ITEMS.push_back({"XI_READ_ONLY_PARAM",                109, " Read only parameter"});
+	XI_RET_ITEMS.push_back({"XI_BANDWIDTH_NOT_SUPPORTED",        111, " This camera does not support currently available bandwidth"});
+	XI_RET_ITEMS.push_back({"XI_INVALID_FFS_FILE_NAME",          112, " FFS file selector is invalid or NULL"});
+	XI_RET_ITEMS.push_back({"XI_FFS_FILE_NOT_FOUND",             113, " FFS file not found"});
+	XI_RET_ITEMS.push_back({"XI_PARAM_NOT_SETTABLE",             114, " Parameter value cannot be set (might be out of range or invalid)."});
+	XI_RET_ITEMS.push_back({"XI_SAFE_POLICY_NOT_SUPPORTED",      115, " Safe buffer policy is not supported. E.g. when transport target is set to GPU (GPUDirect)."});
+	XI_RET_ITEMS.push_back({"XI_GPUDIRECT_NOT_AVAILABLE",        116, " GPUDirect is not available. E.g. platform isn't supported or CUDA toolkit isn't installed."});
+	XI_RET_ITEMS.push_back({"XI_INCORRECT_SENS_ID_CHECK",        117, " Incorrect sensor board unique identifier checksum."});
+	XI_RET_ITEMS.push_back({"XI_INCORRECT_FPGA_TYPE",            118, " Incorrect or unknown FPGA firmware type used for camera."});
+	XI_RET_ITEMS.push_back({"XI_PROC_OTHER_ERROR",               201, " Processing error - other"});
+	XI_RET_ITEMS.push_back({"XI_PROC_PROCESSING_ERROR",          202, " Error while image processing."});
+	XI_RET_ITEMS.push_back({"XI_PROC_INPUT_FORMAT_UNSUPPORTED",  203, " Input format is not supported for processing."});
+	XI_RET_ITEMS.push_back({"XI_PROC_OUTPUT_FORMAT_UNSUPPORTED", 204, " Output format is not supported for processing."});
+	XI_RET_ITEMS.push_back({"XI_OUT_OF_RANGE",                   205, " Parameter value is out of range"});
+		
+}
+
+
+xiAPIplus_Enumerators::param_item_t::param_item_t()
+{
+	name = NULL;
+	value = 0;
+	description = NULL;
+}
+
+xiAPIplus_Enumerators::param_item_t::param_item_t(const char * in_name, int in_value, const char * in_description)
+{
+	name = in_name;
+	value = in_value;
+	description = in_description;
+}
+
+xiAPIplus_Enumerators::param_item_t * xiAPIplus_Enumerators::FindItem(std::vector<param_item_t> * param_vector, int item_val)
+{
+	for (unsigned int i=0;i<param_vector->size();i++)
+	{
+		if ((*param_vector)[i].value==item_val)
+		{			
+			return &((*param_vector)[i]);
+		}
+	}
+	return NULL;
+}
 //-------------------------------------------------------------------------------------------------------------------
 // xiAPIplus implementation file
 // XIMEA Application Programming Interface Object Oriented Approach
@@ -10348,6 +11160,7 @@ xiapi_errorcode_t xiAPIplus_errorcodes_list[]=
 
 //#include <os_common_header.h>
 //#include <stdio.h>
+//#include <cstring>
 //#include <xiAPIplus/xiapiplus.h>
 
 #ifdef WIN32
@@ -10495,7 +11308,7 @@ void xiAPIplus_Camera::OpenFirst()
 	OpenByID(0);
 }
 
-void xiAPIplus_Camera::OpenByID(unsigned long id)
+void xiAPIplus_Camera::OpenByID(const unsigned long id)
 {
 	xiAPIPlusDP((DBFIN "%s\n","OpenByID"));
 	XI_RETURN res=xiOpenDevice(id, &camera_handle);
@@ -10504,7 +11317,7 @@ void xiAPIplus_Camera::OpenByID(unsigned long id)
 	if(!camera_handle) res = XI_INVALID_HANDLE;
 	CheckResult(res,"OpenByID");
 }
-void xiAPIplus_Camera::OpenBySN(char* serial_number)
+void xiAPIplus_Camera::OpenBySN(const char* serial_number)
 {
 	if (!serial_number)  ReportException(XI_WRONG_PARAM_VALUE, "xiAPIplus_Camera::OpenBySN()");
 
@@ -10516,7 +11329,7 @@ void xiAPIplus_Camera::OpenBySN(char* serial_number)
 	CheckResult(res, "OpenBySN");
 }
 
-void xiAPIplus_Camera::OpenByPath(char* device_path)
+void xiAPIplus_Camera::OpenByPath(const char* device_path)
 {
 	if(!device_path)  ReportException(XI_WRONG_PARAM_VALUE, "xiAPIplus_Camera::OpenByPath()");
 
@@ -10528,7 +11341,7 @@ void xiAPIplus_Camera::OpenByPath(char* device_path)
 	CheckResult(res,"OpenByPath");
 }
 
-void xiAPIplus_Camera::OpenByUserID(char* user_id)
+void xiAPIplus_Camera::OpenByUserID(const char* user_id)
 {
 	if(!user_id)  ReportException(XI_WRONG_PARAM_VALUE, "xiAPIplus_Camera::OpenByUserID()");
 
@@ -10540,7 +11353,7 @@ void xiAPIplus_Camera::OpenByUserID(char* user_id)
 	CheckResult(res,"OpenByUserID");
 }
 
-void xiAPIplus_Camera::OpenByLocation(char* location)
+void xiAPIplus_Camera::OpenByLocation(const char* location)
 {
 	if(!location)  ReportException(XI_WRONG_PARAM_VALUE, "xiAPIplus_Camera::OpenByLocation()");
 
@@ -10797,8 +11610,7 @@ void xiAPIplus_Image::CopyTo(xiAPIplus_Image* image_copy)
 	if (!clone->bp)
 	{
 		ReportException(XI_MEMORY_ALLOCATION, "CopyTo");
-	}
-	memcpy(clone->bp, orig->bp, GetPixelsArraySize());
+	}else memcpy(clone->bp, orig->bp, GetPixelsArraySize());
 }
 
 // ---------------------------------------------------------------------
@@ -10881,7 +11693,8 @@ void xiAPIplus_ImageProcessing::GetImage(xiAPIplus_Image* ret_image)
 	last_image_.CopyTo(ret_image);
 }
 
-// ---------------------------------------------------------------------//#include "XiSampleOpencv.hpp"
+// ---------------------------------------------------------------------
+//#include "XiSampleOpencv.hpp"
 
 
 

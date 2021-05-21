@@ -256,7 +256,7 @@ namespace dynaman {
 		Eigen::Vector3f pos(DWORD time_ms) override;
 		Eigen::Vector3f vel(DWORD time_ms) override;
 		Eigen::Vector3f accel(DWORD time_ms) override;
-		inline float terminal_velocity();
+		float terminal_velocity();
 		inline float beta();
 		inline float mu();
 		float time_to_accel();

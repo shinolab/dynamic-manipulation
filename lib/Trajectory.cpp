@@ -340,7 +340,7 @@ std::shared_ptr<Trajectory> TrajectoryBangbangWithDrag::Create(
 }
 
 float TrajectoryBangbangWithDrag::terminal_velocity() {
-	return 36914 * std::sqrt(_force) / _radius;
+	return 36914.f * std::sqrt(_force) / _radius;
 }
 
 float TrajectoryBangbangWithDrag::mu() {
@@ -362,21 +362,22 @@ float TrajectoryBangbangWithDrag::time_to_decel() {
 
 float TrajectoryBangbangWithDrag::dist_to_accel() {
 	auto dist = (_posEnd - _posInit).norm();
-	return 0.5f / mu() * std::logf(0.5*(std::expf(2 * mu() * dist) + 1));
+	return 0.5f / mu() * std::logf(0.5f * (std::expf(2.f * mu() * dist) + 1.f));
 }
 
 Eigen::Vector3f TrajectoryBangbangWithDrag::pos(DWORD time_ms) {
 	auto vt = terminal_velocity();
+	if (time_ms < _sys_time_init) {
+		return _posInit;
+	}
 	float dt = (time_ms - _sys_time_init) / 1000.f;
 	float dist = 0;
 	if (dt < time_to_accel()) {
 		dist = -vt * dt + 1.0f / mu() * std::logf((std::expf(2.f * mu() * vt * dt) + 1) / 2.0f);
 	}
-	else if (dt < time_to_accel() + time_to_decel()) {
+	else if (dt <= time_to_accel() + time_to_decel()) {
 		float time_to_go = time_to_accel() + time_to_decel() - dt;
-		dist = (_posEnd - _posInit).norm() - 0.5f / mu() * std::logf(
-			std::abs(std::cosf(mu() * vt * time_to_go))
-		);
+		dist = (_posEnd - _posInit).norm() + std::logf(std::abs(std::cosf(mu() * vt * time_to_go))) / mu();
 	}
 	else {
 		dist = (_posEnd - _posInit).norm();
@@ -385,10 +386,13 @@ Eigen::Vector3f TrajectoryBangbangWithDrag::pos(DWORD time_ms) {
 }
 
 Eigen::Vector3f TrajectoryBangbangWithDrag::vel(DWORD time_ms) {
+	if (time_ms < _sys_time_init) {
+		return Eigen::Vector3f::Zero();
+	}
 	float dt = (time_ms - _sys_time_init) / 1000.f;
 	float speed = 0;
 	if (dt < time_to_accel()) {
-		speed = terminal_velocity() * (1 - 2 / (exp(2 * mu() / terminal_velocity() * dt) + 1));
+		speed = terminal_velocity() * (1 - 2.f / (expf(2 * mu() * terminal_velocity() * dt) + 1.f));
 	}
 	else if (dt < time_to_accel() + time_to_decel()) {
 		auto time_to_go = time_to_accel() + time_to_decel() - dt;
@@ -402,7 +406,7 @@ Eigen::Vector3f TrajectoryBangbangWithDrag::accel(DWORD time_ms) {
 	if (dt >= time_to_accel() + time_to_decel()) {
 		return Eigen::Vector3f::Zero();
 	}
-	auto mass = static_cast<float>(1.168e-9f * 4.0f * M_PI * _radius * _radius * _radius / 3.0f);
+	auto mass = static_cast<float>(1.168e-9f * 4.0f * float(M_PI) * _radius * _radius * _radius / 3.0f);
 	auto a = _force / mass;
 	if (dt > time_to_accel()) {
 		a *= -1;

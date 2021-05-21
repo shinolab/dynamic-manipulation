@@ -54,15 +54,34 @@ int main(int argc, char** argv) {
 		obsLogName,
 		controlLogName
 	);
-	//Recorder recorder;
-	//recorder.Start(pObject, filename, 33);
+
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	
 	std::this_thread::sleep_for(std::chrono::seconds(10)); // wait for I-gain adjustment
+	pObject->updateStatesTarget(posStart);
 	for (int iTrial = 0; iTrial < numTrial; iTrial++) {
-		pObject->updateStatesTarget(posStart);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posLeft));
+		float force = 0.002; //[mN]
+		//pObject->updateStatesTarget(posStart);
+		pObject->SetTrajectory(
+			TrajectoryBangbangWithDrag::Create(
+				force,
+				pObject->Radius(),
+				timeGetTime(),
+				posStart,
+				posEnd
+			)
+		);
 		std::this_thread::sleep_for(std::chrono::seconds(10));
-		pObject->updateStatesTarget(posEnd);//pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(3.0f, timeGetTime(), posLeft, posRight));
+		//pObject->updateStatesTarget(posEnd);
+		pObject->SetTrajectory(
+			TrajectoryBangbangWithDrag::Create(
+				force,
+				pObject->Radius(),
+				timeGetTime(),
+				posEnd,
+				posStart
+			)
+		);
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 

@@ -246,7 +246,7 @@ namespace dynaman {
 			_posEnd(posEnd) {}
 
 		static std::shared_ptr<Trajectory> Create(
-			float accel,
+			float force,
 			float radius,
 			DWORD sys_time_init_ms,
 			const Eigen::Vector3f& posInit,

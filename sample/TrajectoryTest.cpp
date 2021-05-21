@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
 	);
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
-
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(250.f, 0.f, 0.f);
 	Eigen::Vector3f posLeft(-250.f, 0.f, 0.f);

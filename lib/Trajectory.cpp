@@ -10,9 +10,15 @@
 
 using namespace dynaman;
 
-TrajectoryConstantState::TrajectoryConstantState(Eigen::Vector3f const &positionTarget,
+TrajectoryConstantState::TrajectoryConstantState(
+	Eigen::Vector3f const &positionTarget,
 	Eigen::Vector3f const &velocityTarget,
-	Eigen::Vector3f const &accelTarget) :posTgt(positionTarget), velTgt(velocityTarget), accelTgt(accelTarget) {}
+	Eigen::Vector3f const &accelTarget)
+	:
+	posTgt(positionTarget),
+	velTgt(velocityTarget),
+	accelTgt(accelTarget)
+{}
 
 Eigen::Vector3f TrajectoryConstantState::pos(DWORD sys_time_ms) {
 	return posTgt;
@@ -29,7 +35,8 @@ Eigen::Vector3f TrajectoryConstantState::accel(DWORD sys_time_ms) {
 std::shared_ptr<Trajectory> TrajectoryConstantState::Create(
 	const Eigen::Vector3f &positionTarget,
 	const Eigen::Vector3f &velocityTarget,
-	const Eigen::Vector3f &accelTarget) {
+	const Eigen::Vector3f &accelTarget
+) {
 	return std::make_shared<TrajectoryConstantState>(
 		positionTarget,
 		velocityTarget,
@@ -322,68 +329,83 @@ Eigen::Vector3f TrajectoryHeart::accel(DWORD sys_time_ms) {
 	);
 }
 
-std::shared_ptr<Trajectory> TrajectoryConstCruise::Create(
+std::shared_ptr<Trajectory> TrajectoryBangbangWithDrag::Create(
 	float force,
 	float radius,
-	float beta,
 	DWORD sys_time_init,
 	const Eigen::Vector3f& posInit,
 	const Eigen::Vector3f& posEnd
 ) {
-	return std::make_shared<TrajectoryConstCruise>(force, radius, beta, sys_time_init, posInit, posEnd);
+	return std::make_shared<TrajectoryBangbangWithDrag>(force, radius, sys_time_init, posInit, posEnd);
 }
 
-float TrajectoryConstCruise::terminal_velocity() {
+float TrajectoryBangbangWithDrag::terminal_velocity() {
 	return 36914 * std::sqrt(_force) / _radius;
 }
 
-float TrajectoryConstCruise::muvt() {
-	return terminal_velocity() * 0.15f / _radius;
+float TrajectoryBangbangWithDrag::mu() {
+	return 0.15f / _radius;
 }
 
-float TrajectoryConstCruise::time_to_accel() {
-	return std::logf((1 + _beta) / (1 - _beta)) / 2.0f / muvt();
-}
-
-float TrajectoryConstCruise::dist_to_accel() {
-	return -3.333 * std::logf((1 - _beta * _beta)) * _radius;
-}
-
-Eigen::Vector3f TrajectoryConstCruise::pos(DWORD time_ms) {
-	float dt = (time_ms - _sys_time_init) / 1000.f;
+float TrajectoryBangbangWithDrag::beta() {
 	float dist = (_posEnd - _posInit).norm();
+	return std::sqrtf((std::expf(2 * mu() * dist) - 1 )/(std::expf(2 * mu() * dist) + 1));
+}
+
+float TrajectoryBangbangWithDrag::time_to_accel() {
+	return std::logf((1 + beta()) / (1 - beta())) / 2.0f / mu() / terminal_velocity();
+}
+
+float TrajectoryBangbangWithDrag::time_to_decel() {
+	return std::atan(beta()) / mu() / terminal_velocity();
+}
+
+float TrajectoryBangbangWithDrag::dist_to_accel() {
+	auto dist = (_posEnd - _posInit).norm();
+	return 0.5f / mu() * std::logf(0.5*(std::expf(2 * mu() * dist) + 1));
+}
+
+Eigen::Vector3f TrajectoryBangbangWithDrag::pos(DWORD time_ms) {
+	auto vt = terminal_velocity();
+	float dt = (time_ms - _sys_time_init) / 1000.f;
+	float dist = 0;
 	if (dt < time_to_accel()) {
-		std::cout << "accel" << std::endl;
-		dist = -terminal_velocity() * dt + _radius / 0.15 * std::logf((exp(2.f * muvt() * dt) + 1) / 2.0f);
+		dist = -vt * dt + 1.0f / mu() * std::logf((std::expf(2.f * mu() * vt * dt) + 1) / 2.0f);
 	}
-	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
-		std::cout << "cruise" << std::endl;
-		dist = dist_to_accel() + _beta * terminal_velocity() * (dt - time_to_accel());
+	else if (dt < time_to_accel() + time_to_decel()) {
+		float time_to_go = time_to_accel() + time_to_decel() - dt;
+		dist = (_posEnd - _posInit).norm() - 0.5f / mu() * std::logf(
+			std::abs(std::cosf(mu() * vt * time_to_go))
+		);
+	}
+	else {
+		dist = (_posEnd - _posInit).norm();
 	}
 	return dist * (_posEnd - _posInit).normalized() + _posInit;
 }
 
-Eigen::Vector3f TrajectoryConstCruise::vel(DWORD time_ms) {
+Eigen::Vector3f TrajectoryBangbangWithDrag::vel(DWORD time_ms) {
 	float dt = (time_ms - _sys_time_init) / 1000.f;
 	float speed = 0;
 	if (dt < time_to_accel()) {
-		speed = terminal_velocity() * (1 - 2 / (exp(2 * muvt() * dt) + 1));
+		speed = terminal_velocity() * (1 - 2 / (exp(2 * mu() / terminal_velocity() * dt) + 1));
 	}
-	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
-		speed = _beta * terminal_velocity();
+	else if (dt < time_to_accel() + time_to_decel()) {
+		auto time_to_go = time_to_accel() + time_to_decel() - dt;
+		speed = terminal_velocity() * std::tanf(mu() * terminal_velocity() * time_to_go);
 	}
 	return speed * (_posEnd - _posInit).normalized();
 }
 
-Eigen::Vector3f TrajectoryConstCruise::accel(DWORD time_ms) {
-	float dt = (time_ms - _sys_time_init) / 1000.f;
-	float a = 0;
-	if (dt < time_to_accel()) {
-		float m =  1.168e-9f * 4 * M_PI *_radius * _radius * _radius / 3.0f;
-		a =  _force / m;
+Eigen::Vector3f TrajectoryBangbangWithDrag::accel(DWORD time_ms) {
+	auto dt = (time_ms - _sys_time_init) / 1000.f;
+	if (dt >= time_to_accel() + time_to_decel()) {
+		return Eigen::Vector3f::Zero();
 	}
-	else if (dt < time_to_accel() + ((_posEnd - _posInit).norm() - dist_to_accel()) / _beta / terminal_velocity()) {
-		a = 0.15f * _beta *_beta * terminal_velocity() * terminal_velocity() / _radius;
+	auto mass = static_cast<float>(1.168e-9f * 4.0f * M_PI * _radius * _radius * _radius / 3.0f);
+	auto a = _force / mass;
+	if (dt > time_to_accel()) {
+		a *= -1;
 	}
 	return a * (_posEnd - _posInit).normalized();
 }

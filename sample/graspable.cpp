@@ -127,7 +127,9 @@ int main(int argc, char** argv) {
 
 	pcl_viewer viewer("pointcloud", 1280, 720);
 	while (viewer) {
-		auto pCloud = pHandStateReader->DefaultPreprocess(grabber->Capture(), pObject);
+		auto pCloudRaw = grabber->Capture();
+		auto pCloudRawInsideWS = pcl_util::TrimPointsOutsideWorkspace(pObject, pCloudRaw);
+		auto pCloud = pHandStateReader->DefaultPreprocess(pCloudRawInsideWS, pObject);
 		dynaman::HandState handState = dynaman::HandState::NONCONTACT;
 		auto posBalloon = 0.001f * (pObject->getPosition() + sensor_bias);
 		bool read_ok = pHandStateReader->Read(handState, pCloud, posBalloon);
@@ -139,9 +141,13 @@ int main(int argc, char** argv) {
 			auto pCloudColliderContact = pcl_util::MakeSphere(posBalloon, pHandStateReader->RadiusColliderContact());
 			auto pCloudInsideColliderClick = pHandStateReader->ExtractPointsInsideColliderClick(pCloud, posBalloon);
 			//auto pCloudColliderClick = pcl_util::MakeSphere(0.001f*posBalloon, pHandStateReader->RadiusColliderClick());
+			auto pCloudCenter = pcl_util::MakeSphere(posBalloon, 0.005);
 			std::vector<pcl_util::pcl_ptr> cloudPtrs{
-				pCloud,
-				pCloudBalloon
+				//pCloud,
+				pCloudRawInsideWS,
+				pCloudBalloon,
+				pCloudColliderContact,
+				pCloudCenter
 				//pCloudColliderContact,
 				//pCloudInsideColliderClick
 			};

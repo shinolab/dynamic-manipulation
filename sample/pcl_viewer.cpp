@@ -193,9 +193,10 @@ void pcl_viewer::draw(const std::vector<pcl_ptr>& clouds) {
 
 std::vector<float3> pcl_viewer::make_default_colors(int size) {
 	return std::vector<float3>{
-		{ 0.9f, 0.1f, 0.1f },
 		{ 0.1f, 0.9f, 0.1f },
-		{ 0.1f, 0.1f, 0.9f }
+		{ 0.9f, 0.9f, 0.9f },
+		{ 0.9f, 0.1f, 0.1f },
+		{ 1.0f, 0.0f, 0.0f }
 	};
 }
 

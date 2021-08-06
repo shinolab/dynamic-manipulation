@@ -45,8 +45,8 @@ int main(int argc, char** argv ) {
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
-	Eigen::Vector3f posRight(300.f, 0.f, 0.f);
-	Eigen::Vector3f posLeft(-300.f, 0.f, 0.f);
+	Eigen::Vector3f posRight(280.f, 0.f, 0.f);
+	Eigen::Vector3f posLeft(-280.f, 0.f, 0.f);
 	Eigen::Vector3f posHigh(0.f, 0.f, 300.f);
 	Eigen::Vector3f posLow(0.f, 0.f, -200.f);
 	// params for circular trajectory

@@ -62,7 +62,6 @@ namespace dynaman {
 		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
 		Eigen::VectorXf getLatestInput();
 		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
-		void setLatestInput(Eigen::VectorXf input);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew, Eigen::Vector3f& velocitynew);
 		void resetIntegral();

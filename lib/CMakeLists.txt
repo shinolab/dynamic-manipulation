@@ -64,6 +64,11 @@ if(USE_XIMEA)
 	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})
 endif()
 
+add_library(WinMultiplexer
+	WinMultiplexer.cpp
+	../inc/WinMultiplexer.hpp
+)
+
 add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
 	FloatingObject.cpp
@@ -100,6 +105,7 @@ target_link_libraries(DynamicManipulation
 	QPSolver
 	GeometryUtil
 	Trajectory
+	WinMultiplexer
 )
 
 add_library(dynaman_dll SHARED

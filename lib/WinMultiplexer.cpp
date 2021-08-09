@@ -32,6 +32,9 @@ void WinMultiplexer::MicroSleep(int interval_us)
 void WinMultiplexer::Start() {
 	this->Stop();
 	m_is_running = true;
+	if(orders.empty()){
+		return;
+	}
 	th_exe = std::thread([this]() {
 		auto itr = orders.begin();
 		while (IsRunning()) {

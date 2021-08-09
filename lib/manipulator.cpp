@@ -547,7 +547,6 @@ namespace dynaman {
 				std::cout << "Starting Multiplexer ..." << std::endl;
 				mux.Start();
 			}
-			//DriveAupa
 			if (m_logEnabled) {
 				m_controlLogStream
 					<< timeLoopInit << ","
@@ -644,8 +643,7 @@ namespace dynaman {
 				sequence.push_back(std::make_pair(gain, duration));
 			}
 		}
-		return sequence;
-		
+		return sequence;	
 	}
 
 	void VarMultiplexManipulator::ExecuteOnPaused(

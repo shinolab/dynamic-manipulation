@@ -128,9 +128,6 @@ namespace dynaman {
 
 	class VarMultiplexManipulator: public Manipulator {
 	private:
-		std::shared_ptr<autd::Controller> m_pAupa;
-		std::shared_ptr<Tracker> m_pTracker;
-		FloatingObjectPtr m_pObject;
 		SimpleNavigator navigator;
 		Eigen::Vector3f m_gainP;
 		Eigen::Vector3f m_gainD;
@@ -150,8 +147,12 @@ namespace dynaman {
 		std::mutex m_mtx_gain;
 		std::string m_controlLogName;
 		std::ofstream m_controlLogStream;
-		WinMultiplexer mux;
 	public:
+		std::shared_ptr<autd::Controller> m_pAupa;
+		std::shared_ptr<Tracker> m_pTracker;
+		FloatingObjectPtr m_pObject;
+		WinMultiplexer mux;
+
 		VarMultiplexManipulator(
 			const Eigen::Vector3f& gainP,
 			const Eigen::Vector3f& gainD,

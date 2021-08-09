@@ -360,3 +360,12 @@ if(BUILD_PCL_APPS)
     )
 
 endif()
+
+add_executable(CreateSequenceTest CreateSequenceTest.cpp)
+target_link_libraries(
+    CreateSequenceTest
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)

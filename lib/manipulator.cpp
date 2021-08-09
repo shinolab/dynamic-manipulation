@@ -355,8 +355,6 @@ namespace dynaman {
 		}
 	}
 
-
-
 	void SimpleNavigator::InitLog(const std::string& logName) {
 		ofs.open(logName);
 		ofs << "sys_time,x,y,z" << std::endl;
@@ -538,10 +536,10 @@ namespace dynaman {
 				std::cout << "Clearing Multiplexer ..." << std::endl;
 				mux.ClearOrders();
 				std::cout << "Applying Sequence ..." << std::endl;
-				for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
+				for (int i = 0; i < sequence.size(); i++) {
 					mux.AddOrder(
-						[&itr, this]() { m_pAupa->AppendGainSync(itr->first); },
-						itr->second
+						[&sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
+						sequence[i].second
 					);
 				}
 				std::cout << "Starting Multiplexer ..." << std::endl;

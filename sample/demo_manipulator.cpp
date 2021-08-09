@@ -32,17 +32,27 @@ int main(int argc, char** argv ) {
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
 
-	auto pManipulator = MultiplexManipulator::Create(
+	//auto pManipulator = MultiplexManipulator::Create(
+	//	20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+	//	5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+	//	1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+	//	100, //freqLM
+	//	10,
+	//	5,
+	//	0
+	//);
+
+	auto pManipulator = VarMultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
-		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		100, //freqLM
-		10,
-		5,
-		0
+		1 * Eigen::Vector3f::Constant(-0.05f) //gainI
 	);
-
+	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+	pManipulator->FinishManipulation();
+	pAupa->Close();
+	return 0;
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(280.f, 0.f, 0.f);

@@ -22,6 +22,7 @@ namespace dynaman {
 			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
 			return false;
 		}
+		return true;
 	}
 
 	MultiplexManipulator::MultiplexManipulator(
@@ -397,7 +398,7 @@ namespace dynaman {
 		m_gainI(gainI),
 		m_periodMux_us(periodMux_us),
 		m_periodControl_ms(periodControl_ms),
-		m_periodObs_ms(m_periodObs_ms),
+		m_periodObs_ms(periodObs_ms),
 		m_lambda(lambda),
 		m_arfModelPtr(arfModelPtr),
 		m_isRunning(false),
@@ -432,9 +433,13 @@ namespace dynaman {
 		std::shared_ptr<Tracker> pTracker,
 		FloatingObjectPtr pObject
 	) {
+		m_pAupa = pAupa;
+		m_pTracker = pTracker;
+		m_pObject = pObject;
 		if (!IsInitialized(pAupa, pTracker)) {
 			return 1;
 		}
+		std::cout << "Initialized. " << std::endl;
 		timeBeginPeriod(1);
 		{
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
@@ -447,7 +452,6 @@ namespace dynaman {
 					navigator.Navigate(m_pTracker, m_pObject);
 					int waitTime = m_periodObs_ms - (observationTime - timeGetTime());
 					Sleep(std::max(waitTime, 0));
-
 				}
 			}
 		);
@@ -458,6 +462,7 @@ namespace dynaman {
 						this->ExecuteOnPaused(m_pAupa, m_pObject);
 					}
 					else {
+						std::cout << "Execute Actuation." << std::endl;
 						this->ExecuteSingleActuation(m_pAupa, m_pObject);
 					}
 				}
@@ -479,6 +484,7 @@ namespace dynaman {
 			m_thr_control.join();
 		}
 		navigator.CloseLog();
+		mux.Stop();
 		m_pAupa->AppendGainSync(autd::NullGain::Create());
 	}
 
@@ -500,6 +506,7 @@ namespace dynaman {
 		Eigen::Vector3f pos, vel, integ;
 		pObject->getStates(pos, vel, integ);
 		if (pObject->IsTracked() && isInsideWorkspace(pos, pObject->lowerbound(), pObject->upperbound())) {
+			std::cout << "Computing restoring force ..." << std::endl;
 			auto posTgt = pObject->getPositionTarget(timeLoopInit);
 			auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 			auto accelTgt = pObject->getAccelTarget(timeLoopInit);
@@ -516,21 +523,28 @@ namespace dynaman {
 				= pObject->totalMass() * accel
 				+ pObject->AdditionalMass() * Eigen::Vector3f(0, 0, GRAVITY_ACCEL);
 			auto duties = ComputeDuty(forceToApply, pos);
+			std::cout << "duty: " << duties.transpose() << std::endl;
 			int num_active = (duties.array() > 1.0e-3f).count();
 			if (num_active == 0) {
+				std::cout << "Applying NULL Gain ..." << std::endl;
 				mux.Stop();
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
+				std::cout << "Creating Sequence ..." << std::endl;
 				auto sequence = CreateDriveSequence(duties, pos);
+				std::cout << "Stopping Multiplexer..." << std::endl;
 				mux.Stop();
+				std::cout << "Clearing Multiplexer ..." << std::endl;
 				mux.ClearOrders();
+				std::cout << "Applying Sequence ..." << std::endl;
 				for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
 					mux.AddOrder(
 						[&itr, this]() { m_pAupa->AppendGainSync(itr->first); },
 						itr->second
 					);
 				}
+				std::cout << "Starting Multiplexer ..." << std::endl;
 				mux.Start();
 			}
 			//DriveAupa
@@ -611,7 +625,8 @@ namespace dynaman {
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-		int amplitude = 255 * duty.sum();
+		int amplitude = 255 * std::max(0.0f, std::min(1.0f, duty.sum()));
+		std::cout << "amplitude " << amplitude << std::endl;
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
 		for (int iAutd = 0; iAutd < duty.size(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {

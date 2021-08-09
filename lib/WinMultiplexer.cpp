@@ -4,6 +4,7 @@
 #include <utility>
 #include <functional>
 #include <shared_mutex>
+#include <iostream>
 
 #pragma comment(lib, "winmm")
 
@@ -36,12 +37,12 @@ void WinMultiplexer::Start() {
 		while (IsRunning()) {
 			LARGE_INTEGER start, now;
 			QueryPerformanceCounter(&start);
-			(*itr).first();
+			itr->first();
 			itr++;
 			if (itr == orders.end()) {
 				itr = orders.begin();
 			}
-			const auto sleep_count = (*itr).second * (freq.QuadPart / 1000000L);
+			const auto sleep_count = itr->second * (freq.QuadPart / 1000000L);
 			do {
 				QueryPerformanceCounter(&now);
 			} while (now.QuadPart - start.QuadPart < sleep_count);
@@ -60,7 +61,9 @@ void WinMultiplexer::Stop() {
 		m_is_running = false;
 	}
 	if (th_exe.joinable()) {
+		std::cout << "Joining th_exe.";
 		th_exe.join();
+		std::cout << ".... Joined." << std::endl;
 	}
 }
 

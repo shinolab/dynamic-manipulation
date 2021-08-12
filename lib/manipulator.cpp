@@ -437,7 +437,6 @@ namespace dynaman {
 		if (!IsInitialized(pAupa, pTracker)) {
 			return 1;
 		}
-		std::cout << "Initialized. " << std::endl;
 		timeBeginPeriod(1);
 		{
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
@@ -460,7 +459,6 @@ namespace dynaman {
 						this->ExecuteOnPaused(m_pAupa, m_pObject);
 					}
 					else {
-						std::cout << "Execute Actuation." << std::endl;
 						this->ExecuteSingleActuation(m_pAupa, m_pObject);
 					}
 				}
@@ -504,7 +502,6 @@ namespace dynaman {
 		Eigen::Vector3f pos, vel, integ;
 		pObject->getStates(pos, vel, integ);
 		if (pObject->IsTracked() && isInsideWorkspace(pos, pObject->lowerbound(), pObject->upperbound())) {
-			std::cout << "Computing restoring force ..." << std::endl;
 			auto posTgt = pObject->getPositionTarget(timeLoopInit);
 			auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 			auto accelTgt = pObject->getAccelTarget(timeLoopInit);
@@ -521,10 +518,8 @@ namespace dynaman {
 				= pObject->totalMass() * accel
 				+ pObject->AdditionalMass() * Eigen::Vector3f(0, 0, GRAVITY_ACCEL);
 			auto duties = ComputeDuty(forceToApply, pos);
-			std::cout << "duty: " << duties.transpose() << std::endl;
 			int num_active = (duties.array() > 1.0e-3f).count();
 			if (num_active == 0) {
-				std::cout << "Applying NULL Gain ..." << std::endl;
 				mux.Stop();
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
@@ -538,8 +533,7 @@ namespace dynaman {
 				std::cout << "Applying Sequence ..." << std::endl;
 				for (int i = 0; i < sequence.size(); i++) {
 					mux.AddOrder(
-						//[sequence, i]() { std::cout << i << ":" << sequence[i].second << std::endl; },
-						[sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
+						[&sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
 						sequence[i].second
 					);
 				}

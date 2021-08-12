@@ -153,6 +153,15 @@ target_link_libraries(
     DynamicManipulation
 )
 
+add_executable(MuxGainTest MuxGainTest.cpp)
+target_link_libraries(
+    MuxGainTest
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+
 add_executable(Stationary stationary.cpp)
 target_link_libraries(Stationary
     StereoTracker

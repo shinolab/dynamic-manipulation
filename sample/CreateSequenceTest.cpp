@@ -3,21 +3,22 @@
 #include "autd3.hpp"
 #include "haptic_icon.hpp"
 #include "WinMultiplexer.hpp"
+#include "GainPlan.hpp"
 
 using namespace dynaman;
 
 int main(int argc, char** argv) {
 
 	/*user-defined configurations*/
-	Eigen::Vector3f pos_init(0, 0, 0);
+	Eigen::Vector3f pos(0, 0, 0);
 	std::string target_image_name("blue_target_no_cover.png");
 	/*end of user-defined configurations*/
 
 	auto pObject = dynaman::FloatingObject::Create(
-		pos_init,
+		pos,
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
-		0,//-0.036e-3f,
+		0,
 		50.f
 	);
 
@@ -42,10 +43,21 @@ int main(int argc, char** argv) {
 	manipulator.m_pAupa = pAupa;
 	manipulator.m_pObject = pObject;
 	manipulator.m_pTracker = pTracker;
-	Eigen::VectorXf duty(11);
-	duty << 0.2, 0.1, 0.3, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-	std::cout << "duty:" << duty.transpose() << std::endl;
-	auto sequence = manipulator.CreateDriveSequence(duty, pos_init);
+
+	Eigen::Vector3f forceTarget(2, 2, 0);
+	auto duty = manipulator.ComputeDuty(forceTarget, pos);
+
+	Eigen::MatrixXf posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
+	std::cout << CentersAutd(pAupa->geometry()) << std::endl;
+	Eigen::Vector3f forceResult = manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry()))* duty;
+
+	std::cout << "Duty: " << duty.transpose() << std::endl;
+	std::cout << "Sum (Duty): " << duty.sum() << std::endl;
+	std::cout << "ForceTarget: " << forceTarget.transpose() << std::endl;
+	std::cout << "ForceResult: " << forceResult.transpose() << std::endl;
+	std::cout << "Force Matrix:" << std::endl << manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry())) << std::endl;;
+
+	auto sequence = manipulator.CreateDriveSequence(duty, pos);
 	for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
 		std::cout << itr->second << ",";
 	}

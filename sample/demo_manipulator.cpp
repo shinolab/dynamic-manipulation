@@ -45,11 +45,14 @@ int main(int argc, char** argv ) {
 	auto pManipulator = VarMultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
-		1 * Eigen::Vector3f::Constant(-0.05f) //gainI
+		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+		10000, // mux_period_us
+		10, // control_period_ms
+		5 //obs_period_ms
 	);
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
-	std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::this_thread::sleep_for(std::chrono::seconds(10));
 	pManipulator->FinishManipulation();
 	pAupa->Close();
 	return 0;

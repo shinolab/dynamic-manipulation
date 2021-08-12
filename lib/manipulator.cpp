@@ -538,7 +538,8 @@ namespace dynaman {
 				std::cout << "Applying Sequence ..." << std::endl;
 				for (int i = 0; i < sequence.size(); i++) {
 					mux.AddOrder(
-						[&sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
+						//[sequence, i]() { std::cout << i << ":" << sequence[i].second << std::endl; },
+						[sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
 						sequence[i].second
 					);
 				}

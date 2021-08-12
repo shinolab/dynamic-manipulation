@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f gainD(1, 1, 1);
 	Eigen::Vector3f gainI(0, 0, 0);
 
-	int period_mux_us = 1000 * 1000 * 5;
+	int period_mux_us = 1000 * 1000 * 0.01;
 
 	dynaman::VarMultiplexManipulator manipulator(
 		gainP,
@@ -60,33 +60,46 @@ int main(int argc, char** argv) {
 
 	std::uniform_int_distribution dist(0, pAupa->geometry()->numDevices() - 1);
 
+	pAupa->AppendModulationSync(autd::SineModulation::Create(150));
+
+
 	for (int i_trial = 0; i_trial < num_trial; i_trial++) {
+		std::cout << "Trial #" << i_trial << std::endl;
 		Eigen::Vector3f focus(0, 0, 0);
 		Eigen::VectorXf duty(pAupa->geometry()->numDevices());
 		duty.setZero();
-		for (int j = 0; j < 4; j++) {
-			duty[dist(engine)] = 1;
-		}
+		//for (int j = 0; j < 4; j++) {
+		//	duty[dist(engine)] = 1;
+		//}
+		duty[0] = 1;
+		duty[1] = 1;
+		duty[2] = 1;
 		duty.normalize();
 		std::cout << "duty: " << duty.transpose() << std::endl;
 		auto sequence = manipulator.CreateDriveSequence(
 			duty,
 			focus
 		);
+		std::cout << "Append Gain" << std::endl;
+
 		for (int i = 0; i < sequence.size(); i++) {
 			std::cout << "TimeSlices: " << sequence[i].second << ", ";
 			manipulator.mux.AddOrder(
-				[sequence, i, &pAupa]() { pAupa->AppendGainSync(sequence[i].first); },
+				[sequence, i, &pAupa]() {
+					std::cout << "Append Gain #" << i << std::endl;
+					pAupa->AppendGainSync(sequence[i].first);
+				},
 				sequence[i].second
 			);
 		}
 		std::cout << std::endl;
 		manipulator.mux.Start();
-		std::this_thread::sleep_for(std::chrono::seconds(update_interval_ms));
+		std::this_thread::sleep_for(std::chrono::milliseconds(update_interval_ms));
 		manipulator.mux.Stop();
+		manipulator.mux.ClearOrders();
 
-		pAupa->Close();
+
 	}
-
+	pAupa->Close();
 	return 0;
 }

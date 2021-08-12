@@ -524,16 +524,12 @@ namespace dynaman {
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
-				std::cout << "Creating Sequence ..." << std::endl;
 				auto sequence = CreateDriveSequence(duties, pos);
-				std::cout << "Stopping Multiplexer..." << std::endl;
 				mux.Stop();
-				std::cout << "Clearing Multiplexer ..." << std::endl;
 				mux.ClearOrders();
-				std::cout << "Applying Sequence ..." << std::endl;
 				for (int i = 0; i < sequence.size(); i++) {
 					mux.AddOrder(
-						[&sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
+						[sequence, i, this]() { std::cout << "duration:" << sequence[i].second << std::endl; m_pAupa->AppendGainSync(sequence[i].first); },
 						sequence[i].second
 					);
 				}
@@ -618,17 +614,16 @@ namespace dynaman {
 		const Eigen::Vector3f& focus
 	) {
 		int amplitude = 255 * std::max(0.0f, std::min(1.0f, duty.sum()));
-		std::cout << "amplitude " << amplitude << std::endl;
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
-		for (int iAutd = 0; iAutd < duty.size(); iAutd++) {
+		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {
 				std::map<int, autd::GainPtr> gain_map;
 				for (int i = 0; i < m_pAupa->geometry()->numDevices(); i++) {
 					if (i == iAutd) {
-						gain_map.insert(std::make_pair(iAutd, autd::FocalPointGain::Create(focus, amplitude)));
+						gain_map.insert(std::make_pair(i, autd::FocalPointGain::Create(focus, amplitude)));
 					}
 					else {
-						gain_map.insert(std::make_pair(iAutd, autd::NullGain::Create()));
+						gain_map.insert(std::make_pair(i, autd::NullGain::Create()));
 					}
 				}
 				auto gain = autd::GroupedGain::Create(gain_map);

@@ -579,7 +579,7 @@ namespace dynaman {
 		}
 		Eigen::MatrixXf F = m_arfModelPtr->arf(posRelActive, rotsAutdActive);
 		Eigen::VectorXi condEq(1);
-		condEq << 1;
+		condEq << -1;
 		Eigen::MatrixXf A(1, isActive.count());
 		A << Eigen::RowVectorXf::Ones(isActive.count());
 		Eigen::VectorXf b(1);

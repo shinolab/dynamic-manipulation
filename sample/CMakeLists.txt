@@ -325,3 +325,12 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+
+add_executable(ComputeDutyTest ComputeDutyTest.cpp)
+target_link_libraries(
+    ComputeDutyTest
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)

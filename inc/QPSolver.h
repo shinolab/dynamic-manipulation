@@ -3,7 +3,21 @@
 
 #include <Eigen/Dense>
 
-float EigenLinearProgrammingSolver(
+/// <summary>
+/// Find x that minimizes c^T * x, subject to Ax <=/==/>= b
+/// positive/zero/negative number of the equalityConditions[i] means Ax[i] <=/==/>= b[i]. 
+/// </summary>
+/// <param name="result"></param>
+/// <param name="A"></param>
+/// <param name="b"></param>
+/// <param name="c"></param>
+/// <param name="equalityConditions"></param>
+/// <param name="lowerbound"></param>
+/// <param name="upperbound"></param>
+/// <param name="scale"></param>
+/// <returns></returns>
+
+float EigenCgalLpSolver(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,
@@ -11,7 +25,7 @@ float EigenLinearProgrammingSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	int const scale = 10000000
+	const float accuracy = 1.0e-8f
 );
 
 /*

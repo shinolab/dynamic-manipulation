@@ -49,7 +49,7 @@ std::shared_ptr<const float*> Eigen2CgalArray2d(Eigen::MatrixXf const &eigenMat)
 Solve Linear Programming minimize: y = c'x subject to Ax </=/> b, .
 sign of the coefficients of equality conditions specifies inequality/equlaity conditions of the row number.
 */
-float EigenLinearProgrammingSolver(
+float EigenCgalLpSolver(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,
@@ -57,7 +57,7 @@ float EigenLinearProgrammingSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	int accuracy = 1.0e-8f
+	const float accuracy
 )
 {
 	Eigen::MatrixXf A_scaled = A / accuracy;
@@ -84,7 +84,7 @@ float EigenLinearProgrammingSolver(
 		else
 			r[iCond] = CGAL::EQUAL;
 	}
-	LpProgram lp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lowerbound.data(), fub, upperbound.data(), c.data(), 0.f);
+	LpProgram lp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lowerbound.data(), fub, upperbound.data(), c_scaled.data(), 0.f);
 	Solution s = CGAL::solve_linear_program(lp, ET());
 	result.resize(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)

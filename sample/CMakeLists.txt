@@ -334,3 +334,16 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+
+add_executable(
+    ThrustSearchTest
+    ThrustSearchTest.cpp
+)
+target_link_libraries(
+    ThrustSearchTest
+    ThrustSearch
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)

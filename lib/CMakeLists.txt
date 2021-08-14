@@ -69,6 +69,11 @@ add_library(WinMultiplexer
 	../inc/WinMultiplexer.hpp
 )
 
+add_library(ThrustSearch
+	../inc/ThrustSearch.hpp
+	ThrustSearch.cpp
+)
+
 add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
 	FloatingObject.cpp

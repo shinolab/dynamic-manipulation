@@ -206,6 +206,8 @@ namespace dynaman {
 
 		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequence(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
+		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequenceOld(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
+
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 
 		std::shared_ptr<arfModelLinearBase> arfModel();

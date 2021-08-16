@@ -609,12 +609,44 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
+	std::vector<std::pair<autd::GainPtr, int>> VarMultiplexManipulator::CreateDriveSequenceOld(
+		const Eigen::VectorXf& duties,
+		const Eigen::Vector3f& focus
+	) {
+		std::vector<float> dutiesStl(duties.size());
+		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
+		int num_active = (duties.array() > 1.0e-3f).count();
+		int duration = m_periodMux_us / num_active;
+		//std::vector<autd::GainPtr> gain_list(num_active);
+		std::vector<std::pair<autd::GainPtr, int>> sequence(num_active);
+		int id_begin_search = 0;
+		for (auto itr_list = sequence.begin(); itr_list != sequence.end(); itr_list++) {
+			std::map<int, autd::GainPtr> gain_map;
+			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
+			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
+				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
+					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
+					//std::cout << amplitude << std::endl;
+					gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
+				}
+				else {
+					gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
+				}
+			}
+			auto gain = autd::GroupedGain::Create(gain_map);
+			*itr_list = std::make_pair(gain, duration);
+			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
+		}
+		return sequence;
+	}
+
 	std::vector<std::pair<autd::GainPtr, int>> VarMultiplexManipulator::CreateDriveSequence(
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-		int amplitude = 255 * std::max(0.0f, std::min(1.0f, duty.sum()));
+		auto amplitude = static_cast<int>(255 * std::max(0.0f, std::min(1.0f, duty.sum())));
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
+
 		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {
 				std::map<int, autd::GainPtr> gain_map;

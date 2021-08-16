@@ -442,6 +442,10 @@ namespace dynaman {
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
 			m_isRunning = true;
 		}
+		mux.SetStopSequence([this]() {
+			this->m_pAupa->AppendGainSync(autd::NullGain::Create());
+			}
+		);
 		m_thr_track = std::thread([this]()
 			{
 				while (this->IsRunning()) {
@@ -481,7 +485,6 @@ namespace dynaman {
 		}
 		navigator.CloseLog();
 		mux.Stop();
-		m_pAupa->AppendGainSync(autd::NullGain::Create());
 	}
 
 	void VarMultiplexManipulator::PauseManipulation() {

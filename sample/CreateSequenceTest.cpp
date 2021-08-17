@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
 	Eigen::Vector3f gainP(1, 1, 1);
 	Eigen::Vector3f gainD(1, 1, 1);
 	Eigen::Vector3f gainI(0, 0, 0);
+
 	VarMultiplexManipulator manipulator(
 		gainP,
 		gainD,
@@ -37,6 +38,7 @@ int main(int argc, char** argv) {
 		10000,
 		33,
 		10,
+		1.0,
 		0,
 		std::make_shared<arfModelFocusSphereExp50mm>()
 	);
@@ -44,39 +46,28 @@ int main(int argc, char** argv) {
 	manipulator.m_pObject = pObject;
 	manipulator.m_pTracker = pTracker;
 
-	Eigen::Vector3f forceTarget(2, 2, 0);
+	Eigen::Vector3f forceTarget(0,0,3);
+	std::cout << "computing duty ... " << std::endl;
 	auto duty = manipulator.ComputeDuty(forceTarget, pos);
-
-	Eigen::MatrixXf posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
-	std::cout << CentersAutd(pAupa->geometry()) << std::endl;
-	Eigen::Vector3f forceResult = manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry()))* duty;
-
-	std::cout << "Duty: " << duty.transpose() << std::endl;
-	std::cout << "Sum (Duty): " << duty.sum() << std::endl;
-	std::cout << "ForceTarget: " << forceTarget.transpose() << std::endl;
-	std::cout << "ForceResult: " << forceResult.transpose() << std::endl;
-	std::cout << "Force Matrix:" << std::endl << manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry())) << std::endl;;
-
+	auto duty_copy = duty;
+	for (int i = 0; i < duty.size(); i++) {
+		std::cout << duty[i] << ", ";
+	}
+	std::cout << std::endl;
+	std::cout << "computing sequence (new)" << std::endl;
 	auto sequence = manipulator.CreateDriveSequence(duty, pos);
+	std::cout << "computing sequence (old)" << std::endl;
+
+	auto sequence_old = manipulator.CreateDriveSequenceOld(duty_copy, pos);
+	std::cout << "duration (new): " << std::endl;
 	for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
 		std::cout << itr->second << ",";
 	}
 	std::cout << std::endl;
-	//for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
-	//	manipulator.mux.AddOrder(
-	//		[&itr]() { std::cout << itr->second; },
-	//		500000
-	//	);
-	//}
-	for (int i = 0; i < sequence.size(); i++) {
-		manipulator.mux.AddOrder(
-			[&sequence, i]() {std::cout << i << ": " << sequence[i].second << std::endl; },
-			500000
-		);
+	std::cout << "duration (old): " << std::endl;
+	for (auto itr = sequence_old.begin(); itr != sequence_old.end(); itr++) {
+		std::cout << itr->second << ",";
 	}
-	manipulator.mux.Start();
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-	manipulator.mux.Stop();
-
+	std::cout << std::endl;
 	return 0;
 }

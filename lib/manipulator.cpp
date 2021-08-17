@@ -7,7 +7,7 @@
 namespace dynaman {
 
 	constexpr DWORD thres_timeout_track_ms = 100;
-	constexpr float minimum_duty = 0.05f;
+	constexpr float minimum_duty = 0.01f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
 	bool IsInitialized(
@@ -126,12 +126,12 @@ namespace dynaman {
 	) {
 		std::vector<float> dutiesStl(duties.size());
 		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-		int num_active = (duties.array() > 1.0e-3f).count();
+		int num_active = (duties.array() > minimum_duty).count();
 		std::vector<autd::GainPtr> gain_list(num_active);
 		int id_begin_search = 0;
 		for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
 			std::map<int, autd::GainPtr> gain_map;
-			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
+			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > minimum_duty; });
 			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
 				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
 					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
@@ -628,11 +628,10 @@ namespace dynaman {
 		int id_begin_search = 0;
 		for (auto itr_list = sequence.begin(); itr_list != sequence.end(); itr_list++) {
 			std::map<int, autd::GainPtr> gain_map;
-			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
+			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 1.0e-3f; });
 			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
 				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
-					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
-					//std::cout << amplitude << std::endl;
+					int amplitude = std::max(0, (std::min(255, static_cast<int>(std::sqrtf((*itr_duties) * num_active) * 255.f))));
 					gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
 				}
 				else {
@@ -650,10 +649,8 @@ namespace dynaman {
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-
 		auto amplitude = static_cast<int>(255 * std::sqrtf(std::max(0.0f, std::min(1.0f, duty.sum()))));
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
-		std::cout << std::endl << "amplitude:" << amplitude;
 		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {
 				std::map<int, autd::GainPtr> gain_map;
@@ -667,7 +664,6 @@ namespace dynaman {
 				}
 				auto gain = autd::GroupedGain::Create(gain_map);
 				auto duration = static_cast<int>(m_periodMux_us * duty(iAutd) / duty.sum());
-				std::cout << "," << duration;
 				sequence.push_back(std::make_pair(gain, duration));
 			}
 		}

@@ -7,7 +7,7 @@
 namespace dynaman {
 
 	constexpr DWORD thres_timeout_track_ms = 100;
-	constexpr float minimum_duty = 1.0e-3f;
+	constexpr float minimum_duty = 0.05f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
 	bool IsInitialized(
@@ -388,6 +388,7 @@ namespace dynaman {
 		int periodMux_us,
 		int periodControl_ms,
 		int periodObs_ms,
+		float duty_max,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	):
@@ -397,6 +398,7 @@ namespace dynaman {
 		m_periodMux_us(periodMux_us),
 		m_periodControl_ms(periodControl_ms),
 		m_periodObs_ms(periodObs_ms),
+		m_duty_max(duty_max),
 		m_lambda(lambda),
 		m_arfModelPtr(arfModelPtr),
 		m_isRunning(false),
@@ -411,6 +413,7 @@ namespace dynaman {
 		int periodMux_us,
 		int periodControl_ms,
 		int periodObs_ms,
+		float duty_max,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {
@@ -421,6 +424,7 @@ namespace dynaman {
 			periodMux_us,
 			periodControl_ms,
 			periodObs_ms,
+			duty_max,
 			lambda,
 			arfModelPtr
 			);
@@ -442,6 +446,10 @@ namespace dynaman {
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
 			m_isRunning = true;
 		}
+		mux.SetStopSequence([this]() {
+			this->m_pAupa->AppendGainSync(autd::NullGain::Create());
+			}
+		);
 		m_thr_track = std::thread([this]()
 			{
 				while (this->IsRunning()) {
@@ -481,7 +489,6 @@ namespace dynaman {
 		}
 		navigator.CloseLog();
 		mux.Stop();
-		m_pAupa->AppendGainSync(autd::NullGain::Create());
 	}
 
 	void VarMultiplexManipulator::PauseManipulation() {
@@ -582,7 +589,7 @@ namespace dynaman {
 		Eigen::MatrixXf A(1, isActive.count());
 		A << Eigen::RowVectorXf::Ones(isActive.count());
 		Eigen::VectorXf b(1);
-		b << 1;
+		b << m_duty_max;
 		Eigen::VectorXf resultActive;
 		EigenCgalQpSolver(
 			resultActive,
@@ -608,12 +615,45 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
+	std::vector<std::pair<autd::GainPtr, int>> VarMultiplexManipulator::CreateDriveSequenceOld(
+		const Eigen::VectorXf& duties,
+		const Eigen::Vector3f& focus
+	) {
+		std::vector<float> dutiesStl(duties.size());
+		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
+		int num_active = (duties.array() > 1.0e-3f).count();
+		int duration = m_periodMux_us / num_active;
+		//std::vector<autd::GainPtr> gain_list(num_active);
+		std::vector<std::pair<autd::GainPtr, int>> sequence(num_active);
+		int id_begin_search = 0;
+		for (auto itr_list = sequence.begin(); itr_list != sequence.end(); itr_list++) {
+			std::map<int, autd::GainPtr> gain_map;
+			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 0; });
+			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
+				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
+					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
+					//std::cout << amplitude << std::endl;
+					gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
+				}
+				else {
+					gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
+				}
+			}
+			auto gain = autd::GroupedGain::Create(gain_map);
+			*itr_list = std::make_pair(gain, duration);
+			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
+		}
+		return sequence;
+	}
+
 	std::vector<std::pair<autd::GainPtr, int>> VarMultiplexManipulator::CreateDriveSequence(
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-		int amplitude = 255 * std::sqrt(std::max(0.0f, std::min(1.0f, duty.sum())));
+
+		auto amplitude = static_cast<int>(255 * std::sqrtf(std::max(0.0f, std::min(1.0f, duty.sum()))));
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
+		std::cout << std::endl << "amplitude:" << amplitude;
 		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {
 				std::map<int, autd::GainPtr> gain_map;
@@ -626,11 +666,12 @@ namespace dynaman {
 					}
 				}
 				auto gain = autd::GroupedGain::Create(gain_map);
-				int duration = m_periodMux_us * duty(iAutd) / duty.sum();
+				auto duration = static_cast<int>(m_periodMux_us * duty(iAutd) / duty.sum());
+				std::cout << "," << duration;
 				sequence.push_back(std::make_pair(gain, duration));
 			}
 		}
-		return sequence;	
+		return sequence;
 	}
 
 	void VarMultiplexManipulator::ExecuteOnPaused(

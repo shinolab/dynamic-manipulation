@@ -45,13 +45,15 @@ int main(int argc, char** argv ) {
 	int mux_period_us = 0.01 * 1000 * 1000;
 	int control_period_ms = 0.01 * 1000;
 	int obs_period_ms = 5;
+	float duty_max = 0.6;
 	auto pManipulator = VarMultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
 		mux_period_us,
 		control_period_ms,
-		obs_period_ms
+		obs_period_ms,
+		duty_max
 	);
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);

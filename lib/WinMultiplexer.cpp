@@ -9,6 +9,7 @@
 #pragma comment(lib, "winmm")
 
 WinMultiplexer::WinMultiplexer()
+	:onStop([](){})
 {
 	QueryPerformanceFrequency(&freq);
 }
@@ -66,6 +67,7 @@ void WinMultiplexer::Stop() {
 	if (th_exe.joinable()) {
 		th_exe.join();
 	}
+	onStop();
 }
 
 void WinMultiplexer::AddOrder(std::function<void()> order, int interval_us) {
@@ -76,3 +78,6 @@ void WinMultiplexer::ClearOrders() {
 	orders.clear();
 }
 
+void WinMultiplexer::SetStopSequence(std::function<void()> sequence) {
+	onStop = sequence;
+}

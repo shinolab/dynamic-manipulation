@@ -136,6 +136,7 @@ namespace dynaman {
 		int m_periodControl_ms;
 		int m_periodObs_ms;
 		float m_lambda;
+		float m_duty_max;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;
 		bool m_isPaused;
@@ -160,6 +161,7 @@ namespace dynaman {
 			int periodMux_us,
 			int periodUpdateControl_ms,
 			int periodUpdateObs_ms,
+			float duty_max,
 			float lambda,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr
 		);
@@ -171,6 +173,7 @@ namespace dynaman {
 			int periodMux_us = 10000,
 			int updatePeriodAupa_ms = 10,
 			int updatePeriodTraceker_ms = 5,
+			float duty_max = 1.0,
 			float lambda = 0.0f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()
 		);
@@ -205,6 +208,8 @@ namespace dynaman {
 		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& focus);
 
 		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequence(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
+
+		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequenceOld(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 

@@ -11,6 +11,7 @@
 class WinMultiplexer {
 private:
 	std::vector<std::pair<std::function<void()>, int>> orders;
+	std::function<void()> onStop;
 	std::shared_mutex mtx_is_running;
 	LARGE_INTEGER freq;
 	bool m_is_running = false;
@@ -22,6 +23,7 @@ public:
 	void Stop();
 	void MicroSleep(int interval_us);
 	void AddOrder(std::function<void()> order, int interval_us);
+	void SetStopSequence(std::function<void()> sequence);
 	void ClearOrders();
 	bool IsRunning();
 };

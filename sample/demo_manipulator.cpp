@@ -56,9 +56,6 @@ int main(int argc, char** argv ) {
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	std::this_thread::sleep_for(std::chrono::seconds(10));
-	pManipulator->FinishManipulation();
-	pAupa->Close();
-	return 0;
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(280.f, 0.f, 0.f);

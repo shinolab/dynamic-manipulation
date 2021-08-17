@@ -64,9 +64,7 @@ void WinMultiplexer::Stop() {
 		m_is_running = false;
 	}
 	if (th_exe.joinable()) {
-		std::cout << "Joining th_exe.";
 		th_exe.join();
-		std::cout << ".... Joined." << std::endl;
 	}
 }
 

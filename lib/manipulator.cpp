@@ -529,11 +529,10 @@ namespace dynaman {
 				mux.ClearOrders();
 				for (int i = 0; i < sequence.size(); i++) {
 					mux.AddOrder(
-						[sequence, i, this]() { std::cout << "duration:" << sequence[i].second << std::endl; m_pAupa->AppendGainSync(sequence[i].first); },
+						[sequence, i, this]() { m_pAupa->AppendGainSync(sequence[i].first); },
 						sequence[i].second
 					);
 				}
-				std::cout << "Starting Multiplexer ..." << std::endl;
 				mux.Start();
 			}
 			if (m_logEnabled) {
@@ -613,7 +612,7 @@ namespace dynaman {
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-		int amplitude = 255 * std::max(0.0f, std::min(1.0f, duty.sum()));
+		int amplitude = 255 * std::sqrt(std::max(0.0f, std::min(1.0f, duty.sum())));
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
 		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {

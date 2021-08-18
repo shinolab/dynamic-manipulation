@@ -388,6 +388,7 @@ namespace dynaman {
 		int periodMux_us,
 		int periodControl_ms,
 		int periodObs_ms,
+		int interval_min_us,
 		float duty_max,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
@@ -398,6 +399,7 @@ namespace dynaman {
 		m_periodMux_us(periodMux_us),
 		m_periodControl_ms(periodControl_ms),
 		m_periodObs_ms(periodObs_ms),
+		m_interval_min(interval_min_us),
 		m_duty_max(duty_max),
 		m_lambda(lambda),
 		m_arfModelPtr(arfModelPtr),
@@ -413,6 +415,7 @@ namespace dynaman {
 		int periodMux_us,
 		int periodControl_ms,
 		int periodObs_ms,
+		int interval_min_us,
 		float duty_max,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
@@ -424,6 +427,7 @@ namespace dynaman {
 			periodMux_us,
 			periodControl_ms,
 			periodObs_ms,
+			interval_min_us,
 			duty_max,
 			lambda,
 			arfModelPtr
@@ -531,7 +535,10 @@ namespace dynaman {
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
-				auto sequence = CreateDriveSequence(duties, pos);
+				auto sequence = SplitSequence(
+					CreateDriveSequence(duties, pos),
+					m_interval_min
+					);
 				mux.Stop();
 				mux.ClearOrders();
 				for (int i = 0; i < sequence.size(); i++) {
@@ -669,6 +676,21 @@ namespace dynaman {
 		}
 		return sequence;
 	}
+
+	std::vector<std::pair<autd::GainPtr, int>>
+		VarMultiplexManipulator::SplitSequence(const std::vector<std::pair<autd::GainPtr, int>>& sequence, int interval) {
+		std::vector<std::pair<autd::GainPtr, int>> sequence_new;
+		for (auto itr = sequence.cbegin(); itr != sequence.cend(); itr++) {
+			int num_split = itr->second / interval;
+			std::cout << "numsplit:" << num_split << std::endl;
+			for (int i_split = 0; i_split < num_split; i_split++) {
+				sequence_new.push_back(std::make_pair(itr->first, interval));
+			}
+			sequence_new.push_back(std::make_pair(itr->first, itr->second - num_split * interval));
+		}
+		return sequence_new;
+	}
+
 
 	void VarMultiplexManipulator::ExecuteOnPaused(
 		std::shared_ptr<autd::Controller> pAupa,

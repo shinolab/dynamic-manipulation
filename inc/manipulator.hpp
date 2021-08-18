@@ -135,6 +135,7 @@ namespace dynaman {
 		int m_periodMux_us;
 		int m_periodControl_ms;
 		int m_periodObs_ms;
+		int m_interval_min;
 		float m_lambda;
 		float m_duty_max;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
@@ -161,6 +162,7 @@ namespace dynaman {
 			int periodMux_us,
 			int periodUpdateControl_ms,
 			int periodUpdateObs_ms,
+			int interval_min_us,
 			float duty_max,
 			float lambda,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr
@@ -173,6 +175,7 @@ namespace dynaman {
 			int periodMux_us = 10000,
 			int updatePeriodAupa_ms = 10,
 			int updatePeriodTraceker_ms = 5,
+			int interval_min_us = 1000,
 			float duty_max = 1.0,
 			float lambda = 0.0f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()
@@ -210,6 +213,8 @@ namespace dynaman {
 		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequence(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
 		std::vector<std::pair<autd::GainPtr, int>> CreateDriveSequenceOld(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
+
+		std::vector<std::pair<autd::GainPtr, int>> SplitSequence(const std::vector<std::pair<autd::GainPtr, int>>& sequence, int interval);
 
 		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 

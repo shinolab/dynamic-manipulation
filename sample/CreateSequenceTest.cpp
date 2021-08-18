@@ -7,6 +7,20 @@
 
 using namespace dynaman;
 
+std::vector<std::pair<autd::GainPtr, int>>
+SplitSequence(std::vector<std::pair<autd::GainPtr, int>>& sequence, int interval) {
+	std::vector<std::pair<autd::GainPtr, int>> sequence_new;
+	for (auto itr = sequence.cbegin(); itr != sequence.cend(); itr++) {
+		int num_split = itr->second / interval;
+		std::cout << "numsplit:" << num_split << std::endl;
+		for (int i_split = 0; i_split < num_split; i_split++) {
+			sequence_new.push_back(std::make_pair(itr->first, interval));
+		}
+		sequence_new.push_back(std::make_pair(itr->first, itr->second - num_split * interval));
+	}
+	return sequence_new;
+}
+
 int main(int argc, char** argv) {
 
 	/*user-defined configurations*/
@@ -46,7 +60,7 @@ int main(int argc, char** argv) {
 	manipulator.m_pObject = pObject;
 	manipulator.m_pTracker = pTracker;
 
-	Eigen::Vector3f forceTarget(0,0,3);
+	Eigen::Vector3f forceTarget(0,0,1);
 	std::cout << "computing duty ... " << std::endl;
 	auto duty = manipulator.ComputeDuty(forceTarget, pos);
 	auto duty_copy = duty;
@@ -54,18 +68,18 @@ int main(int argc, char** argv) {
 		std::cout << duty[i] << ", ";
 	}
 	std::cout << std::endl;
-	std::cout << "computing sequence (new)" << std::endl;
+	std::cout << "computing sequence ..." << std::endl;
 	auto sequence = manipulator.CreateDriveSequence(duty, pos);
-	std::cout << "computing sequence (old)" << std::endl;
-
-	auto sequence_old = manipulator.CreateDriveSequenceOld(duty_copy, pos);
-	std::cout << "duration (new): " << std::endl;
+	std::cout << "splitting sequence ..." << std::endl;
+	int interval = 6000;
+	auto sequence_splitted = SplitSequence(sequence, interval);
+	std::cout << "duration (original): " << std::endl;
 	for (auto itr = sequence.begin(); itr != sequence.end(); itr++) {
 		std::cout << itr->second << ",";
 	}
 	std::cout << std::endl;
-	std::cout << "duration (old): " << std::endl;
-	for (auto itr = sequence_old.begin(); itr != sequence_old.end(); itr++) {
+	std::cout << "duration (split): " << std::endl;
+	for (auto itr = sequence_splitted.begin(); itr != sequence_splitted.end(); itr++) {
 		std::cout << itr->second << ",";
 	}
 	std::cout << std::endl;

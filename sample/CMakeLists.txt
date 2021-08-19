@@ -72,6 +72,7 @@ target_link_libraries(MobilityEvalTest
     CameraDevice
     ImgProcUtil
     DynamicManipulation
+    ThrustSearch
 )
 
 add_executable(WorkspaceEvalTest WorkspaceEvalTest.cpp)

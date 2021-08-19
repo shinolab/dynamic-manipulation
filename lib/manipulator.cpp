@@ -7,7 +7,7 @@
 namespace dynaman {
 
 	constexpr DWORD thres_timeout_track_ms = 100;
-	constexpr float minimum_duty = 0.01f;
+	constexpr float minimum_duty = 1.0f/255.f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
 	bool IsInitialized(
@@ -529,16 +529,17 @@ namespace dynaman {
 				= pObject->totalMass() * accel
 				+ pObject->AdditionalMass() * Eigen::Vector3f(0, 0, GRAVITY_ACCEL);
 			auto duties = ComputeDuty(forceToApply, pos);
-			int num_active = (duties.array() > 1.0e-3f).count();
+			int num_active = (duties.array() > minimum_duty).count();
 			if (num_active == 0) {
 				mux.Stop();
 				m_pAupa->AppendGainSync(autd::NullGain::Create());
 			}
 			else {
-				auto sequence = SplitSequence(
-					CreateDriveSequence(duties, pos),
-					m_interval_min
-					);
+				//auto sequence = SplitSequence(
+				//	CreateDriveSequence(duties, pos),
+				//	m_interval_min
+				//	);
+				auto sequence = CreateDriveSequenceOld(duties, pos);
 				mux.Stop();
 				mux.ClearOrders();
 				for (int i = 0; i < sequence.size(); i++) {
@@ -626,29 +627,46 @@ namespace dynaman {
 		const Eigen::VectorXf& duties,
 		const Eigen::Vector3f& focus
 	) {
-		std::vector<float> dutiesStl(duties.size());
-		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-		int num_active = (duties.array() > 1.0e-3f).count();
+		//std::vector<float> dutiesStl(duties.size());
+		//Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
+		int num_active = (duties.array() > minimum_duty).count();
 		int duration = m_periodMux_us / num_active;
 		//std::vector<autd::GainPtr> gain_list(num_active);
-		std::vector<std::pair<autd::GainPtr, int>> sequence(num_active);
-		int id_begin_search = 0;
-		for (auto itr_list = sequence.begin(); itr_list != sequence.end(); itr_list++) {
-			std::map<int, autd::GainPtr> gain_map;
-			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > 1.0e-3f; });
-			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
-				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
-					int amplitude = std::max(0, (std::min(255, static_cast<int>(std::sqrtf((*itr_duties) * num_active) * 255.f))));
-					gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
+		std::vector<std::pair<autd::GainPtr, int>> sequence;
+		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
+			if (duties(iAutd) > minimum_duty) {
+				std::map<int, autd::GainPtr> gain_map;
+				for (int i = 0; i < m_pAupa->geometry()->numDevices(); i++) {
+					if (i == iAutd) {
+						int amplitude = std::max(0, (std::min(255, static_cast<int>(duties(iAutd) * num_active * 255.f))));
+
+						gain_map.insert(std::make_pair(i, autd::FocalPointGain::Create(focus, amplitude)));
+					}
+					else {
+						gain_map.insert(std::make_pair(i, autd::NullGain::Create()));
+					}
 				}
-				else {
-					gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
-				}
+				auto gain = autd::GroupedGain::Create(gain_map);
+				sequence.push_back(std::make_pair(gain, duration));
 			}
-			auto gain = autd::GroupedGain::Create(gain_map);
-			*itr_list = std::make_pair(gain, duration);
-			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
 		}
+		//int id_begin_search = 0;
+		//for (auto itr_list = sequence.begin(); itr_list != sequence.end(); itr_list++) {
+		//	std::map<int, autd::GainPtr> gain_map;
+		//	auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > minimum_duty; });
+		//	for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
+		//		if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
+		//			int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * num_active * 255.f))));
+		//			gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
+		//		}
+		//		else {
+		//			gain_map.insert(std::make_pair(i_autd, autd::NullGain::Create()));
+		//		}
+		//	}
+		//	auto gain = autd::GroupedGain::Create(gain_map);
+		//	*itr_list = std::make_pair(gain, duration);
+		//	id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
+		//}
 		return sequence;
 	}
 
@@ -656,7 +674,7 @@ namespace dynaman {
 		const Eigen::VectorXf& duty, 
 		const Eigen::Vector3f& focus
 	) {
-		auto amplitude = static_cast<int>(255 * std::sqrtf(std::max(0.0f, std::min(1.0f, duty.sum()))));
+		auto amplitude = static_cast<int>(255 * std::max(0.0f, std::min(1.0f, duty.sum())));
 		std::vector<std::pair<autd::GainPtr, int>> sequence;
 		for (int iAutd = 0; iAutd < m_pAupa->geometry()->numDevices(); iAutd++) {
 			if (duty(iAutd) > minimum_duty) {
@@ -682,7 +700,6 @@ namespace dynaman {
 		std::vector<std::pair<autd::GainPtr, int>> sequence_new;
 		for (auto itr = sequence.cbegin(); itr != sequence.cend(); itr++) {
 			int num_split = itr->second / interval;
-			std::cout << "numsplit:" << num_split << std::endl;
 			for (int i_split = 0; i_split < num_split; i_split++) {
 				sequence_new.push_back(std::make_pair(itr->first, interval));
 			}

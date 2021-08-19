@@ -43,9 +43,10 @@ int main(int argc, char** argv ) {
 	//);
 
 	int mux_period_us = 0.01 * 1000 * 1000;
-	int control_period_ms = 0.01 * 1000;
+	int control_period_ms = 10;
 	int obs_period_ms = 5;
-	float duty_max = 0.6;
+	int interval_min = 2500;
+	float duty_max = 1.0f;
 	auto pManipulator = VarMultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
@@ -53,6 +54,7 @@ int main(int argc, char** argv ) {
 		mux_period_us,
 		control_period_ms,
 		obs_period_ms,
+		interval_min,
 		duty_max
 	);
 	std::cout << "Starting Manipulaion ... " << std::endl;

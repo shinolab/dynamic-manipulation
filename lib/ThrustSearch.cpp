@@ -54,9 +54,8 @@ float dynaman::MaximumThrust(
 	std::shared_ptr<arfModelLinearBase> arf_model
 ) {
 	Eigen::MatrixXf posRel = pos.replicate(1, geo->numDevices()) - CentersAutd(geo);
-
 	Eigen::VectorXf duty = MaximizeThrust(pos, direction, duty_max, geo, arf_model);
-	return (arf_model->arf(posRel, RotsAutd(geo)) * duty.norm()).norm();
+	return (arf_model->arf(posRel, RotsAutd(geo)) * duty).norm();
 }
 
 float dynaman::MaximumThrust(

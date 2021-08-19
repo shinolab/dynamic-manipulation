@@ -33,23 +33,25 @@ void WinMultiplexer::MicroSleep(int interval_us)
 void WinMultiplexer::Start() {
 	this->Stop();
 	m_is_running = true;
-	if(orders.empty()){
-		return;
-	}
 	th_exe = std::thread([this]() {
-		auto itr = orders.begin();
-		while (IsRunning()) {
-			LARGE_INTEGER start, now;
-			QueryPerformanceCounter(&start);
-			itr->first();
-			itr++;
-			if (itr == orders.end()) {
-				itr = orders.begin();
+		if (orders.empty()) {
+			std::cerr << "MUX Caution: no order is registered." << std::endl;
+		}
+		else{
+			auto itr = orders.begin();
+			while (IsRunning()) {
+				LARGE_INTEGER start, now;
+				QueryPerformanceCounter(&start);
+				itr->first();
+				itr++;
+				if (itr == orders.end()) {
+					itr = orders.begin();
+				}
+				const auto sleep_count = itr->second * (freq.QuadPart / 1000000L);
+				do {
+					QueryPerformanceCounter(&now);
+				} while (now.QuadPart - start.QuadPart < sleep_count);
 			}
-			const auto sleep_count = itr->second * (freq.QuadPart / 1000000L);
-			do {
-				QueryPerformanceCounter(&now);
-			} while (now.QuadPart - start.QuadPart < sleep_count);
 		}
 	});
 }

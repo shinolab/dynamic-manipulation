@@ -60,13 +60,13 @@ float EigenCgalLpSolver(
 	const float accuracy
 )
 {
-	auto bound_scale_factor = 100.f;
+	auto bound_scale_factor = 0.01f;
 
 	Eigen::MatrixXf A_scaled = A / accuracy * bound_scale_factor;
 	Eigen::VectorXf b_scaled = b / accuracy;
 	Eigen::VectorXf c_scaled = c / accuracy;
-	Eigen::VectorXf lb_scaled = lowerbound * bound_scale_factor;
-	Eigen::VectorXf ub_scaled = upperbound * bound_scale_factor;
+	Eigen::VectorXf lb_scaled = lowerbound / bound_scale_factor;
+	Eigen::VectorXf ub_scaled = upperbound / bound_scale_factor;
 	auto _A_scaled = Eigen2CgalArray2d(A_scaled);
 
 	CGAL::Comparison_result* r = new CGAL::Comparison_result[A.rows()];
@@ -96,7 +96,7 @@ float EigenCgalLpSolver(
 		int index = std::distance(s.variable_values_begin(), itr);
 		result[index] = (*itr).numerator().to_double() / (*itr).denominator().to_double();
 	}
-	result /= bound_scale_factor;
+	result *= bound_scale_factor;
 	delete fub;
 	delete flb;
 	delete r;

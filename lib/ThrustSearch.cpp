@@ -7,6 +7,7 @@ using namespace dynaman;
 namespace {
 	auto thres_orth_norm_min = 0.01f;
 	auto thres_alignment = 0.998f;
+	auto thres_orth_force_min = 0.05f;
 }
 
 std::vector<std::vector<int>> combination(int max, int num) {
@@ -55,10 +56,7 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 	const Eigen::Vector3f& pos,
 	const Eigen::Vector3f& direction
 ) {
-	const int num_cond = 2;
-	Eigen::Vector3f orth_x = Eigen::Vector3f::UnitX().cross(direction);
-	Eigen::Vector3f orth_y = Eigen::Vector3f::UnitY().cross(direction);
-	Eigen::Vector3f orth_z = Eigen::Vector3f::UnitZ().cross(direction);
+	const int num_cond = 4;
 	Eigen::VectorXf duty_best(m_centers_autd.cols());
 	duty_best.setConstant(0.0f);
 	float force_best = 0.0f;
@@ -85,11 +83,13 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 				return large.cross(direction).norm() > small.cross(direction).norm();
 			});
 		A.row(0) << basis[0].cross(direction).transpose() * arfMat;
-		A.row(1) << basis[1].cross(direction).transpose() * arfMat;
+		A.row(1) << basis[0].cross(direction).transpose() * arfMat;
+		A.row(2) << basis[1].cross(direction).transpose() * arfMat;
+		A.row(3) << basis[1].cross(direction).transpose() * arfMat;
 		Eigen::VectorXf b(num_cond);
-		b << 0, 0;
+		b << thres_orth_force_min, -thres_orth_force_min, thres_orth_force_min, -thres_orth_force_min;
 		Eigen::VectorXi condEq(num_cond);
-		condEq << 0, 0;
+		condEq << -1, 1, -1, 1;
 		Eigen::VectorXf duty(m_num_time_slices);
 		duty.setConstant(0.1f);
 		Eigen::VectorXf lb(m_num_time_slices);
@@ -102,11 +102,13 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			c,
 			condEq,
 			lb,
-			ub
+			ub,
+			1e-12
 		);
 		/*check feasibility*/
 		auto force = arfMat * duty;
 		if (force.normalized().dot(direction) > thres_alignment && force.norm() > force_best) {
+			force_best = force.norm();
 			duty_best.setZero();
 			for (int i_used = 0; i_used < indexes.size(); i_used++) {
 				duty_best(indexes[i_used]) = duty[i_used];
@@ -123,7 +125,7 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			std::cout << "lb: " << lb.transpose() << std::endl;
 			std::cout << "ub: " << ub.transpose() << std::endl;
 			std::cout << "duty: " << duty.transpose() << std::endl;
-			std::cout << "duty_max: " << m_duty_max << std::endl;
+			//std::cout << "duty_max: " << m_duty_max << std::endl;
 		}	
 	}
 	return duty_best;

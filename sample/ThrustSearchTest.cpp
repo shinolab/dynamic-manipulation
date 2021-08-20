@@ -11,6 +11,27 @@ using namespace dynaman;
 
 int main(int argc, char** argv) {
 
+	//Eigen::VectorXf res(1);
+	//Eigen::VectorXf c(1);
+	//c << -1;
+	//Eigen::MatrixXf A(2, 1);
+	//Eigen::VectorXf b(2);
+	//A << 0.1, 0.1;
+	//b << 0.05, 0.05;
+	//Eigen::VectorXi condEq(2);
+	//condEq << -1, -1;
+	//EigenCgalLpSolver(
+	//	res,
+	//	A,
+	//	b,
+	//	c,
+	//	condEq,
+	//	Eigen::VectorXf::Zero(1),
+	//	Eigen::VectorXf::Ones(1)
+	//);
+
+	//std::cout << res << std::endl;
+	//return 0;
 	auto pAupa = std::make_shared<autd::Controller>();
 	haptic_icon::SetGeometry(pAupa);
 

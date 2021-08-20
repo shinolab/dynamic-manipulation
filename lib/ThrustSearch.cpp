@@ -82,10 +82,10 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			[&direction](const Eigen::Vector3f& large, const Eigen::Vector3f& small) {
 				return large.cross(direction).norm() > small.cross(direction).norm();
 			});
-		A.row(0) << basis[0].cross(direction).transpose() * arfMat;
-		A.row(1) << basis[0].cross(direction).transpose() * arfMat;
-		A.row(2) << basis[1].cross(direction).transpose() * arfMat;
-		A.row(3) << basis[1].cross(direction).transpose() * arfMat;
+		A.row(0) << basis[0].cross(direction).normalized().transpose() * arfMat;
+		A.row(1) << basis[0].cross(direction).normalized().transpose() * arfMat;
+		A.row(2) << basis[1].cross(direction).normalized().transpose() * arfMat;
+		A.row(3) << basis[1].cross(direction).normalized().transpose() * arfMat;
 		Eigen::VectorXf b(num_cond);
 		b << thres_orth_force_min, -thres_orth_force_min, thres_orth_force_min, -thres_orth_force_min;
 		Eigen::VectorXi condEq(num_cond);
@@ -113,18 +113,18 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			for (int i_used = 0; i_used < indexes.size(); i_used++) {
 				duty_best(indexes[i_used]) = duty[i_used];
 			}
-			std::cout << "index: ";
-			for (int i = 0; i < indexes.size(); i++) {
-				std::cout << indexes[i] << ",";
-			}
-			std::cout << std::endl;
-			std::cout << "arfMat: " << std::endl << arfMat << std::endl;
-			std::cout << "A: " << std::endl << A << std::endl;
-			std::cout << "b: " << b.transpose() << std::endl;
-			std::cout << "c: " << c.transpose() << std::endl;
-			std::cout << "lb: " << lb.transpose() << std::endl;
-			std::cout << "ub: " << ub.transpose() << std::endl;
-			std::cout << "duty: " << duty.transpose() << std::endl;
+			//std::cout << "index: ";
+			//for (int i = 0; i < indexes.size(); i++) {
+			//	std::cout << indexes[i] << ",";
+			//}
+			//std::cout << std::endl;
+			//std::cout << "arfMat: " << std::endl << arfMat << std::endl;
+			//std::cout << "A: " << std::endl << A << std::endl;
+			//std::cout << "b: " << b.transpose() << std::endl;
+			//std::cout << "c: " << c.transpose() << std::endl;
+			//std::cout << "lb: " << lb.transpose() << std::endl;
+			//std::cout << "ub: " << ub.transpose() << std::endl;
+			//std::cout << "duty: " << duty.transpose() << std::endl;
 			//std::cout << "duty_max: " << m_duty_max << std::endl;
 		}	
 	}

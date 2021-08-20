@@ -17,16 +17,23 @@ int main(int argc, char** argv) {
 	std::random_device seed_gen;
 	std::default_random_engine engine(seed_gen());
 	std::uniform_real_distribution dist(0.0, 250.0);
-	const int num_trial = 100;
+	const int num_trial = 1;
 	std::vector<float> angles(num_trial);
 	std::vector<float> duties(num_trial);
 	const float duty_max = 0.6;
 	auto arf_model = std::make_shared<arfModelFocusSphereExp50mm>();
+	MuxThrustSearcher searcher(
+		pAupa->geometry(),
+		arf_model,
+		1.0f
+	);
+
 	for (int i = 0; i < angles.size(); i++) {
 		auto offset = dist(engine);
-		Eigen::Vector3f pos = Eigen::Vector3f::Zero() + offset * Eigen::Vector3f::Random().normalized();
-		Eigen::Vector3f direction = Eigen::Vector3f::Random().normalized();
-		Eigen::VectorXf duty = MaximizeThrust(pos, direction, duty_max, pAupa->geometry(), arf_model);
+		Eigen::Vector3f pos = Eigen::Vector3f::Zero();// +offset * Eigen::Vector3f::Random().normalized();
+		Eigen::Vector3f direction(1, 0, 0);// = Eigen::Vector3f::Random().normalized();
+		Eigen::VectorXf duty = searcher.Search(pos, direction);
+		//Eigen::VectorXf duty = MaximizeThrust(pos, direction, duty_max, pAupa->geometry(), arf_model);
 		Eigen::MatrixXf posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
 		Eigen::Vector3f force = arf_model->arf(posRel, RotsAutd(pAupa->geometry())) * duty;
 		float angle = 180.0f / pi * acosf(std::min(1.0f, force.normalized().dot(direction)));

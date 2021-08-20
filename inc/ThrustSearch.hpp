@@ -7,6 +7,29 @@
 
 namespace dynaman {
 
+	class MuxThrustSearcher {
+	public:
+		MuxThrustSearcher(const MuxThrustSearcher& s) = delete;
+
+		MuxThrustSearcher(
+			autd::GeometryPtr geo,
+			std::shared_ptr<arfModelLinearBase> arf_model,
+			float duty_max = 1.0f
+		);
+
+		Eigen::VectorXf Search(
+			const Eigen::Vector3f& pos,
+			const Eigen::Vector3f& direction
+			);
+
+	private:
+		Eigen::MatrixXf m_centers_autd;
+		std::vector<Eigen::Matrix3f> m_rots_autd;
+		std::shared_ptr<arfModelLinearBase> m_arf_model;
+		float m_duty_max;
+		std::vector<std::vector<int>> m_autd_comb;
+	};
+
 	Eigen::VectorXf MaximizeThrust(
 		const Eigen::Vector3f& pos,
 		const Eigen::Vector3f& direction,

@@ -348,3 +348,13 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+
+add_executable(
+    FloatingObjectTest
+    FloatingObjectTest.cpp
+)
+
+target_link_libraries(
+    FloatingObjectTest
+    DynamicManipulation   
+)

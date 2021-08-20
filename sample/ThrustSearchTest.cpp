@@ -20,12 +20,14 @@ int main(int argc, char** argv) {
 	const int num_trial = 1;
 	std::vector<float> angles(num_trial);
 	std::vector<float> duties(num_trial);
-	const float duty_max = 0.6;
+	const float duty_max = 1.0f;
+	int num_time_slices = 1;
 	auto arf_model = std::make_shared<arfModelFocusSphereExp50mm>();
 	MuxThrustSearcher searcher(
 		pAupa->geometry(),
 		arf_model,
-		1.0f
+		num_time_slices,
+		duty_max
 	);
 
 	for (int i = 0; i < angles.size(); i++) {

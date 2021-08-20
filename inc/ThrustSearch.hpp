@@ -14,6 +14,7 @@ namespace dynaman {
 		MuxThrustSearcher(
 			autd::GeometryPtr geo,
 			std::shared_ptr<arfModelLinearBase> arf_model,
+			int num_time_slices,
 			float duty_max = 1.0f
 		);
 
@@ -23,6 +24,7 @@ namespace dynaman {
 			);
 
 	private:
+		int m_num_time_slices;
 		Eigen::MatrixXf m_centers_autd;
 		std::vector<Eigen::Matrix3f> m_rots_autd;
 		std::shared_ptr<arfModelLinearBase> m_arf_model;

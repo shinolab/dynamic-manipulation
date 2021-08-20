@@ -5,7 +5,6 @@
 using namespace dynaman;
 
 namespace {
-	constexpr int NUM_TIME_SLICES = 4;
 	auto thres_orth_norm_min = 0.01f;
 	auto thres_alignment = 0.998f;
 }
@@ -37,16 +36,18 @@ std::vector<std::vector<int>> combination(int max, int num) {
 MuxThrustSearcher::MuxThrustSearcher(
 	autd::GeometryPtr geo,
 	std::shared_ptr<arfModelLinearBase> arf_model,
+	int num_time_slices,
 	float duty_max
 ) 
 	:m_arf_model(arf_model),
 	m_duty_max(duty_max),
 	m_centers_autd(CentersAutd(geo)),
-	m_rots_autd(RotsAutd(geo))
+	m_rots_autd(RotsAutd(geo)),
+	m_num_time_slices(num_time_slices)
 {
 	m_autd_comb = combination(
 		geo->numDevices() - 1,
-		NUM_TIME_SLICES
+		num_time_slices
 	);
 }
 
@@ -63,18 +64,19 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 	float force_best = 0.0f;
 	for (auto itr_comb = m_autd_comb.begin(); itr_comb != m_autd_comb.end(); itr_comb++) {
 
-		auto idx_1 = (*itr_comb)[0];
-		auto idx_2 = (*itr_comb)[1];
-		auto idx_3 = (*itr_comb)[2];
-		auto idx_4 = (*itr_comb)[3];
+		std::vector<int> indexes = *itr_comb;
 
-		Eigen::MatrixXf centers_autd_used(3, NUM_TIME_SLICES);
-		centers_autd_used << m_centers_autd.col(idx_1), m_centers_autd.col(idx_2), m_centers_autd.col(idx_3), m_centers_autd.col(idx_4);
-		std::vector<Eigen::Matrix3f> rots_autd_used{ m_rots_autd[idx_1], m_rots_autd[idx_2], m_rots_autd[idx_3], m_rots_autd[idx_4] };
-		Eigen::MatrixXf posRel = pos.replicate(1, NUM_TIME_SLICES) - centers_autd_used;
+		Eigen::MatrixXf centers_autd_used(3, m_num_time_slices);
+		std::vector<Eigen::Matrix3f> rots_autd_used(m_num_time_slices);
+
+		for (int i_used = 0; i_used < indexes.size(); i_used++) {
+			centers_autd_used.col(i_used) = m_centers_autd.col(indexes[i_used]);
+			rots_autd_used[i_used] = m_rots_autd[indexes[i_used]];
+		}
+		Eigen::MatrixXf posRel = pos.replicate(1, m_num_time_slices) - centers_autd_used;
 		auto arfMat = m_arf_model->arf(posRel, rots_autd_used);
 		Eigen::VectorXf c = -direction.transpose() * arfMat;
-		Eigen::MatrixXf A(num_cond, NUM_TIME_SLICES);
+		Eigen::MatrixXf A(num_cond, m_num_time_slices);
 		std::vector<Eigen::Vector3f> basis{ Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ() };
 		std::sort(
 			basis.begin(),
@@ -88,11 +90,11 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 		b << 0, 0;
 		Eigen::VectorXi condEq(num_cond);
 		condEq << 0, 0;
-		Eigen::VectorXf duty(NUM_TIME_SLICES);
+		Eigen::VectorXf duty(m_num_time_slices);
 		duty.setConstant(0.1f);
-		Eigen::VectorXf lb(NUM_TIME_SLICES);
+		Eigen::VectorXf lb(m_num_time_slices);
 		lb.setConstant(0.f);
-		auto ub = 0.25 * Eigen::VectorXf::Ones(NUM_TIME_SLICES);
+		auto ub = m_duty_max / m_num_time_slices * Eigen::VectorXf::Ones(m_num_time_slices);
 		EigenCgalLpSolver(
 			duty,
 			A,
@@ -100,26 +102,28 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			c,
 			condEq,
 			lb,
-			ub,
-			1e-4f
+			ub
 		);
 		/*check feasibility*/
-		std::cout << "index: " << idx_1 << "," << idx_2 << "," << idx_3 << ", " << idx_4 << std::endl;
-		std::cout << "arfMat: " << std::endl << arfMat << std::endl;
-
-		std::cout << "A: " << std::endl << A << std::endl;
-		std::cout << "b: " << b.transpose() << std::endl;
-		std::cout << "c: " << c.transpose() << std::endl;
-		std::cout << "lb: " << lb.transpose() << std::endl;
-		std::cout << "ub: " << ub.transpose() << std::endl;
-		std::cout << "duty: "  << duty.transpose() << std::endl;
-		std::cout << "duty_max: " << m_duty_max << std::endl;
 		auto force = arfMat * duty;
 		if (force.normalized().dot(direction) > thres_alignment && force.norm() > force_best) {
 			duty_best.setZero();
-			duty_best(idx_1) = duty[0];
-			duty_best(idx_2) = duty[1];
-			duty_best(idx_3) = duty[2];
+			for (int i_used = 0; i_used < indexes.size(); i_used++) {
+				duty_best(indexes[i_used]) = duty[i_used];
+			}
+			std::cout << "index: ";
+			for (int i = 0; i < indexes.size(); i++) {
+				std::cout << indexes[i] << ",";
+			}
+			std::cout << std::endl;
+			std::cout << "arfMat: " << std::endl << arfMat << std::endl;
+			std::cout << "A: " << std::endl << A << std::endl;
+			std::cout << "b: " << b.transpose() << std::endl;
+			std::cout << "c: " << c.transpose() << std::endl;
+			std::cout << "lb: " << lb.transpose() << std::endl;
+			std::cout << "ub: " << ub.transpose() << std::endl;
+			std::cout << "duty: " << duty.transpose() << std::endl;
+			std::cout << "duty_max: " << m_duty_max << std::endl;
 		}	
 	}
 	return duty_best;

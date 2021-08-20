@@ -215,7 +215,7 @@ namespace dynaman {
 				m_controlLogStream
 					<< timeLoopInit << ","
 					<< pos.x() << "," << pos.y() << "," << pos.z() << ","
-					<< vel.y() << "," << vel.y() << "," << vel.z() << ","
+					<< vel.x() << "," << vel.y() << "," << vel.z() << ","
 					<< integ.x() << "," << integ.y() << "," << integ.z() << ","
 					<< posTgt.x() << "," << posTgt.y() << "," << posTgt.z() << ","
 					<< velTgt.x() << "," << velTgt.y() << "," << velTgt.z() << ","
@@ -554,7 +554,7 @@ namespace dynaman {
 				m_controlLogStream
 					<< timeLoopInit << ","
 					<< pos.x() << "," << pos.y() << "," << pos.z() << ","
-					<< vel.y() << "," << vel.y() << "," << vel.z() << ","
+					<< vel.x() << "," << vel.y() << "," << vel.z() << ","
 					<< integ.x() << "," << integ.y() << "," << integ.z() << ","
 					<< posTgt.x() << "," << posTgt.y() << "," << posTgt.z() << ","
 					<< velTgt.x() << "," << velTgt.y() << "," << velTgt.z() << ","

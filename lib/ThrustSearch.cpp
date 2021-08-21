@@ -7,7 +7,7 @@ using namespace dynaman;
 namespace {
 	auto thres_orth_norm_min = 0.01f;
 	auto thres_alignment = 0.998f;
-	auto thres_orth_force_min = 0.05f;
+	auto thres_orth_force_min = 0.01f;
 }
 
 std::vector<std::vector<int>> combination(int max, int num) {
@@ -113,20 +113,23 @@ Eigen::VectorXf MuxThrustSearcher::Search(
 			for (int i_used = 0; i_used < indexes.size(); i_used++) {
 				duty_best(indexes[i_used]) = duty[i_used];
 			}
-			//std::cout << "index: ";
-			//for (int i = 0; i < indexes.size(); i++) {
-			//	std::cout << indexes[i] << ",";
-			//}
-			//std::cout << std::endl;
-			//std::cout << "arfMat: " << std::endl << arfMat << std::endl;
-			//std::cout << "A: " << std::endl << A << std::endl;
-			//std::cout << "b: " << b.transpose() << std::endl;
-			//std::cout << "c: " << c.transpose() << std::endl;
-			//std::cout << "lb: " << lb.transpose() << std::endl;
-			//std::cout << "ub: " << ub.transpose() << std::endl;
-			//std::cout << "duty: " << duty.transpose() << std::endl;
-			//std::cout << "duty_max: " << m_duty_max << std::endl;
 		}	
+
+		//if (true) {
+		//	std::cout << "index: ";
+		//	for (int i = 0; i < indexes.size(); i++) {
+		//		std::cout << indexes[i] << ",";
+		//	}
+		//	std::cout << std::endl;
+		//	std::cout << "arfMat: " << std::endl << arfMat << std::endl;
+		//	std::cout << "A: " << std::endl << A << std::endl;
+		//	std::cout << "b: " << b.transpose() << std::endl;
+		//	std::cout << "c: " << c.transpose() << std::endl;
+		//	std::cout << "lb: " << lb.transpose() << std::endl;
+		//	std::cout << "ub: " << ub.transpose() << std::endl;
+		//	std::cout << "duty: " << duty.transpose() << std::endl;
+		//	std::cout << "duty_max: " << m_duty_max << std::endl;
+		//}
 	}
 	return duty_best;
 }

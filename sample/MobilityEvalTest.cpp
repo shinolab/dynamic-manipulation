@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
 	const float num_search_points = 10;
 
 	std::string target_image_name("blue_target_r50mm.png");
-	std::string obsLogName("20210723_Bangbang_Obs_xz8_low.csv");
-	std::string controlLogName("20210723_Bangbang_Control_xz8_low.csv");
+	std::string obsLogName("20210819_Pid_Obs_xz5.csv");
+	std::string controlLogName("20210819_Pid_Control_xz5.csv");
 	float dist = 200;
 	Eigen::Vector3f posInit(0, 0, 0);
 	Eigen::Vector3f posStart = posInit - dist * direction;
@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
 		50.f
 	);
 
-	//return 0;
 	//Create Stereo Tracker	
 	std::cout << "opening tracker ..." << std::endl;
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
@@ -55,8 +54,8 @@ int main(int argc, char** argv) {
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		100, //freqLM
-		10,
+		170, //freqLM
+		6,
 		5,
 		0.0f,
 		arf_model
@@ -76,13 +75,10 @@ int main(int argc, char** argv) {
 	float force_accel_bw = MaximumThrust(posEnd, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
 	float force_decel_bw = MaximumThrust(posStart, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
 	std::cout << "force_accel_fw: " << force_accel_fw << std::endl;
-	std::cout << "force_decel_bw: " << force_decel_fw << std::endl;
+	std::cout << "force_decel_fw: " << force_decel_fw << std::endl;
 	std::cout << "force_accel_bw: " << force_accel_bw << std::endl;
-	std::cout << "force_decel_fw: " << force_decel_bw << std::endl;
+	std::cout << "force_decel_bw: " << force_decel_bw << std::endl;
 
-	pManipulator->FinishManipulation();
-	pAupa->Close();
-	return 0;
 
 	auto traj_forward = TrajectoryBangbangWithDrag::Create(
 		std::min(force_accel_fw, force_decel_fw),
@@ -117,12 +113,28 @@ int main(int argc, char** argv) {
 	std::this_thread::sleep_for(std::chrono::seconds(10)); 
 
 	for (int iTrial = 0; iTrial < numTrial; iTrial++) {
-		//pObject->updateStatesTarget(posEnd);
-		pObject->SetTrajectory(traj_forward);		
+		pObject->updateStatesTarget(posEnd);
+		//pObject->SetTrajectory(
+		//	TrajectoryBangbangWithDrag::Create(
+		//		std::min(force_accel_fw, force_decel_fw),
+		//		pObject->Radius(),
+		//		timeGetTime(),
+		//		posStart,
+		//		posEnd
+		//	)
+		//);		
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 
-		//pObject->updateStatesTarget(posStart);
-		pObject->SetTrajectory(traj_backward);
+		pObject->updateStatesTarget(posStart);
+		//pObject->SetTrajectory(
+		//	TrajectoryBangbangWithDrag::Create(
+		//		std::min(force_accel_bw, force_decel_bw),
+		//		pObject->Radius(),
+		//		timeGetTime(),
+		//		posEnd,
+		//		posStart
+		//	)
+		//);
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 

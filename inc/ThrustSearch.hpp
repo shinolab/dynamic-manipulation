@@ -9,7 +9,6 @@ namespace dynaman {
 
 	class MuxThrustSearcher {
 	public:
-		MuxThrustSearcher(const MuxThrustSearcher& s) = delete;
 
 		MuxThrustSearcher(
 			autd::GeometryPtr geo,

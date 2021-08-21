@@ -8,13 +8,53 @@
 #include "haptic_icon.hpp"
 #include "recorder.hpp"
 #include "ThrustSearch.hpp"
+#include "GainPlan.hpp"
 
 using namespace dynaman;
+
+float MuxMaximumThrust(
+	const Eigen::Vector3f& posStart,
+	const Eigen::Vector3f& posEnd,
+	float duty_max,
+	int num_points,
+	autd::GeometryPtr geo,
+	std::shared_ptr<arfModelLinearBase> arf_model
+) {
+	std::vector<MuxThrustSearcher> searchers{
+		{geo, arf_model, 1, duty_max},
+		{geo, arf_model, 2, duty_max},
+		{geo, arf_model, 3, duty_max},
+		{geo, arf_model, 4, duty_max}
+	};
+	float dist = (posEnd - posStart).norm();
+	auto direction = (posEnd - posStart).normalized();
+	float interval = dist / (num_points - 1);
+	float force_min = FLT_MAX;
+	for (int i_point = 0; i_point < num_points; i_point++) {
+		Eigen::Vector3f pos = posStart + i_point * interval * direction;
+		Eigen::MatrixXf posRel = pos.replicate(1, geo->numDevices()) - CentersAutd(geo);
+		Eigen::MatrixXf arfMat = arf_model->arf(posRel, RotsAutd(geo));
+		float force_max_at_point = 0;
+		std::for_each(searchers.begin(), searchers.end(), [&](MuxThrustSearcher& searcher)
+			{
+				auto duty = searcher.Search(pos, direction);
+				auto force = (arfMat * duty).dot(direction);
+				if (force > force_max_at_point) {
+					force_max_at_point = force;
+				}
+			}
+		);
+		if (force_max_at_point < force_min) {
+			force_min = force_max_at_point;
+		}
+	}
+	return force_min;
+}
 
 int main(int argc, char** argv) {
 
 	//configurations
-	auto direction =  Eigen::Vector3f(1, 0, 1).normalized();
+	auto direction =  Eigen::Vector3f(1, 0, 0).normalized();
 	const float force = 1.5; //[mN]
 	const float duty_max = 0.6;
 	const float num_search_points = 10;
@@ -37,19 +77,40 @@ int main(int argc, char** argv) {
 		50.f
 	);
 
+
+
+	std::cout << "opening aupa ..." << std::endl;
+	auto pAupa = std::make_shared<autd::Controller>();
+
+	haptic_icon::SetGeometry(pAupa);
+
+	auto arf_model = std::make_shared<arfModelFocusSphereExp50mm>();
+
+	float mu = 3 * 0.4f / 8.0f / pObject->Radius();
+	float dist_sw = 0.5f / mu * logf(0.5f * (expf(2.f * mu * 2.0f * dist) + 1.0f));
+
+	Eigen::Vector3f pos_sw_fw = posStart + dist_sw * direction;
+	Eigen::Vector3f pos_sw_bw = posEnd - dist_sw * direction;
+	float force_accel_fw = MuxMaximumThrust(posStart, pos_sw_fw, duty_max, num_search_points, pAupa->geometry(), arf_model);
+	float force_decel_fw = MuxMaximumThrust(posEnd, pos_sw_fw, duty_max, num_search_points, pAupa->geometry(), arf_model);
+	float force_accel_bw = MuxMaximumThrust(posEnd, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
+	float force_decel_bw = MuxMaximumThrust(posStart, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
+	std::cout << "force_accel_fw: " << force_accel_fw << std::endl;
+	std::cout << "force_decel_fw: " << force_decel_fw << std::endl;
+	std::cout << "force_accel_bw: " << force_accel_bw << std::endl;
+	std::cout << "force_decel_bw: " << force_decel_bw << std::endl;
+
+	return 0;
+
+	pAupa->Open(autd::LinkType::ETHERCAT);
+	if (!pAupa->isOpen())
+		return ENXIO;
+
 	//Create Stereo Tracker	
 	std::cout << "opening tracker ..." << std::endl;
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
 
-	std::cout << "opening aupa ..." << std::endl;
-	auto pAupa = std::make_shared<autd::Controller>();
-	pAupa->Open(autd::LinkType::ETHERCAT);
-	if (!pAupa->isOpen())
-		return ENXIO;
-	haptic_icon::SetGeometry(pAupa);
-
-	auto arf_model = std::make_shared<arfModelFocusSphereExp50mm>();
 	auto pManipulator = MultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
@@ -64,21 +125,6 @@ int main(int argc, char** argv) {
 		obsLogName,
 		controlLogName
 	);
-
-	float mu = 3 * 0.4f / 8.0f / pObject->Radius();
-	float dist_sw = 0.5f / mu * logf(0.5f * (expf(2.f * mu * 2.0f * dist) + 1.0f));
-	std::cout << "dist_sw: " << dist_sw << std::endl;
-	Eigen::Vector3f pos_sw_fw = posStart + dist_sw * direction;
-	Eigen::Vector3f pos_sw_bw = posEnd - dist_sw * direction;
-	float force_accel_fw = MaximumThrust(posStart, posEnd, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	float force_decel_fw = MaximumThrust(posEnd, pos_sw_fw, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	float force_accel_bw = MaximumThrust(posEnd, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	float force_decel_bw = MaximumThrust(posStart, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	std::cout << "force_accel_fw: " << force_accel_fw << std::endl;
-	std::cout << "force_decel_fw: " << force_decel_fw << std::endl;
-	std::cout << "force_accel_bw: " << force_accel_bw << std::endl;
-	std::cout << "force_decel_bw: " << force_decel_bw << std::endl;
-
 
 	auto traj_forward = TrajectoryBangbangWithDrag::Create(
 		std::min(force_accel_fw, force_decel_fw),

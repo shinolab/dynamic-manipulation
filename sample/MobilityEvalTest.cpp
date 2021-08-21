@@ -54,14 +54,14 @@ float MuxMaximumThrust(
 int main(int argc, char** argv) {
 
 	//configurations
-	auto direction =  Eigen::Vector3f(1, 0, 0).normalized();
+	auto direction = Eigen::Vector3f(-1, 0, 1).normalized();
 	const float force = 1.5; //[mN]
-	const float duty_max = 0.6;
+	const float duty_max = 0.7;
 	const float num_search_points = 10;
 
 	std::string target_image_name("blue_target_r50mm.png");
-	std::string obsLogName("20210819_Pid_Obs_xz5.csv");
-	std::string controlLogName("20210819_Pid_Control_xz5.csv");
+	std::string obsLogName("20210821_Pid_Obs_xz8.csv");
+	std::string controlLogName("20210821_Pid_Control_xz8.csv");
 	float dist = 200;
 	Eigen::Vector3f posInit(0, 0, 0);
 	Eigen::Vector3f posStart = posInit - dist * direction;
@@ -90,17 +90,12 @@ int main(int argc, char** argv) {
 	float dist_sw = 0.5f / mu * logf(0.5f * (expf(2.f * mu * 2.0f * dist) + 1.0f));
 
 	Eigen::Vector3f pos_sw_fw = posStart + dist_sw * direction;
-	Eigen::Vector3f pos_sw_bw = posEnd - dist_sw * direction;
 	float force_accel_fw = MuxMaximumThrust(posStart, pos_sw_fw, duty_max, num_search_points, pAupa->geometry(), arf_model);
 	float force_decel_fw = MuxMaximumThrust(posEnd, pos_sw_fw, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	float force_accel_bw = MuxMaximumThrust(posEnd, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
-	float force_decel_bw = MuxMaximumThrust(posStart, pos_sw_bw, duty_max, num_search_points, pAupa->geometry(), arf_model);
+
 	std::cout << "force_accel_fw: " << force_accel_fw << std::endl;
 	std::cout << "force_decel_fw: " << force_decel_fw << std::endl;
-	std::cout << "force_accel_bw: " << force_accel_bw << std::endl;
-	std::cout << "force_decel_bw: " << force_decel_bw << std::endl;
 
-	return 0;
 
 	pAupa->Open(autd::LinkType::ETHERCAT);
 	if (!pAupa->isOpen())
@@ -115,8 +110,8 @@ int main(int argc, char** argv) {
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		170, //freqLM
-		6,
+		100, //freqLM
+		10,
 		5,
 		0.0f,
 		arf_model
@@ -134,31 +129,21 @@ int main(int argc, char** argv) {
 		posEnd
 	);
 
-	auto traj_backward = TrajectoryBangbangWithDrag::Create(
-		std::min(force_accel_bw, force_decel_bw),
-		pObject->Radius(),
-		timeGetTime(),
-		posEnd,
-		posStart
-	);
 
 	auto time_to_accel_fw = dynamic_cast<TrajectoryBangbangWithDrag*>(traj_forward.get())->time_to_accel();
 	auto time_to_decel_fw = dynamic_cast<TrajectoryBangbangWithDrag*>(traj_forward.get())->time_to_decel();
 	std::cout << "time to accel: " << time_to_accel_fw << std::endl;
 	std::cout << "time to decel: " << time_to_decel_fw << std::endl;
-	auto time_to_accel_bw = dynamic_cast<TrajectoryBangbangWithDrag*>(traj_backward.get())->time_to_accel();
-	auto time_to_decel_bw = dynamic_cast<TrajectoryBangbangWithDrag*>(traj_backward.get())->time_to_decel();
-	std::cout << "time to accel: " << time_to_accel_bw << std::endl;
-	std::cout << "time to decel: " << time_to_decel_bw << std::endl;
 
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
 	std::this_thread::sleep_for(std::chrono::seconds(5));// wait for I-gain adjustment`
-
-	pObject->updateStatesTarget(posStart);
-	
-	std::this_thread::sleep_for(std::chrono::seconds(10)); 
+	std::cout << "posStart:" << posStart.transpose() << std::endl;
+	std::cout << "posEnd:" << posEnd.transpose() << std::endl;
 
 	for (int iTrial = 0; iTrial < numTrial; iTrial++) {
+		std::cout << "Moving to the starting point ..." << std::endl;
+		pObject->updateStatesTarget(posStart);
+		std::this_thread::sleep_for(std::chrono::seconds(10));
 		pObject->updateStatesTarget(posEnd);
 		//pObject->SetTrajectory(
 		//	TrajectoryBangbangWithDrag::Create(
@@ -169,18 +154,6 @@ int main(int argc, char** argv) {
 		//		posEnd
 		//	)
 		//);		
-		std::this_thread::sleep_for(std::chrono::seconds(10));
-
-		pObject->updateStatesTarget(posStart);
-		//pObject->SetTrajectory(
-		//	TrajectoryBangbangWithDrag::Create(
-		//		std::min(force_accel_bw, force_decel_bw),
-		//		pObject->Radius(),
-		//		timeGetTime(),
-		//		posEnd,
-		//		posStart
-		//	)
-		//);
 		std::this_thread::sleep_for(std::chrono::seconds(10));
 	}
 

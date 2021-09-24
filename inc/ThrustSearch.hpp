@@ -23,6 +23,12 @@ namespace dynaman {
 			);
 
 	private:
+		float MaximizeThrust(
+			const Eigen::Vector3f& pos,
+			const Eigen::Vector3f& direction,
+			const std::vector<int>& indexes_autd,
+			Eigen::VectorXf& duty
+		);
 		int m_num_time_slices;
 		Eigen::MatrixXf m_centers_autd;
 		std::vector<Eigen::Matrix3f> m_rots_autd;

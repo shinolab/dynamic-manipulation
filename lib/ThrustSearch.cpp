@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <future>
 #include "ThrustSearch.hpp"
 #include "GainPlan.hpp"
 #include "QPSolver.h"
@@ -39,7 +41,7 @@ MuxThrustSearcher::MuxThrustSearcher(
 	std::shared_ptr<arfModelLinearBase> arf_model,
 	int num_time_slices,
 	float duty_max
-) 
+)
 	:m_arf_model(arf_model),
 	m_duty_max(duty_max),
 	m_centers_autd(CentersAutd(geo)),
@@ -52,85 +54,91 @@ MuxThrustSearcher::MuxThrustSearcher(
 	);
 }
 
+float MuxThrustSearcher::MaximizeThrust(
+	const Eigen::Vector3f& pos,
+	const Eigen::Vector3f& direction,
+	const std::vector<int>& indexes,
+	Eigen::VectorXf& duty_full
+) {
+	const int num_cond = 4;
+
+	Eigen::MatrixXf centers_autd_used(3, m_num_time_slices);
+	std::vector<Eigen::Matrix3f> rots_autd_used(m_num_time_slices);
+
+	for (int i_used = 0; i_used < indexes.size(); i_used++) {
+		centers_autd_used.col(i_used) = m_centers_autd.col(indexes[i_used]);
+		rots_autd_used[i_used] = m_rots_autd[indexes[i_used]];
+	}
+	Eigen::MatrixXf posRel = pos.replicate(1, m_num_time_slices) - centers_autd_used;
+	auto arfMat = m_arf_model->arf(posRel, rots_autd_used);
+	Eigen::VectorXf c = -direction.transpose() * arfMat;
+	Eigen::MatrixXf A(num_cond, m_num_time_slices);
+	std::vector<Eigen::Vector3f> basis{ Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ() };
+	std::sort(
+		basis.begin(),
+		basis.end(),
+		[&direction](const Eigen::Vector3f& large, const Eigen::Vector3f& small) {
+			return large.cross(direction).norm() > small.cross(direction).norm();
+		});
+	A.row(0) << basis[0].cross(direction).normalized().transpose() * arfMat;
+	A.row(1) << basis[0].cross(direction).normalized().transpose() * arfMat;
+	A.row(2) << basis[1].cross(direction).normalized().transpose() * arfMat;
+	A.row(3) << basis[1].cross(direction).normalized().transpose() * arfMat;
+	Eigen::VectorXf b(num_cond);
+	b << thres_orth_force_min, -thres_orth_force_min, thres_orth_force_min, -thres_orth_force_min;
+	Eigen::VectorXi condEq(num_cond);
+	condEq << -1, 1, -1, 1;
+	Eigen::VectorXf duty(m_num_time_slices);
+	duty.setConstant(0.1f);
+	Eigen::VectorXf lb(m_num_time_slices);
+	lb.setConstant(0.f);
+	auto ub = m_duty_max / m_num_time_slices * Eigen::VectorXf::Ones(m_num_time_slices);
+	EigenCgalLpSolver(
+		duty,
+		A,
+		b,
+		c,
+		condEq,
+		lb,
+		ub,
+		1e-12
+	);
+	auto force = arfMat * duty;
+	duty_full.resize(m_centers_autd.cols());
+	duty_full.setZero();
+	if (force.normalized().dot(direction) > thres_alignment) {
+		for (int i_used = 0; i_used < indexes.size(); i_used++) {
+			duty_full(indexes[i_used]) = duty[i_used];
+		}
+		return force.norm();
+	}
+	return 0;
+}
+
 Eigen::VectorXf MuxThrustSearcher::Search(
 	const Eigen::Vector3f& pos,
 	const Eigen::Vector3f& direction
 ) {
-	const int num_cond = 4;
-	Eigen::VectorXf duty_best(m_centers_autd.cols());
-	duty_best.setConstant(0.0f);
 	float force_best = 0.0f;
-	for (auto itr_comb = m_autd_comb.begin(); itr_comb != m_autd_comb.end(); itr_comb++) {
-
-		std::vector<int> indexes = *itr_comb;
-
-		Eigen::MatrixXf centers_autd_used(3, m_num_time_slices);
-		std::vector<Eigen::Matrix3f> rots_autd_used(m_num_time_slices);
-
-		for (int i_used = 0; i_used < indexes.size(); i_used++) {
-			centers_autd_used.col(i_used) = m_centers_autd.col(indexes[i_used]);
-			rots_autd_used[i_used] = m_rots_autd[indexes[i_used]];
-		}
-		Eigen::MatrixXf posRel = pos.replicate(1, m_num_time_slices) - centers_autd_used;
-		auto arfMat = m_arf_model->arf(posRel, rots_autd_used);
-		Eigen::VectorXf c = -direction.transpose() * arfMat;
-		Eigen::MatrixXf A(num_cond, m_num_time_slices);
-		std::vector<Eigen::Vector3f> basis{ Eigen::Vector3f::UnitX(), Eigen::Vector3f::UnitY(), Eigen::Vector3f::UnitZ() };
-		std::sort(
-			basis.begin(),
-			basis.end(),
-			[&direction](const Eigen::Vector3f& large, const Eigen::Vector3f& small) {
-				return large.cross(direction).norm() > small.cross(direction).norm();
-			});
-		A.row(0) << basis[0].cross(direction).normalized().transpose() * arfMat;
-		A.row(1) << basis[0].cross(direction).normalized().transpose() * arfMat;
-		A.row(2) << basis[1].cross(direction).normalized().transpose() * arfMat;
-		A.row(3) << basis[1].cross(direction).normalized().transpose() * arfMat;
-		Eigen::VectorXf b(num_cond);
-		b << thres_orth_force_min, -thres_orth_force_min, thres_orth_force_min, -thres_orth_force_min;
-		Eigen::VectorXi condEq(num_cond);
-		condEq << -1, 1, -1, 1;
-		Eigen::VectorXf duty(m_num_time_slices);
-		duty.setConstant(0.1f);
-		Eigen::VectorXf lb(m_num_time_slices);
-		lb.setConstant(0.f);
-		auto ub = m_duty_max / m_num_time_slices * Eigen::VectorXf::Ones(m_num_time_slices);
-		EigenCgalLpSolver(
-			duty,
-			A,
-			b,
-			c,
-			condEq,
-			lb,
-			ub,
-			1e-12
+	std::vector<float> force_norms(m_autd_comb.size());
+	std::vector<std::future<void>> futures;
+	for (int i_comb = 0; i_comb < m_autd_comb.size(); i_comb++) {
+		futures.push_back(
+			std::async([i_comb, &pos, &direction, &force_norms, this]()
+				{
+					Eigen::VectorXf duty;
+					force_norms[i_comb] = MaximizeThrust(pos, direction, m_autd_comb[i_comb], duty);
+				}
+			)
 		);
-		/*check feasibility*/
-		auto force = arfMat * duty;
-		if (force.normalized().dot(direction) > thres_alignment && force.norm() > force_best) {
-			force_best = force.norm();
-			duty_best.setZero();
-			for (int i_used = 0; i_used < indexes.size(); i_used++) {
-				duty_best(indexes[i_used]) = duty[i_used];
-			}
-		}	
-
-		//if (true) {
-		//	std::cout << "index: ";
-		//	for (int i = 0; i < indexes.size(); i++) {
-		//		std::cout << indexes[i] << ",";
-		//	}
-		//	std::cout << std::endl;
-		//	std::cout << "arfMat: " << std::endl << arfMat << std::endl;
-		//	std::cout << "A: " << std::endl << A << std::endl;
-		//	std::cout << "b: " << b.transpose() << std::endl;
-		//	std::cout << "c: " << c.transpose() << std::endl;
-		//	std::cout << "lb: " << lb.transpose() << std::endl;
-		//	std::cout << "ub: " << ub.transpose() << std::endl;
-		//	std::cout << "duty: " << duty.transpose() << std::endl;
-		//	std::cout << "duty_max: " << m_duty_max << std::endl;
-		//}
 	}
+	for (auto&& f: futures) {
+		f.get();
+	}
+	auto itr_force_max = std::max_element(force_norms.begin(), force_norms.end());
+	auto comb_best = m_autd_comb[std::distance(force_norms.begin(), itr_force_max)];
+	Eigen::VectorXf duty_best;
+	MaximizeThrust(pos, direction, comb_best, duty_best);
 	return duty_best;
 }
 

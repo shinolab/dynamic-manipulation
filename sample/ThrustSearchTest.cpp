@@ -6,6 +6,9 @@
 #include "arfModel.hpp"
 #include "QPSolver.h"
 #include "GainPlan.hpp"
+#include <Windows.h>
+
+#pragma comment (lib, "winmm")
 
 using namespace dynaman;
 
@@ -18,7 +21,7 @@ int main(int argc, char** argv) {
 	std::random_device seed_gen;
 	std::default_random_engine engine(seed_gen());
 	std::uniform_real_distribution dist(0.0, 100.0);
-	const int num_trial = 250;
+	const int num_trial = 100;
 	std::vector<float> angles(num_trial);
 	std::vector<float> duties(num_trial);
 	std::vector<float> force_list(num_trial);
@@ -50,15 +53,17 @@ int main(int argc, char** argv) {
 		duty_max
 	);
 
+	auto start = timeGetTime();
+
 	for (int i = 0; i < angles.size(); i++) {
 		auto offset = dist(engine);
 		Eigen::Vector3f pos = Eigen::Vector3f::Zero() + offset * Eigen::Vector3f::Random().normalized();
 		Eigen::Vector3f direction = Eigen::Vector3f::Random().normalized();
+	
 		auto duty1 = searcher1.Search(pos, direction);
 		auto duty2 = searcher2.Search(pos, direction);
 		auto duty3 = searcher4.Search(pos, direction);
 		auto duty4 = searcher4.Search(pos, direction);
-		
 		//Eigen::VectorXf duty = MaximizeThrust(pos, direction, duty_max, pAupa->geometry(), arf_model);
 		Eigen::MatrixXf posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
 		Eigen::Vector3f force1 = arf_model->arf(posRel, RotsAutd(pAupa->geometry())) * duty1;
@@ -75,24 +80,30 @@ int main(int argc, char** argv) {
 			break;
 		case 1:
 			duty = duty2;
+			break;
 		case 2:
 			duty = duty3;
+			break;
 		case 3:
 			duty = duty4;
+			break;
+		default:
+			break;
 		}
-		//duty = duty3;
 		float angle = 180.0f / pi * acosf(std::min(1.0f, force.normalized().dot(direction)));
-		std::cout
-			<< "Pos: " << pos.x() << ", " << pos.y() << ", " << pos.z()
-			<< ", Direction: " << direction.x() << ", " << direction.y() << ", " << direction.z()
-			<< ", Force: " << force.x() << ", " << force.y() << ", " << force.z()
-			<< ", angle: " << angle << " deg"
-			<< ", sum(duty): " << duty.sum() << std::endl;
+		//std::cout
+		//	<< "Pos: " << pos.x() << ", " << pos.y() << ", " << pos.z()
+		//	<< ", Direction: " << direction.x() << ", " << direction.y() << ", " << direction.z()
+		//	<< ", Force: " << force.x() << ", " << force.y() << ", " << force.z()
+		//	<< ", angle: " << angle << " deg"
+		//	<< ", sum(duty): " << duty.sum() << std::endl;
 		angles[i] = angle;
 		duties[i] = duty.norm();
 		force_list[i] = (force.norm());
 		//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
+	auto end = timeGetTime();
+	std::cout << "elapsed: " << end - start << " ms per " << num_trial << "trials ( average process time: " << float(end-start)/num_trial << " ms)" << std::endl;
 	
 	auto mean_err_angle = std::accumulate(angles.begin(), angles.end(), 0) / angles.size();
 	auto max_err_angle = *std::max_element(angles.begin(), angles.end());

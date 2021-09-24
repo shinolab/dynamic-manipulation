@@ -133,7 +133,7 @@ namespace dynaman {
 		//cv::imshow("left view", img_left_rect);
 		//cv::imshow("right view", img_right_rect);
 		//cv::imshow("left (processed)", _extPtrLeft->img_debug());
-		//cv::imshow("right (processed", _extPtrRight->img_debug());
+		//cv::imshow("right (processed)", _extPtrRight->img_debug());
 		//cv::waitKey(3);
 		cv::Point3f cvPos = _stereoCamPtr->triangulate(point_left, point_right);
 		Eigen::Vector3f posObserved;

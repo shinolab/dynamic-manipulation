@@ -32,34 +32,34 @@ int main(int argc, char** argv ) {
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
 
-	//auto pManipulator = MultiplexManipulator::Create(
-	//	20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-	//	5 * Eigen::Vector3f::Constant(-4.0f), // gainD
-	//	1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-	//	100, //freqLM
-	//	10,
-	//	5,
-	//	0
-	//);
-
-	int mux_period_us = 0.01 * 1000 * 1000;
-	int control_period_ms = 10;
-	int obs_period_ms = 5;
-	int interval_min = 2500;
-	float duty_max = 1.0f;
-	auto pManipulator = VarMultiplexManipulator::Create(
+	auto pManipulator = MultiplexManipulator::Create(
 		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
 		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		mux_period_us,
-		control_period_ms,
-		obs_period_ms,
-		interval_min,
-		duty_max
+		100, //freqLM
+		10,
+		5,
+		0
 	);
+
+	//int mux_period_us = 0.01 * 1000 * 1000;
+	//int control_period_ms = 10;
+	//int obs_period_ms = 5;
+	//int interval_min = 2500;
+	//float duty_max = 1.0f;
+	//auto pManipulator = VarMultiplexManipulator::Create(
+	//	20 * Eigen::Vector3f::Constant(-1.6f), // gainP
+	//	5 * Eigen::Vector3f::Constant(-4.0f), // gainD
+	//	1 * Eigen::Vector3f::Constant(-0.05f), //gainI
+	//	mux_period_us,
+	//	control_period_ms,
+	//	obs_period_ms,
+	//	interval_min,
+	//	duty_max
+	//);
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);
-	std::this_thread::sleep_for(std::chrono::seconds(10));
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(280.f, 0.f, 0.f);

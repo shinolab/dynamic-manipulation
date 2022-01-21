@@ -68,7 +68,7 @@
 # Check Directory Macro
 macro(CHECK_DIR _DIR)
   if(NOT EXISTS "${${_DIR}}")
-    message(WARNING "Directory \"${${_DIR}}\" not found.")
+#    message(WARNING "Directory \"${${_DIR}}\" not found.")
     set(KinectSDK2_FOUND FALSE)
     unset(_DIR)
   endif()

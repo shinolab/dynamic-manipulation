@@ -23,20 +23,7 @@ include_directories(
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-# KinectSDK20
-# Find Kinect SDK v2
-find_package( KinectSDK2 REQUIRED )
-# Settings Kinect SDK v2
-include_directories( ${KinectSDK2_INCLUDE_DIRS} )
-link_directories( ${KinectSDK2_LIBRARY_DIRS} )
-
 add_library(Trajectory ../inc/Trajectory.hpp Trajectory.cpp)
-
-add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
-target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
-
-add_library(KinectSphereTracker ../inc/KinectSphereTracker.hpp KinectSphereTracker.cpp)
-target_link_libraries(KinectSphereTracker ${OpenCV_LIBS} KinectUtility)
 
 add_library(LinearArfModel ../inc/arfModel.hpp arfModel.cpp)
 
@@ -44,6 +31,23 @@ add_library(GeometryUtil ../inc/geometryUtil.hpp geometryUtil.cpp)
 
 add_library(AdditionalGain ../inc/additionalGain.hpp additionalGain.cpp)
 target_link_libraries(AdditionalGain autd3)
+
+# Tracker
+# Kinect v2 tracker and Ximea stereo tracker is implemented as default trackers
+option(USE_KINECT "USE KINECT" OFF)
+if(USE_KINECT)
+	# Find Kinect SDK v2
+	find_package( KinectSDK2 REQUIRED )
+	# Settings Kinect SDK v2
+	include_directories( ${KinectSDK2_INCLUDE_DIRS} )
+	link_directories( ${KinectSDK2_LIBRARY_DIRS} )
+
+	add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
+	target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
+
+	add_library(KinectSphereTracker ../inc/KinectSphereTracker.hpp KinectSphereTracker.cpp)
+	target_link_libraries(KinectSphereTracker ${OpenCV_LIBS} KinectUtility)
+endif()
 
 option(USE_XIMEA "USE XIMEA CAMERA" ON)
 if(USE_XIMEA)

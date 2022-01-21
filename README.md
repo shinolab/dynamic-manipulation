@@ -3,9 +3,12 @@
 1. 下記の依存ライブラリを予めインスト—ルしておく．
     - Boost(環境変数にBOOST_ROOTという名前でBoostのルートディレクトリのパスを追加しておくこと．)
     - Eigen3
-    - OpenCV（使用する予定の構成(x64 / Win32, Debug / Release)でビルドする）（※CまだMakeでビルドされたOpenCVでしか検証していません）
-    - KinectSDK
-    
+    - OpenCV（使用する予定の構成(x64 / Win32, Debug / Release)でビルドする）（※まだCMakeでビルドされたOpenCVでしか検証していません）
+
+    加えて，下記のいずれかのソフトウェア
+    - XIMEA Windows Software Package
+    - KindetV2SDK
+        
 さらに，下記のソフトをインスト—ルしておく．
     - CMake
     - Git (※説明はgit Bashを前提.)

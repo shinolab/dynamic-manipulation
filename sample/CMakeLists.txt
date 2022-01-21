@@ -34,6 +34,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
 
 #add_executable(simple simple.cpp)
 #target_link_libraries(simple DynamicManipulation)
@@ -57,6 +58,7 @@ target_link_libraries(demo_arf
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(demo_arf PROPERTIES FOLDER "demos")
 
 # add_executable(test_findDuty test_findDuty.cpp)
 # target_link_libraries(test_findDuty
@@ -74,6 +76,7 @@ target_link_libraries(MobilityEvalTest
     DynamicManipulation
     ThrustSearch
 )
+set_target_properties(MobilityEvalTest PROPERTIES FOLDER "test")
 
 add_executable(WorkspaceEvalTest WorkspaceEvalTest.cpp)
 target_link_libraries(WorkspaceEvalTest 
@@ -82,6 +85,7 @@ target_link_libraries(WorkspaceEvalTest
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(WorkspaceEvalTest PROPERTIES FOLDER "test")
 
 add_executable(TrajectoryTest TrajectoryTest.cpp)
 target_link_libraries(
@@ -91,6 +95,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(TrajectoryTest PROPERTIES FOLDER "test")
 
 add_executable(CircularEvalTest CircularEvalTest.cpp)
 target_link_libraries(
@@ -100,6 +105,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(CircularEvalTest PROPERTIES FOLDER "test")
 
 add_executable(MuxGainTest MuxGainTest.cpp)
 target_link_libraries(
@@ -109,6 +115,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(MuxGainTest PROPERTIES FOLDER "test")
 
 add_executable(Stationary stationary.cpp)
 target_link_libraries(Stationary
@@ -162,6 +169,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(testVelTrans PROPERTIES FOLDER "test")
 
 add_executable(demo_catch demo_catch.cpp)
 target_link_libraries(
@@ -171,6 +179,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(demo_catch PROPERTIES FOLDER "demos")
 
 option(BUILD_PCL_APPS "build examples that use pcl" ON)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
@@ -236,6 +245,7 @@ if(BUILD_PCL_APPS)
     target_link_libraries(ActionHandlerTest
         ActionHandler
     )
+    set_target_properties(ActionHandlerTest PROPERTIES FOLDER "test")
 
     add_library(HandStateReader
         HandStateReader.hpp
@@ -263,6 +273,7 @@ if(BUILD_PCL_APPS)
         pcl_grabber
         pcl_viewer
     )
+    set_target_properties(HandStateReaderTest PROPERTIES FOLDER "test")
 
     add_executable(
         graspable
@@ -297,6 +308,7 @@ if(BUILD_PCL_APPS)
         pcl_viewer
         ActionHandler
     )
+    set_target_properties(demo_grasp PROPERTIES FOLDER "demos")
 
     add_executable(
         demo_hand_state
@@ -315,6 +327,7 @@ if(BUILD_PCL_APPS)
         ActionHandler
         DrawUtil
     )
+    set_target_properties(demo_hand_state PROPERTIES FOLDER "demos")
 
 endif()
 
@@ -326,6 +339,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(CreateSequenceTest PROPERTIES FOLDER "test")
 
 add_executable(ComputeDutyTest ComputeDutyTest.cpp)
 target_link_libraries(
@@ -335,6 +349,7 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(ComputeDutyTest PROPERTIES FOLDER "test")
 
 add_executable(
     ThrustSearchTest
@@ -348,13 +363,14 @@ target_link_libraries(
     ImgProcUtil
     DynamicManipulation
 )
+set_target_properties(ThrustSearchTest PROPERTIES FOLDER "test")
 
 add_executable(
     FloatingObjectTest
     FloatingObjectTest.cpp
 )
-
 target_link_libraries(
     FloatingObjectTest
     DynamicManipulation   
 )
+set_target_properties(FloatingObjectTest PROPERTIES FOLDER "test")

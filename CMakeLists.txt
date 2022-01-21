@@ -5,11 +5,15 @@ enable_language(CSharp)
 set (CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0074 NEW)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
+
 project(DynamicManipulation)
 
 #add_subdirectory(deps/autd3/client)
 add_subdirectory(deps/autd3-library-software/client/deps/BeckhoffADS)
 add_subdirectory(deps/autd3-library-software/client/lib)
+set_target_properties(autd3 PROPERTIES FOLDER "3rdParty")
+set_target_properties(ads PROPERTIES FOLDER "3rdParty")
 add_subdirectory(lib)
 
 add_executable(simple_cs

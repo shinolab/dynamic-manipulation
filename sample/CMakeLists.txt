@@ -37,19 +37,6 @@ target_link_libraries(
 set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
 
 
-add_executable(demo_arf
-    demo_arf.cpp
-    haptic_icon.hpp
-)
-target_link_libraries(demo_arf
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(demo_arf PROPERTIES FOLDER "demos")
-
-
 add_executable(MobilityEvalTest MobilityEvalTest.cpp)
 target_link_libraries(MobilityEvalTest 
     StereoTracker

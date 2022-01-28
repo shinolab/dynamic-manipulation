@@ -27,8 +27,6 @@ add_library(Trajectory ../inc/Trajectory.hpp Trajectory.cpp)
 
 add_library(LinearArfModel ../inc/arfModel.hpp arfModel.cpp)
 
-add_library(GeometryUtil ../inc/geometryUtil.hpp geometryUtil.cpp)
-
 add_library(AdditionalGain ../inc/additionalGain.hpp additionalGain.cpp)
 target_link_libraries(AdditionalGain autd3)
 
@@ -51,6 +49,7 @@ endif()
 
 option(USE_XIMEA "USE XIMEA CAMERA" ON)
 if(USE_XIMEA)
+
 	find_package( XIMEA REQUIRED )
 
 	include_directories(${XIMEA_INCLUDE_DIR})
@@ -66,6 +65,7 @@ if(USE_XIMEA)
 
 	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
 	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})
+
 endif()
 
 add_library(WinMultiplexer
@@ -107,7 +107,6 @@ target_link_libraries(DynamicManipulation
 	${OpenCV_LIBS}
 	LinearArfModel
 	QPSolver
-	GeometryUtil
 	Trajectory
 	WinMultiplexer
 )

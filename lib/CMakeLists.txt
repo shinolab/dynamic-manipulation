@@ -123,9 +123,3 @@ target_link_libraries(DynamicManipulation
 	Trajectory
 	WinMultiplexer
 )
-
-add_library(dynaman_dll SHARED
-	${PROJECT_SOURCE_DIR}/dll/dll.cpp
-)
-target_link_libraries(dynaman_dll DynamicManipulation)
-set_target_properties(dynaman_dll PROPERTIES FOLDER "DynamicManipulation")

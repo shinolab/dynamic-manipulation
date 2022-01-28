@@ -24,11 +24,14 @@ find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(Trajectory ../inc/Trajectory.hpp Trajectory.cpp)
+set_target_properties(Trajectory PROPERTIES FOLDER "DynamicManipulation")
 
 add_library(LinearArfModel ../inc/arfModel.hpp arfModel.cpp)
+set_target_properties(LinearArfModel PROPERTIES FOLDER "DynamicManipulation")
 
 add_library(AdditionalGain ../inc/additionalGain.hpp additionalGain.cpp)
 target_link_libraries(AdditionalGain autd3)
+set_target_properties(AdditionalGain PROPERTIES FOLDER "DynamicManipulation")
 
 # Tracker
 # Kinect v2 tracker and Ximea stereo tracker is implemented as default trackers
@@ -42,9 +45,11 @@ if(USE_KINECT)
 
 	add_library(KinectUtility STATIC ../inc/KinectUtility.hpp KinectUtility.cpp)
 	target_link_libraries(KinectUtility ${KinectSDK2_LIBRARIES})
+	set_target_properties(KinectUtility PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(KinectSphereTracker ../inc/KinectSphereTracker.hpp KinectSphereTracker.cpp)
 	target_link_libraries(KinectSphereTracker ${OpenCV_LIBS} KinectUtility)
+	set_target_properties(KinectSphereTracker PROPERTIES FOLDER "DynamicManipulation")
 endif()
 
 option(USE_XIMEA "USE XIMEA CAMERA" ON)
@@ -56,27 +61,32 @@ if(USE_XIMEA)
 
 	add_library(xiApiPlusOcv ../inc/xiApiPlusOcv.hpp xiApiPlusOcv.cpp)
 	target_link_libraries(xiApiPlusOcv ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
+	set_target_properties(xiApiPlusOcv PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(ImgProcUtil ../inc/ImgProcUtil.hpp ImgProcUtil.cpp)
 	target_link_libraries(ImgProcUtil ${OpenCV_LIBS})
+	set_target_properties(ImgProcUtil PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(CameraDevice ../inc/CameraDevice.hpp CameraDevice.cpp)
 	target_link_libraries(CameraDevice xiApiPlusOcv)
+	set_target_properties(CameraDevice PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
 	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})
-
+	set_target_properties(StereoTracker PROPERTIES FOLDER "DynamicManipulation")
 endif()
 
 add_library(WinMultiplexer
 	WinMultiplexer.cpp
 	../inc/WinMultiplexer.hpp
 )
+set_target_properties(WinMultiplexer PROPERTIES FOLDER "DynamicManipulation")
 
 add_library(ThrustSearch
 	../inc/ThrustSearch.hpp
 	ThrustSearch.cpp
 )
+set_target_properties(ThrustSearch PROPERTIES FOLDER "DynamicManipulation")
 
 add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
@@ -86,10 +96,11 @@ add_library(DynamicManipulation STATIC
 	GainPlan.cpp
 	../inc/manipulator.hpp
 	manipulator.cpp
-	../inc/EigenTools.hpp
+	#../inc/EigenTools.hpp
 	../inc/recorder.hpp
 	recorder.cpp
 )
+set_target_properties(DynamicManipulation PROPERTIES FOLDER "DynamicManipulation")
 
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
   target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
@@ -100,6 +111,8 @@ add_library(QPSolver
 	QPSolver.cpp
 )
 target_link_libraries(QPSolver CGAL::CGAL)
+set_target_properties(QPSolver PROPERTIES FOLDER "DynamicManipulation")
+
 target_link_libraries(DynamicManipulation
 	autd3
 	AdditionalGain
@@ -115,4 +128,4 @@ add_library(dynaman_dll SHARED
 	${PROJECT_SOURCE_DIR}/dll/dll.cpp
 )
 target_link_libraries(dynaman_dll DynamicManipulation)
-
+set_target_properties(dynaman_dll PROPERTIES FOLDER "DynamicManipulation")

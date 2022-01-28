@@ -35,11 +35,6 @@ if(BUILD_SAMPLES)
 	add_subdirectory(sample)
 endif()
 
-option(BUILD_TEST "build test programs" OFF)
-if(BUILD_TEST)
-	add_subdirectory(test)
-endif()
-
 option(BUILD_SERVER "build dynaman server" ON)
 if(BUILD_SERVER)
 	add_subdirectory(server)

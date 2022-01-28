@@ -37,55 +37,6 @@ target_link_libraries(
 set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
 
 
-add_executable(MobilityEvalTest MobilityEvalTest.cpp)
-target_link_libraries(MobilityEvalTest 
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-    ThrustSearch
-)
-set_target_properties(MobilityEvalTest PROPERTIES FOLDER "test")
-
-add_executable(WorkspaceEvalTest WorkspaceEvalTest.cpp)
-target_link_libraries(WorkspaceEvalTest 
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(WorkspaceEvalTest PROPERTIES FOLDER "test")
-
-add_executable(TrajectoryTest TrajectoryTest.cpp)
-target_link_libraries(
-    TrajectoryTest
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(TrajectoryTest PROPERTIES FOLDER "test")
-
-add_executable(CircularEvalTest CircularEvalTest.cpp)
-target_link_libraries(
-    CircularEvalTest
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(CircularEvalTest PROPERTIES FOLDER "test")
-
-add_executable(MuxGainTest MuxGainTest.cpp)
-target_link_libraries(
-    MuxGainTest
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(MuxGainTest PROPERTIES FOLDER "test")
-
 add_library(
     vibrator
     vibrator.hpp
@@ -118,19 +69,6 @@ target_link_libraries(
     testVibrationJnd
     vibrator
 )
-
-add_executable(
-    testVelTrans
-    testVelTrans.cpp
-    )
-target_link_libraries(
-    testVelTrans
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(testVelTrans PROPERTIES FOLDER "test")
 
 add_executable(demo_catch demo_catch.cpp)
 target_link_libraries(
@@ -291,47 +229,3 @@ if(BUILD_PCL_APPS)
     set_target_properties(demo_hand_state PROPERTIES FOLDER "demos")
 
 endif()
-
-add_executable(CreateSequenceTest CreateSequenceTest.cpp)
-target_link_libraries(
-    CreateSequenceTest
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(CreateSequenceTest PROPERTIES FOLDER "test")
-
-add_executable(ComputeDutyTest ComputeDutyTest.cpp)
-target_link_libraries(
-    ComputeDutyTest
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(ComputeDutyTest PROPERTIES FOLDER "test")
-
-add_executable(
-    ThrustSearchTest
-    ThrustSearchTest.cpp
-)
-target_link_libraries(
-    ThrustSearchTest
-    ThrustSearch
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(ThrustSearchTest PROPERTIES FOLDER "test")
-
-add_executable(
-    FloatingObjectTest
-    FloatingObjectTest.cpp
-)
-target_link_libraries(
-    FloatingObjectTest
-    DynamicManipulation   
-)
-set_target_properties(FloatingObjectTest PROPERTIES FOLDER "test")

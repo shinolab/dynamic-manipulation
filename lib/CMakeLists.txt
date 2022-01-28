@@ -96,7 +96,6 @@ add_library(DynamicManipulation STATIC
 	GainPlan.cpp
 	../inc/manipulator.hpp
 	manipulator.cpp
-	#../inc/EigenTools.hpp
 	../inc/recorder.hpp
 	recorder.cpp
 )

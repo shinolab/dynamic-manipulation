@@ -36,17 +36,6 @@ target_link_libraries(
 )
 set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
 
-#add_executable(simple simple.cpp)
-#target_link_libraries(simple DynamicManipulation)
-
-#add_executable(projection projection.cpp)
-#include_directories(../inc)
-#target_link_libraries(projection DynamicManipulation Projector)
-
-add_library(MonitorInfoManager STATIC MonitorInfoManager.hpp MonitorInfoManager.cpp)
-
-add_library(DrawUtil DrawUtil.hpp DrawUtil.cpp)
-target_link_libraries(DrawUtil ${OpenCV_LIBS})
 
 add_executable(demo_arf
     demo_arf.cpp
@@ -60,13 +49,6 @@ target_link_libraries(demo_arf
 )
 set_target_properties(demo_arf PROPERTIES FOLDER "demos")
 
-# add_executable(test_findDuty test_findDuty.cpp)
-# target_link_libraries(test_findDuty
-#     StereoTracker
-#     CameraDevice
-#     ImgProcUtil
-#     DynamicManipulation
-# )
 
 add_executable(MobilityEvalTest MobilityEvalTest.cpp)
 target_link_libraries(MobilityEvalTest 
@@ -116,14 +98,6 @@ target_link_libraries(
     DynamicManipulation
 )
 set_target_properties(MuxGainTest PROPERTIES FOLDER "test")
-
-add_executable(Stationary stationary.cpp)
-target_link_libraries(Stationary
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
 
 add_library(
     vibrator

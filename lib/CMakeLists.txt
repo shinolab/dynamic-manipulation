@@ -95,11 +95,6 @@ if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
   target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
 endif()
 
-add_library(Projector STATIC
-	../inc/projector.hpp
-	projector.cpp
-)
-
 add_library(QPSolver
 	../inc/QPSolver.h
 	QPSolver.cpp

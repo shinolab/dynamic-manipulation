@@ -10,21 +10,22 @@
 
 namespace {
 	const float pi = 3.14159265359;
+	constexpr float AIR_DENSITY = 1.293e-9; // [kg/mm3]
 }
 
 namespace dynaman {
 	FloatingObject::FloatingObject(Eigen::Vector3f const& _positionTarget,
 		Eigen::Vector3f const& lowerbound,
 		Eigen::Vector3f const& upperbound,
-		float _additionalMass,
-		float _radius)
+		float weight,
+		float radius)
 		:position(_positionTarget),
 		velocity(Eigen::Vector3f::Zero()),
 		integral(Eigen::Vector3f::Zero()),
 		_lowerbound(lowerbound),
 		_upperbound(upperbound),
-		additionalMass(_additionalMass),
-		radius(_radius),
+		additionalMass(weight),
+		radius(radius),
 		isTracked(false),
 		lastDeterminationTime(0),
 		velocityBufferSize(3),
@@ -33,14 +34,19 @@ namespace dynaman {
 		dTBuffer(velocityBufferSize, 1),
 		trajectoryPtr(std::make_shared<TrajectoryConstantState>(_positionTarget)) {}
 
-	FloatingObjectPtr FloatingObject::Create(Eigen::Vector3f const& posTgt, Eigen::Vector3f const& lowerbound, Eigen::Vector3f const& upperbound, float _additionalMass, float _radius)
-	{
-		return FloatingObjectPtr(new FloatingObject(posTgt, lowerbound, upperbound, _additionalMass, _radius));
+	FloatingObjectPtr FloatingObject::Create(
+		Eigen::Vector3f const& posTgt,
+		Eigen::Vector3f const& lowerbound,
+		Eigen::Vector3f const& upperbound,
+		float weight,
+		float radius
+	){
+		return FloatingObjectPtr(new FloatingObject(posTgt, lowerbound, upperbound, weight, radius));
 	}
 
 	float FloatingObject::sphereMass()
 	{
-		return 1.293f * 4.0f * pi * radius * radius * radius / 3.0f * 1e-9f;
+		return AIR_DENSITY * 4.0f * pi * radius * radius * radius / 3.0f;
 	}
 
 	float FloatingObject::Radius() {

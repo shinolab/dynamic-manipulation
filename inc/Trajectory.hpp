@@ -10,7 +10,14 @@ namespace dynaman {
 	class Trajectory
 	{
 	public:
+		Trajectory() = default;
 		virtual ~Trajectory() {};
+
+		Trajectory(const Trajectory& trajectory) = default;
+		Trajectory& operator=(const Trajectory& trajectory) = default;
+		Trajectory(Trajectory&& trajectory) = default;
+		Trajectory& operator=(Trajectory&& trajecotry) = default;
+
 		virtual Eigen::Vector3f pos(DWORD time_ms = timeGetTime()) = 0;
 		virtual Eigen::Vector3f vel(DWORD time_ms = timeGetTime()) = 0;
 		virtual Eigen::Vector3f accel(DWORD time_ms = timeGetTime()) = 0;
@@ -24,12 +31,14 @@ namespace dynaman {
 		Eigen::Vector3f accelTgt;
 	public:
 		TrajectoryConstantState(Eigen::Vector3f const& positionTarget,
-			Eigen::Vector3f const& velocityTarget = Eigen::Vector3f::Constant(0.f),
-			Eigen::Vector3f const& accelTarget = Eigen::Vector3f::Constant(0.f));
+			Eigen::Vector3f const& velocityTarget = Eigen::Vector3f::Zero(),
+			Eigen::Vector3f const& accelTarget = Eigen::Vector3f::Zero()
+		);
 		Eigen::Vector3f pos(DWORD sys_time_ms = timeGetTime()) override;
 		Eigen::Vector3f vel(DWORD sys_time_ms = timeGetTime()) override;
 		Eigen::Vector3f accel(DWORD sys_time_ms = timeGetTime()) override;
-		static std::shared_ptr<Trajectory> Create(Eigen::Vector3f const& positionTarget,
+		static std::shared_ptr<Trajectory> Create(
+			Eigen::Vector3f const& positionTarget,
 			Eigen::Vector3f const& velocityTarget,
 			Eigen::Vector3f const& accelTarget);
 	};
@@ -48,11 +57,14 @@ namespace dynaman {
 		TrajectoryBangBang(float timeTotal,
 			DWORD sys_time_init,
 			Eigen::Vector3f const& posInit,
-			Eigen::Vector3f const& posEnd)
-			:_timeTotal(timeTotal),
+			Eigen::Vector3f const& posEnd
+		):
+			_timeTotal(timeTotal),
 			_sys_time_init(sys_time_init),
 			_posInit(posInit),
-			_posEnd(posEnd) {}
+			_posEnd(posEnd) 
+		{
+		}
 
 		Eigen::Vector3f pos(DWORD time_ms) override;
 		Eigen::Vector3f vel(DWORD time_ms) override;
@@ -60,7 +72,8 @@ namespace dynaman {
 		static std::shared_ptr<Trajectory> Create(float timeTotal,
 			DWORD sys_time_init_ms,
 			Eigen::Vector3f const& posInit,
-			Eigen::Vector3f const& posEnd);
+			Eigen::Vector3f const& posEnd
+		);
 	};
 
 	class TrajectoryBang : public Trajectory {
@@ -86,7 +99,8 @@ namespace dynaman {
 		static std::shared_ptr<Trajectory> Create(float const& timeToGo,
 			float const& timeInit,
 			Eigen::Vector3f const& posInit,
-			Eigen::Vector3f const& posEnd);
+			Eigen::Vector3f const& posEnd
+		);
 	};
 
 	class TrajectoryCircle : public Trajectory {
@@ -220,7 +234,7 @@ namespace dynaman {
 
 		Eigen::Vector3f vel(DWORD sys_time_ms) override;
 
-		Eigen::Vector3f accel(DWORD sys_time_ms)override;
+		Eigen::Vector3f accel(DWORD sys_time_ms) override;
 	};
 
 	class TrajectoryBangbangWithDrag : public Trajectory {

@@ -16,7 +16,7 @@ namespace dynaman {
 	class FloatingObject {
 	public:
 		DWORD lastDeterminationTime;
-		const int velocityBufferSize;
+		const size_t velocityBufferSize;
 		std::deque<Eigen::Vector3f> positionBuffer;
 		std::deque<Eigen::Vector3f> velocityBuffer;
 		std::deque<float> dTBuffer;
@@ -40,14 +40,14 @@ namespace dynaman {
 			const Eigen::Vector3f& _positionTarget,
 			const Eigen::Vector3f& lowerbound,
 			const Eigen::Vector3f& upperbound,
-			float _additionalMass = 0.1e-3f,
-			float _radius = 90.f);
+			float weight,
+			float _radius);
 
 		static FloatingObjectPtr Create(
 			const Eigen::Vector3f& posTgt,
 			const Eigen::Vector3f& lowerbound,
 			const Eigen::Vector3f& upperbound,
-			float _additionalMass = 0.1e-3f,
+			float weight = 0.1e-3f,
 			float radius = 90.f);
 
 		float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
@@ -60,7 +60,6 @@ namespace dynaman {
 		Eigen::Vector3f getPositionTarget(DWORD systime_ms = timeGetTime());
 		Eigen::Vector3f getVelocityTarget(DWORD systime_ms = timeGetTime());
 		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
-		Eigen::VectorXf getLatestInput();
 		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew);
 		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew, Eigen::Vector3f& velocitynew);
@@ -69,8 +68,9 @@ namespace dynaman {
 		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
 		void updateStatesTarget(
 			const Eigen::Vector3f& _positionTarget,
-			const Eigen::Vector3f& _velocityTarget = Eigen::Vector3f(0, 0, 0),
-			const Eigen::Vector3f& _accelTarget = Eigen::Vector3f(0, 0, 0));
+			const Eigen::Vector3f& _velocityTarget = Eigen::Vector3f::Zero(),
+			const Eigen::Vector3f& _accelTarget = Eigen::Vector3f::Zero()
+		);
 
 		bool isConverged(float tolPos, float tolVel);
 		bool IsTracked();

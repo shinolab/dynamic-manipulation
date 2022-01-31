@@ -315,7 +315,8 @@ namespace dynaman {
 	void MultiplexManipulator::SetGain(
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
-		const Eigen::Vector3f& gainI)
+		const Eigen::Vector3f& gainI
+	)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_gain);
 		m_gainP = gainP;

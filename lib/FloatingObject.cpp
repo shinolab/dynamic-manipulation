@@ -18,8 +18,9 @@ namespace dynaman {
 		Eigen::Vector3f const& lowerbound,
 		Eigen::Vector3f const& upperbound,
 		float weight,
-		float radius)
-		:position(_positionTarget),
+		float radius
+	):
+		position(_positionTarget),
 		velocity(Eigen::Vector3f::Zero()),
 		integral(Eigen::Vector3f::Zero()),
 		_lowerbound(lowerbound),
@@ -35,13 +36,13 @@ namespace dynaman {
 		trajectoryPtr(std::make_shared<TrajectoryConstantState>(_positionTarget)) {}
 
 	FloatingObjectPtr FloatingObject::Create(
-		Eigen::Vector3f const& posTgt,
-		Eigen::Vector3f const& lowerbound,
-		Eigen::Vector3f const& upperbound,
+		const Eigen::Vector3f& posTgt,
+		const Eigen::Vector3f& lowerbound,
+		const Eigen::Vector3f& upperbound,
 		float weight,
 		float radius
 	){
-		return FloatingObjectPtr(new FloatingObject(posTgt, lowerbound, upperbound, weight, radius));
+		return std::make_shared<FloatingObject>(posTgt, lowerbound, upperbound, weight, radius);
 	}
 
 	float FloatingObject::sphereMass()
@@ -224,8 +225,9 @@ namespace dynaman {
 
 	bool FloatingObject::IsInsideWorkspace()
 	{
-		Eigen::Vector3f v0 = position - lowerbound();
-		Eigen::Vector3f v1 = position - upperbound();
+		auto pos = getPosition();
+		Eigen::Vector3f v0 = pos - lowerbound();
+		Eigen::Vector3f v1 = pos - upperbound();
 		return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
 	}
 

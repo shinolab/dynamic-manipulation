@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
 set(CMAKE_CXX_STANDARD 17)
-cmake_policy(SET CMP0074 NEW)
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+endif()
 
 # Eigen3
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/deps)

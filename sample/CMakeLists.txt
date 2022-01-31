@@ -38,40 +38,6 @@ target_link_libraries(
 )
 set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
 
-
-add_library(
-    vibrator
-    vibrator.hpp
-    vibrator.cpp
-    )
-target_link_libraries(
-    vibrator
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-
-add_executable(testVibration testVibration.cpp)
-target_link_libraries(
-    testVibration
-    vibrator
-)
-
-add_executable(testVibrationSimple testVibrationSimple.cpp)
-target_link_libraries(testVibrationSimple
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-
-add_executable(testVibrationJnd testVibrationJnd.cpp)
-target_link_libraries(
-    testVibrationJnd
-    vibrator
-)
-
 add_executable(demo_catch demo_catch.cpp)
 target_link_libraries(
     demo_catch
@@ -226,7 +192,6 @@ if(BUILD_PCL_APPS)
         pcl_grabber
         pcl_viewer
         ActionHandler
-        DrawUtil
     )
     set_target_properties(demo_hand_state PROPERTIES FOLDER "demos")
 

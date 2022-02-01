@@ -156,7 +156,7 @@ namespace dynaman {
 		DWORD observeTime = timeGetTime();
 		Eigen::Vector3f posObserved;
 		bool observed = pTracker->observe(observeTime, posObserved, pObject);
-		if (observed && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound())) {
+		if (observed && isInsideWorkspace(posObserved, pObject->lowerbound(), pObject->upperbound())) {
 			m_pObject->updateStates(observeTime, posObserved);
 			m_pObject->SetTrackingStatus(true);
 		}

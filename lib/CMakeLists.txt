@@ -98,6 +98,8 @@ add_library(DynamicManipulation STATIC
 	manipulator.cpp
 	../inc/recorder.hpp
 	recorder.cpp
+	../inc/geometryUtil.hpp
+	geometryUtil.cpp
 )
 set_target_properties(DynamicManipulation PROPERTIES FOLDER "DynamicManipulation")
 

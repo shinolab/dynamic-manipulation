@@ -2,6 +2,7 @@
 #include "GainPlan.hpp"
 #include "QPSolver.h"
 #include "manipulator.hpp"
+#include "geometryUtil.hpp"
 
 namespace dynaman {
 
@@ -155,7 +156,7 @@ namespace dynaman {
 		DWORD observeTime = timeGetTime();
 		Eigen::Vector3f posObserved;
 		bool observed = pTracker->observe(observeTime, posObserved, pObject);
-		if (observed && pObject->IsInsideWorkspace()) {
+		if (observed && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound())) {
 			m_pObject->updateStates(observeTime, posObserved);
 			m_pObject->SetTrackingStatus(true);
 		}
@@ -186,7 +187,7 @@ namespace dynaman {
 		auto posTgt = pObject->getPositionTarget(timeLoopInit);
 		auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 		auto accelTgt = pObject->getAccelTarget(timeLoopInit);
-		if (pObject->IsTracked() && pObject->IsInsideWorkspace())
+		if (pObject->IsTracked() && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound()))
 		{
 			Eigen::Vector3f accel;
 			{
@@ -370,7 +371,7 @@ namespace dynaman {
 		DWORD observationTime = timeGetTime();
 		Eigen::Vector3f posObserved;
 		bool observed = pTracker->observe(observationTime, posObserved, pObject);
-		if (observed && pObject->IsInsideWorkspace()) {
+		if (observed && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound())) {
 			pObject->updateStates(observationTime, posObserved);
 			pObject->SetTrackingStatus(true);
 		}
@@ -514,7 +515,7 @@ namespace dynaman {
 		DWORD timeLoopInit = timeGetTime();
 		Eigen::Vector3f pos, vel, integ;
 		pObject->getStates(pos, vel, integ);
-		if (pObject->IsTracked() && pObject->IsInsideWorkspace()) {
+		if (pObject->IsTracked() && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound())) {
 			auto posTgt = pObject->getPositionTarget(timeLoopInit);
 			auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 			auto accelTgt = pObject->getAccelTarget(timeLoopInit);

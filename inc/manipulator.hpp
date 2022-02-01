@@ -47,6 +47,7 @@ namespace dynaman {
 		float m_freqLm;
 		int m_loopPeriodAupa;
 		int m_loopPeriodTracker;
+		int loopPeriod_;
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
 		bool m_isRunning;

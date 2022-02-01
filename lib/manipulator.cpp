@@ -40,6 +40,7 @@ namespace dynaman {
 		m_lambda(lambda),
 		m_loopPeriodAupa(loopPeriodAupa),
 		m_loopPeriodTracker(loopPeriodTracker),
+		loopPeriod_(10),
 		m_arfModelPtr(arfModelPtr),
 		m_isRunning(false),
 		m_isPaused(false),
@@ -165,8 +166,8 @@ namespace dynaman {
 		if (m_logEnabled) {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
 		}
-		int waitTime = m_loopPeriodTracker - (timeGetTime() - observeTime);
-		Sleep(std::max(waitTime, 0));
+		//int waitTime = m_loopPeriodTracker - (timeGetTime() - observeTime);
+		//Sleep(std::max(waitTime, 0));
 	}
 
 	void MultiplexManipulator::ExecuteSingleActuation(
@@ -229,8 +230,8 @@ namespace dynaman {
 				m_controlLogStream << std::endl;
 			}
 		}
-		int waitTime = m_loopPeriodAupa - (timeGetTime() - timeLoopInit);
-		Sleep(std::max(waitTime, 0));
+		//int waitTime = m_loopPeriodAupa - (timeGetTime() - timeLoopInit);
+		//Sleep(std::max(waitTime, 0));
 	}
 
 	int MultiplexManipulator::StartManipulation(
@@ -264,17 +265,18 @@ namespace dynaman {
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
 			m_isRunning = true;
 		}
-		m_thr_track = std::thread([this]()
-			{
-				while (this->IsRunning()) {
-					this->ExecuteSingleObservation(m_pTracker, m_pObject);
-				}
-			}
-		);
 		m_thr_control = std::thread([this]()
 			{
 				while (this->IsRunning()) {
+					DWORD tLoopInit = timeGetTime();
+					this->ExecuteSingleObservation(m_pTracker, m_pObject);
 					this->ExecuteSingleActuation(m_pAupa, m_pObject);
+					DWORD waitTime = std::clamp(
+						timeGetTime() - tLoopInit,
+						static_cast<DWORD>(0),
+						static_cast<DWORD>(loopPeriod_)
+					);
+					std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
 				}
 			}
 		);

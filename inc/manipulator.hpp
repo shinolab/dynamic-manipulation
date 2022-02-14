@@ -19,6 +19,11 @@ namespace dynaman {
 	class Manipulator {
 	public:
 		virtual ~Manipulator() {}
+		Manipulator(const Manipulator& m) = delete;
+		Manipulator operator=(const Manipulator& m) = delete;
+		Manipulator(Manipulator&& m) = default;
+		Manipulator& operator=(Manipulator && m) = default;
+
 		virtual int StartManipulation(
 			std::shared_ptr<autd::Controller> pAupa,
 			std::shared_ptr<Tracker> pTracker,
@@ -64,6 +69,11 @@ namespace dynaman {
 			float lambda,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr
 		);
+
+		MultiplexManipulator(const MultiplexManipulator& m) = delete;
+		MultiplexManipulator operator=(const MultiplexManipulator& m) = delete;
+		MultiplexManipulator(MultiplexManipulator&& m) = default;
+		MultiplexManipulator& operator=(MultiplexManipulator && m) = default;
 
 		static std::shared_ptr<Manipulator> Create(
 			const Eigen::Vector3f& gainP,

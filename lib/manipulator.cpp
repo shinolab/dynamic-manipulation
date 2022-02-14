@@ -119,14 +119,6 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
-	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
-		const Eigen::Vector3f& forceTarget,
-		const Eigen::Vector3f& position,
-		int numAutdMax
-	) {
-
-	}
-
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(
 		const Eigen::VectorXf& duties,
 		const Eigen::Vector3f& focus

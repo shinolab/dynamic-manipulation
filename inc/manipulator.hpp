@@ -44,7 +44,6 @@ namespace dynaman {
 		Eigen::Vector3f m_gainD;
 		Eigen::Vector3f m_gainI;
 		float m_freqLm;
-		int m_loopPeriodTracker;
 		int loopPeriod_;
 		float m_lambda;
 		std::shared_ptr<arfModelLinearBase> m_arfModelPtr;
@@ -117,7 +116,7 @@ namespace dynaman {
 		Eigen::VectorXf ComputeDuty(
 			const Eigen::Vector3f& forceTarget,
 			const Eigen::Vector3f& position,
-			int numAutdMax
+			size_t numAutdMax
 		);
 
 		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);

@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <future>
 #include "GainPlan.hpp"
 #include "QPSolver.h"
 #include "manipulator.hpp"
 #include "geometryUtil.hpp"
+#include "ThrustSearch.hpp"
 
 namespace dynaman {
 
@@ -122,11 +124,13 @@ namespace dynaman {
 	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
 		const Eigen::Vector3f& force,
 		const Eigen::Vector3f& pos,
-		int numAupaMax
+		size_t numAupaMax
 	) {
+		auto posRelAll = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
+		auto rotsAutdAll = RotsAutd(m_pAupa);
 		std::vector<float> alignment(m_pAupa->geometry()->numDevices());
 		Eigen::Map<Eigen::VectorXf>(&alignment[0], alignment.size())
-			= directionsRel(pos, m_pAupa).transpose() * force; // [x1, x2, ... xN]
+			= posRelAll.colwise().normalized().transpose() * force; // [x1, x2, ... xN]
 		auto alignment_sorted(alignment); std::sort(alignment_sorted.begin(), alignment_sorted.end());
 		std::vector<int> deviceIdUsed(numAupaMax);
 		for (int i = 0; i < deviceIdUsed.size(); i++) {
@@ -136,7 +140,59 @@ namespace dynaman {
 					std::find(alignment.begin(), alignment.end(), alignment_sorted[i])
 					);
 		}
-
+		std::vector<std::vector<size_t>> combinations;
+		for (size_t numAupa = 1; numAupa <= numAupaMax; numAupa++) {
+			auto temp = combination(numAupaMax - 1, numAupa);
+			combinations.insert(combinations.end(), temp.begin(), temp.end());
+		}
+		std::vector<std::pair<float, std::vector<float>>> resAndDuties(combinations.size());
+		std::vector<std::future<std::pair<float, std::vector<float>>>> fut;
+		for (auto&& c : combinations){
+			fut.push_back(
+				std::async(
+					[&c, &deviceIdUsed, &force, &posRelAll, &rotsAutdAll, this]() {
+						Eigen::MatrixXf posRelUsed(3, c.size());
+						std::vector<Eigen::Matrix3f> rotsAutdUsed(c.size());
+						for (int iCol = 0; iCol < c.size(); iCol++) {
+							posRelUsed.col(iCol) << posRelAll.col(deviceIdUsed[iCol]);
+							rotsAutdUsed.push_back(rotsAutdAll[iCol]);
+						}
+						auto A = Eigen::MatrixXf::Ones(1, c.size());
+						auto b = Eigen::VectorXf::Ones(1);
+						auto F = m_arfModelPtr->arf(posRelUsed, rotsAutdUsed);
+						auto D = F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(c.size(), c.size());
+						auto c = -F.transpose() * force;
+						auto condEq = Eigen::VectorXi::Constant(1, -1);
+						auto duty_min = Eigen::VectorXf::Zero(c.size());
+						auto duty_max = Eigen::VectorXf::Constant(c.size(), 1.0f / c.size());
+						Eigen::VectorXf resultPart;
+						EigenCgalQpSolver(resultPart, A, b, D, c, condEq, duty_min, duty_max);
+						auto res = (F * resultPart - force).norm();
+						std::vector<float> duty_ordered(m_pAupa->geometry()->numDevices(), 0);
+						for (int i = 0; i < c.size(); i++) {
+							duty_ordered[deviceIdUsed[i]] = resultPart[i];			
+						}
+						return std::make_pair(res, duty_ordered);
+					}
+				)
+			);
+		}
+		for (int iC = 0; iC < combinations.size(); iC++) {
+			resAndDuties[iC] = fut[iC].get();
+		}
+		
+		auto duty_best = std::min_element(
+			resAndDuties.begin(),
+			resAndDuties.end(),
+			[](std::pair<float, std::vector<float>> smaller, std::pair<float, std::vector<float>> larger) {
+				return smaller.first < larger.first ; 
+			}
+		)->second;
+		Eigen::VectorXf duty_best_eigen(m_pAupa->geometry()->numDevices());
+		for (int i = 0; i < duty_best.size(); i++) {
+			duty_best_eigen[i] = duty_best[i];
+		}
+		return duty_best_eigen;
 	}
 
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(

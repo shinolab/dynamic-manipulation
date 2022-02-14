@@ -12,30 +12,6 @@ namespace {
 	auto thres_orth_force_min = 0.01f;
 }
 
-std::vector<std::vector<int>> combination(int max, int num) {
-	if (num == 1) {
-		std::vector<std::vector<int>> v;
-		for (int i = 0; i <= max; i++) {
-			v.push_back({ i });
-		}
-		return v;
-	}
-	if (num == max + 1) {
-		std::vector<int> v;
-		for (int i = 0; i <= max; i++) {
-			v.push_back(i);
-		}
-		return { v };
-	}
-	auto others = combination(max - 1, num);
-	auto inc = combination(max - 1, num - 1);
-	for (auto itr = inc.begin(); itr != inc.end(); itr++) {
-		itr->push_back(max);
-	}
-	inc.insert(inc.end(), others.begin(), others.end());
-	return inc;
-}
-
 MuxThrustSearcher::MuxThrustSearcher(
 	autd::GeometryPtr geo,
 	std::shared_ptr<arfModelLinearBase> arf_model,
@@ -57,7 +33,7 @@ MuxThrustSearcher::MuxThrustSearcher(
 float MuxThrustSearcher::MaximizeThrust(
 	const Eigen::Vector3f& pos,
 	const Eigen::Vector3f& direction,
-	const std::vector<int>& indexes,
+	const std::vector<size_t>& indexes,
 	Eigen::VectorXf& duty_full
 ) {
 	const int num_cond = 4;

@@ -48,7 +48,17 @@ target_link_libraries(
 )
 set_target_properties(demo_catch PROPERTIES FOLDER "demos")
 
-option(BUILD_PCL_APPS "build examples that use pcl" ON)
+add_executable(test_compute_duty test_compute_duty.cpp)
+target_link_libraries(
+    test_compute_duty
+    StereoTracker
+    CameraDevice
+    ImgProcUtil
+    DynamicManipulation
+)
+set_target_properties(test_compute_duty PROPERTIES FOLDER "test")
+
+option(BUILD_PCL_APPS "build examples that use pcl" OFF)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)
     find_package(realsense2 REQUIRED)

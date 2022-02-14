@@ -11,19 +11,15 @@ namespace dynaman {
 
 	std::vector<Eigen::Matrix3f> RotsAutd(autd::GeometryPtr geo);
 
+	std::vector<Eigen::Matrix3f> RotsAutd(std::shared_ptr<autd::Controller> pAupa);
+
 	Eigen::Vector3f CenterForDeviceId(int deviceId, autd::GeometryPtr geo);
 
 	Eigen::Matrix3Xf CentersAutd(autd::GeometryPtr geo);
 
 	Eigen::Matrix3Xf DirectionsAutd(autd::GeometryPtr geo);
 
-	inline Eigen::Matrix3Xf posRel(
-		const Eigen::Vector3f postiion,
-		const std::shared_ptr<const autd::Controller> pAupa
-	);
-
-	inline Eigen::Matrix3Xf directionsRel(const Eigen::Vector3f position, const std::shared_ptr<const autd::Controller> pAupa);
-
+	std::vector<std::vector<size_t>> combination(size_t max, size_t num);
 }
 
 #endif // !_DYNAMAN_GAINPLAN_HPP

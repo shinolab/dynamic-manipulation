@@ -26,7 +26,7 @@ namespace dynaman {
 		float MaximizeThrust(
 			const Eigen::Vector3f& pos,
 			const Eigen::Vector3f& direction,
-			const std::vector<int>& indexes_autd,
+			const std::vector<size_t>& indexes_autd,
 			Eigen::VectorXf& duty
 		);
 		int m_num_time_slices;
@@ -34,7 +34,7 @@ namespace dynaman {
 		std::vector<Eigen::Matrix3f> m_rots_autd;
 		std::shared_ptr<arfModelLinearBase> m_arf_model;
 		float m_duty_max;
-		std::vector<std::vector<int>> m_autd_comb;
+		std::vector<std::vector<size_t>> m_autd_comb;
 	};
 
 	Eigen::VectorXf MaximizeThrust(

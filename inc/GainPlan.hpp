@@ -19,7 +19,7 @@ namespace dynaman {
 
 	inline Eigen::Matrix3Xf posRel(
 		const Eigen::Vector3f postiion,
-		const std::unique_ptr<const autd::Controller> aupa
+		const std::shared_ptr<const autd::Controller> pAupa
 	);
 
 }

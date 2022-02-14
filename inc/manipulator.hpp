@@ -18,6 +18,7 @@ namespace dynaman {
 
 	class Manipulator {
 	public:
+		Manipulator() {}
 		virtual ~Manipulator() {}
 		Manipulator(const Manipulator& m) = delete;
 		Manipulator operator=(const Manipulator& m) = delete;

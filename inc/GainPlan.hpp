@@ -22,6 +22,8 @@ namespace dynaman {
 		const std::shared_ptr<const autd::Controller> pAupa
 	);
 
+	inline Eigen::Matrix3Xf directionsRel(const Eigen::Vector3f position, const std::shared_ptr<const autd::Controller> pAupa);
+
 }
 
 #endif // !_DYNAMAN_GAINPLAN_HPP

@@ -116,7 +116,27 @@ namespace dynaman {
 				resultFull(iAupa) = 0;
 			}
 		}
-		return std::move(resultFull);
+		return resultFull;
+	}
+
+	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
+		const Eigen::Vector3f& force,
+		const Eigen::Vector3f& pos,
+		int numAupaMax
+	) {
+		std::vector<float> alignment(m_pAupa->geometry()->numDevices());
+		Eigen::Map<Eigen::VectorXf>(&alignment[0], alignment.size())
+			= directionsRel(pos, m_pAupa).transpose() * force; // [x1, x2, ... xN]
+		auto alignment_sorted(alignment); std::sort(alignment_sorted.begin(), alignment_sorted.end());
+		std::vector<int> deviceIdUsed(numAupaMax);
+		for (int i = 0; i < deviceIdUsed.size(); i++) {
+			deviceIdUsed[i]
+				= std::distance(
+					alignment.begin(),
+					std::find(alignment.begin(), alignment.end(), alignment_sorted[i])
+					);
+		}
+
 	}
 
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(

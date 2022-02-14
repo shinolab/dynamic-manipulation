@@ -43,4 +43,11 @@ namespace dynaman {
 		}
 		return directions;
 	}
+
+	Eigen::Matrix3Xf posRel(
+		const Eigen::Vector3f position,
+		const std::unique_ptr<autd::Controller> pAupa
+	) {
+		return position.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
+	}
 }

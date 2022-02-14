@@ -34,11 +34,11 @@ int main(int argc, char** argv ) {
 		return ENXIO;
 	haptic_icon::SetGeometry(pAupa);
 
-	auto pManipulator = MultiplexManipulator::Create(
-		20 * Eigen::Vector3f::Constant(-1.6f), // gainP
-		5 * Eigen::Vector3f::Constant(-4.0f), // gainD
-		1 * Eigen::Vector3f::Constant(-0.05f) //gainI
-	);
+	auto gainP = Eigen::Vector3f::Constant(32.0f);
+	auto gainD = Eigen::Vector3f::Constant(20.0f);
+	auto gainI = Eigen::Vector3f::Constant(0.05f);
+
+	auto pManipulator = MultiplexManipulator::Create(gainP, gainD, gainI);
 
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pAupa, pTracker, pObject);

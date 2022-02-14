@@ -7,7 +7,7 @@
 namespace dynaman {
 
 	constexpr DWORD thres_timeout_track_ms = 100;
-	constexpr float minimum_duty = 1.0f/255.f;
+	constexpr float DUTY_MIN = 1.0f/255.f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
 	bool IsInitialized(
@@ -65,7 +65,10 @@ namespace dynaman {
 			);
 	}
 
-	Eigen::VectorXf MultiplexManipulator::ComputeDuty(const Eigen::Vector3f& force, const Eigen::Vector3f& position) {
+	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
+		const Eigen::Vector3f& force,
+		const Eigen::Vector3f& position
+	) {
 		Eigen::MatrixXf posRel = position.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		Eigen::MatrixXf directions = posRel.colwise().normalized();
 		Eigen::Array<bool, -1, -1> isActive = ((directions.transpose() * force.normalized()).array() > 0.17f);
@@ -116,18 +119,26 @@ namespace dynaman {
 		return std::move(resultFull);
 	}
 
+	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
+		const Eigen::Vector3f& forceTarget,
+		const Eigen::Vector3f& position,
+		int numAutdMax
+	) {
+
+	}
+
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(
 		const Eigen::VectorXf& duties,
 		const Eigen::Vector3f& focus
 	) {
 		std::vector<float> dutiesStl(duties.size());
 		Eigen::Map<Eigen::VectorXf>(&dutiesStl[0], duties.size()) = duties;
-		int num_active = (duties.array() > minimum_duty).count();
+		int num_active = (duties.array() > DUTY_MIN).count();
 		std::vector<autd::GainPtr> gain_list(num_active);
 		int id_begin_search = 0;
 		for (auto itr_list = gain_list.begin(); itr_list != gain_list.end(); itr_list++) {
 			std::map<int, autd::GainPtr> gain_map;
-			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > minimum_duty; });
+			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > DUTY_MIN; });
 			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
 				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
 					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));

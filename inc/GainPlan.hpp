@@ -17,6 +17,11 @@ namespace dynaman {
 
 	Eigen::Matrix3Xf DirectionsAutd(autd::GeometryPtr geo);
 
+	inline Eigen::Matrix3Xf posRel(
+		const Eigen::Vector3f postiion,
+		const std::unique_ptr<const autd::Controller> aupa
+	);
+
 }
 
 #endif // !_DYNAMAN_GAINPLAN_HPP

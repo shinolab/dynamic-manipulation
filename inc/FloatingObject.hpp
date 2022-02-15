@@ -40,15 +40,16 @@ namespace dynaman {
 			const Eigen::Vector3f& _positionTarget,
 			const Eigen::Vector3f& lowerbound,
 			const Eigen::Vector3f& upperbound,
-			float weight,
-			float _radius);
+			float radius,
+			float weight = 0.0f);
 
 		static FloatingObjectPtr Create(
 			const Eigen::Vector3f& posTgt,
 			const Eigen::Vector3f& lowerbound,
 			const Eigen::Vector3f& upperbound,
-			float weight = 0.1e-3f,
-			float radius = 90.f);
+			float radius,
+			float weight = 0.0f
+		);
 
 		float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
 		float AdditionalMass();

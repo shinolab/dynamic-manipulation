@@ -10,21 +10,8 @@ using namespace dynaman;
 
 int main(int argc, char** argv ) {
 
-	/*user-defined configurations*/
-	Eigen::Vector3f pos_init(0, 0, 0);
+
 	std::string target_image_name("blue_target_r50mm.png");
-	float balloonRadias = 50.0f;
-	float balloonWeight = 0.0f;
-	/*end of user-defined configurations*/
-
-	auto pObject = dynaman::FloatingObject::Create(
-		pos_init,
-		Eigen::Vector3f::Constant(-600),
-		Eigen::Vector3f::Constant(600),
-		balloonWeight,
-		balloonRadias
-	);
-
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
 	if (!pTracker->isOpen())
@@ -37,10 +24,18 @@ int main(int argc, char** argv ) {
 
 	auto pManipulator = MultiplexManipulator::Create(pAupa, pTracker);
 
+	auto pObject = dynaman::FloatingObject::Create(
+		Eigen::Vector3f::Zero(), //initial position
+		Eigen::Vector3f::Constant(-600), // lower bound of workspace
+		Eigen::Vector3f::Constant(600), // upper bound of workspace
+		50.0f // radius [mm]
+	);
+
 	std::cout << "Starting Manipulaion ... " << std::endl;
 	pManipulator->StartManipulation(pObject);
 	std::this_thread::sleep_for(std::chrono::seconds(8)); // wait for stabilization
 
+	//params for straight maneuvers
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);
 	Eigen::Vector3f posRight(280.f, 0.f, 0.f);
 	Eigen::Vector3f posLeft(-280.f, 0.f, 0.f);
@@ -51,7 +46,7 @@ int main(int argc, char** argv ) {
 	float orbit_period = 3.f;
 	Eigen::Vector3f posCircleInit(orbit_radius, 0.f, 0.f);
 
-	//traslation maneuver without open-loop control
+	//Maneuver without open-loop control
 	pObject->updateStatesTarget(posLeft);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	pObject->updateStatesTarget(posRight);
@@ -65,7 +60,7 @@ int main(int argc, char** argv ) {
 	pObject->updateStatesTarget(posCenter);
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	//Translation maneuvers with open-loop control
+	//Maneuvers with open-loop control
 	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));

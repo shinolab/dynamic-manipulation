@@ -17,8 +17,8 @@ namespace dynaman {
 	FloatingObject::FloatingObject(Eigen::Vector3f const& _positionTarget,
 		Eigen::Vector3f const& lowerbound,
 		Eigen::Vector3f const& upperbound,
-		float weight,
-		float radius
+		float radius,
+		float weight
 	):
 		position(_positionTarget),
 		velocity(Eigen::Vector3f::Zero()),
@@ -39,10 +39,10 @@ namespace dynaman {
 		const Eigen::Vector3f& posTgt,
 		const Eigen::Vector3f& lowerbound,
 		const Eigen::Vector3f& upperbound,
-		float weight,
-		float radius
+		float radius,
+		float weight
 	){
-		return std::make_shared<FloatingObject>(posTgt, lowerbound, upperbound, weight, radius);
+		return std::make_shared<FloatingObject>(posTgt, lowerbound, upperbound, radius, weight);
 	}
 
 	float FloatingObject::sphereMass()

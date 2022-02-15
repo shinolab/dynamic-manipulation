@@ -59,13 +59,13 @@ namespace dynaman {
 		MultiplexManipulator(
 			std::shared_ptr<autd::Controller> pAupa,
 			std::shared_ptr<dynaman::Tracker> pTracker,
-			const Eigen::Vector3f& gainP,
-			const Eigen::Vector3f& gainD,
-			const Eigen::Vector3f& gainI,
-			float freqLm,
-			int loopPeriod,
-			float lambda,
-			std::shared_ptr<arfModelLinearBase> arfModelPtr
+			const Eigen::Vector3f& gainP = Eigen::Vector3f::Constant(32.0f),
+			const Eigen::Vector3f& gainD = Eigen::Vector3f::Constant(20.0f),
+			const Eigen::Vector3f& gainI = Eigen::Vector3f::Constant(0.00f),
+			float freqLm = 100.f,
+			int loopPeriod = 11,
+			float lambda = 0.0f,
+			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()
 		);
 
 		MultiplexManipulator(const MultiplexManipulator& m) = delete;
@@ -78,7 +78,7 @@ namespace dynaman {
 			std::shared_ptr<dynaman::Tracker> pTracker,
 			const Eigen::Vector3f& gainP = Eigen::Vector3f::Constant(32.0f),
 			const Eigen::Vector3f& gainD = Eigen::Vector3f::Constant(20.0f),
-			const Eigen::Vector3f& gainI = Eigen::Vector3f::Constant(0.05f),
+			const Eigen::Vector3f& gainI = Eigen::Vector3f::Constant(0.00f),
 			float freqLm = 100.f,
 			int loopPeriod = 11,
 			float lambda = 0.0f,

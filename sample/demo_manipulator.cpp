@@ -27,21 +27,18 @@ int main(int argc, char** argv ) {
 
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();
+	if (!pTracker->isOpen())
+		return ENXIO;
 
-	auto pAupa = std::make_shared<autd::Controller>();
+	auto pAupa = haptic_icon::CreateController();
 	pAupa->Open(autd::LinkType::ETHERCAT);
 	if (!pAupa->isOpen())
 		return ENXIO;
-	haptic_icon::SetGeometry(pAupa);
 
-	auto gainP = Eigen::Vector3f::Constant(32.0f);
-	auto gainD = Eigen::Vector3f::Constant(20.0f);
-	auto gainI = Eigen::Vector3f::Constant(0.05f);
-
-	auto pManipulator = MultiplexManipulator::Create(gainP, gainD, gainI);
+	auto pManipulator = MultiplexManipulator::Create(pAupa, pTracker);
 
 	std::cout << "Starting Manipulaion ... " << std::endl;
-	pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	pManipulator->StartManipulation(pObject);
 	std::this_thread::sleep_for(std::chrono::seconds(8)); // wait for stabilization
 
 	Eigen::Vector3f posCenter(0.f, 0.f, 0.f);

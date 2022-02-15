@@ -28,14 +28,19 @@ namespace dynaman {
 	}
 
 	MultiplexManipulator::MultiplexManipulator(
+		std::shared_ptr<autd::Controller> pAupa,
+		std::shared_ptr<dynaman::Tracker> pTracker,
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		float freqLm,
 		int loopPeriod,
 		float lambda,
-		std::shared_ptr<arfModelLinearBase> arfModelPtr)
-		:m_gainP(gainP),
+		std::shared_ptr<arfModelLinearBase> arfModelPtr
+	):
+		m_pAupa(pAupa),
+		m_pTracker(pTracker),
+		m_gainP(gainP),
 		m_gainD(gainD),
 		m_gainI(gainI),
 		m_freqLm(freqLm),
@@ -48,6 +53,8 @@ namespace dynaman {
 	{}
 
 	std::shared_ptr<Manipulator> MultiplexManipulator::Create(
+		std::shared_ptr<autd::Controller> pAupa,
+		std::shared_ptr<dynaman::Tracker> pTracker,
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
@@ -57,6 +64,8 @@ namespace dynaman {
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {
 		return std::make_shared<MultiplexManipulator>(
+			pAupa,
+			pTracker,
 			gainP,
 			gainD,
 			gainI,
@@ -150,6 +159,7 @@ namespace dynaman {
 		for (auto&& c : combinations){
 			fut.push_back(
 				std::async(
+					std::launch::async,
 					[&c, &deviceIdUsed, &force, &posRelAll, &rotsAutdAll, this]() {
 						Eigen::MatrixXf posRelUsed(3, c.size());
 						std::vector<Eigen::Matrix3f> rotsAutdUsed(c.size());
@@ -305,27 +315,23 @@ namespace dynaman {
 	}
 
 	int MultiplexManipulator::StartManipulation(
-		std::shared_ptr<autd::Controller> pAupa,
-		std::shared_ptr<Tracker> pTracker,
 		FloatingObjectPtr pObject
 	){
-		m_pAupa = pAupa;
-		m_pTracker = pTracker;
 		m_pObject = pObject;
-		if (!pTracker->isOpen()) {
+		if (!m_pTracker->isOpen()) {
 			std::cerr << "ERROR: Tracker is NOT open!" << std::endl;
-			return 1;
+			return -1;
 		}
-		if (!pAupa->isOpen()) {
+		if (!m_pAupa->isOpen()) {
 			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
-			return 1;
+			return -1;
 		}
 		if (m_logEnabled) {
 			m_obsLogStream.open(m_obsLogName);
 			m_obsLogStream << "sys_time,x,y,z" << std::endl;
 			m_controlLogStream.open(m_controlLogName);
 			m_controlLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,Fxres,Fyres,Fzres";
-			for (int i_aupa = 0; i_aupa < pAupa->geometry()->numDevices(); i_aupa++) {
+			for (int i_aupa = 0; i_aupa < m_pAupa->geometry()->numDevices(); i_aupa++) {
 				m_controlLogStream << ",duty" << i_aupa;
 			}
 			m_controlLogStream << std::endl;

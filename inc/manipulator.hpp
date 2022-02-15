@@ -25,11 +25,7 @@ namespace dynaman {
 		Manipulator(Manipulator&& m) = default;
 		Manipulator& operator=(Manipulator && m) = default;
 
-		virtual int StartManipulation(
-			std::shared_ptr<autd::Controller> pAupa,
-			std::shared_ptr<Tracker> pTracker,
-			FloatingObjectPtr pObject
-		) = 0;		
+		virtual int StartManipulation(FloatingObjectPtr pObject) = 0;
 		virtual void FinishManipulation() = 0;
 		virtual void PauseManipulation() = 0;
 		virtual void ResumeManipulation() = 0;
@@ -61,6 +57,8 @@ namespace dynaman {
 
 	public:
 		MultiplexManipulator(
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<dynaman::Tracker> pTracker,
 			const Eigen::Vector3f& gainP,
 			const Eigen::Vector3f& gainD,
 			const Eigen::Vector3f& gainI,
@@ -76,20 +74,18 @@ namespace dynaman {
 		MultiplexManipulator& operator=(MultiplexManipulator && m) = default;
 
 		static std::shared_ptr<Manipulator> Create(
-			const Eigen::Vector3f& gainP,
-			const Eigen::Vector3f& gainD,
-			const Eigen::Vector3f& gainI,
+			std::shared_ptr<autd::Controller> pAupa,
+			std::shared_ptr<dynaman::Tracker> pTracker,
+			const Eigen::Vector3f& gainP = Eigen::Vector3f::Constant(32.0f),
+			const Eigen::Vector3f& gainD = Eigen::Vector3f::Constant(20.0f),
+			const Eigen::Vector3f& gainI = Eigen::Vector3f::Constant(0.05f),
 			float freqLm = 100.f,
 			int loopPeriod = 11,
 			float lambda = 0.0f,
 			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()//std::make_shared<arfModelFocusOnSphereExperimental>()
 		);
 
-		int StartManipulation(
-			std::shared_ptr<autd::Controller> pAupa,
-			std::shared_ptr<Tracker> pTracker,
-			FloatingObjectPtr pObject
-		) override;
+		int StartManipulation(FloatingObjectPtr pObject) override;
 
 		void FinishManipulation() override;
 

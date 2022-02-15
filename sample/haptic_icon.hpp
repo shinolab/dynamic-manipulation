@@ -76,6 +76,12 @@ namespace haptic_icon {
 		pAupa->geometry()->AddDevice(Polar2Position(theta3, phi3, isUpper3), Polar2Euler(theta3, phi3, isUpper3), 9);
 		pAupa->geometry()->AddDevice(Polar2Position(theta0, phi0, isUpper0), Polar2Euler(theta0, phi0, isUpper0), 10);
 	}
+
+	std::shared_ptr<autd::Controller> CreateController() {
+		auto pAupa = std::make_shared<autd::Controller>();
+		SetGeometry(pAupa);
+		return pAupa;
+	}
 }
 
 #endif // !_HAPTIC_ICON_HPP

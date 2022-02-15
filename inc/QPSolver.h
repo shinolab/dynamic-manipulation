@@ -25,7 +25,7 @@ float EigenCgalLpSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	const float accuracy = 1.0e-8f
+	float accuracy = 1.0e-8f
 );
 
 /*
@@ -41,7 +41,7 @@ float EigenCgalQpSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	float accuracy = 1.0e-8f
+	float accuracy = 1.0e-7f
 );
 
 #endif

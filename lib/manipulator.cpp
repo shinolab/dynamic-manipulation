@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <future>
+#include <iomanip>
 #include "GainPlan.hpp"
 #include "QPSolver.h"
 #include "manipulator.hpp"
@@ -135,72 +136,112 @@ namespace dynaman {
 		const Eigen::Vector3f& pos,
 		size_t numAupaMax
 	) {
-		auto posRelAll = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
+		Eigen::MatrixXf posRelAll = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		auto rotsAutdAll = RotsAutd(m_pAupa);
+		Eigen::MatrixXf fMatAll = m_arfModelPtr->arf(posRelAll, rotsAutdAll);
+
+		Eigen::VectorXf alignment_eigen = fMatAll.colwise().normalized().transpose() * force.normalized();
 		std::vector<float> alignment(m_pAupa->geometry()->numDevices());
-		Eigen::Map<Eigen::VectorXf>(&alignment[0], alignment.size())
-			= posRelAll.colwise().normalized().transpose() * force; // [x1, x2, ... xN]
-		auto alignment_sorted(alignment); std::sort(alignment_sorted.begin(), alignment_sorted.end());
-		std::vector<int> deviceIdUsed(numAupaMax);
+		Eigen::Map<Eigen::VectorXf>(&alignment[0], alignment.size()) = alignment_eigen; // [x1, x2, ... xN]
+		auto alignment_sorted(alignment); std::sort(alignment_sorted.begin(), alignment_sorted.end(), std::greater<float>());
+
+		std::vector<int> deviceIdUsed(numAupaMax, -1);
 		for (int i = 0; i < deviceIdUsed.size(); i++) {
-			deviceIdUsed[i]
-				= std::distance(
-					alignment.begin(),
-					std::find(alignment.begin(), alignment.end(), alignment_sorted[i])
-					);
+			auto search_begin = alignment.begin();
+			while (true) {
+				auto itr = std::find(search_begin, alignment.end(), alignment_sorted[i]);
+				auto deviceId = std::distance(alignment.begin(), itr);
+				if (std::find(deviceIdUsed.begin(), deviceIdUsed.end(), deviceId) == deviceIdUsed.end()) {
+					deviceIdUsed[i] = deviceId;
+					break;
+				}
+				else {
+					search_begin = ++itr;
+				}
+			}
 		}
+
+
 		std::vector<std::vector<size_t>> combinations;
 		for (size_t numAupa = 1; numAupa <= numAupaMax; numAupa++) {
 			auto temp = combination(numAupaMax - 1, numAupa);
 			combinations.insert(combinations.end(), temp.begin(), temp.end());
 		}
+
 		std::vector<std::pair<float, std::vector<float>>> resAndDuties(combinations.size());
 		std::vector<std::future<std::pair<float, std::vector<float>>>> fut;
-		for (auto&& c : combinations){
-			fut.push_back(
-				std::async(
-					std::launch::async,
-					[&c, &deviceIdUsed, &force, &posRelAll, &rotsAutdAll, this]() {
-						Eigen::MatrixXf posRelUsed(3, c.size());
-						std::vector<Eigen::Matrix3f> rotsAutdUsed(c.size());
-						for (int iCol = 0; iCol < c.size(); iCol++) {
-							posRelUsed.col(iCol) << posRelAll.col(deviceIdUsed[iCol]);
-							rotsAutdUsed.push_back(rotsAutdAll[iCol]);
-						}
-						auto A = Eigen::MatrixXf::Ones(1, c.size());
-						auto b = Eigen::VectorXf::Ones(1);
-						auto F = m_arfModelPtr->arf(posRelUsed, rotsAutdUsed);
-						auto D = F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(c.size(), c.size());
-						auto c = -F.transpose() * force;
-						auto condEq = Eigen::VectorXi::Constant(1, -1);
-						auto duty_min = Eigen::VectorXf::Zero(c.size());
-						auto duty_max = Eigen::VectorXf::Constant(c.size(), 1.0f / c.size());
-						Eigen::VectorXf resultPart;
-						EigenCgalQpSolver(resultPart, A, b, D, c, condEq, duty_min, duty_max);
-						auto res = (F * resultPart - force).norm();
-						std::vector<float> duty_ordered(m_pAupa->geometry()->numDevices(), 0);
-						for (int i = 0; i < c.size(); i++) {
-							duty_ordered[deviceIdUsed[i]] = resultPart[i];			
-						}
-						return std::make_pair(res, duty_ordered);
-					}
-				)
-			);
+		for (int ic = 0; ic < combinations.size(); ic++) {
+			auto comb = combinations[ic];
+			Eigen::MatrixXf posRelUsed(3, comb.size());
+			std::vector<Eigen::Matrix3f> rotsAutdUsed;
+			for (int iCol = 0; iCol < comb.size(); iCol++) {
+				posRelUsed.col(iCol) = posRelAll.col(deviceIdUsed[comb[iCol]]);
+				rotsAutdUsed.push_back(rotsAutdAll[deviceIdUsed[comb[iCol]]]);
+			}
+			//std::cout << "posRelAll:\n" << posRelAll << std::endl;
+
+			//std::cout << "posRelUsed:\n" << posRelUsed << std::endl;
+			Eigen::MatrixXf A = Eigen::MatrixXf::Ones(1, comb.size());
+			Eigen::VectorXf b = Eigen::VectorXf::Ones(1);
+			Eigen::MatrixXf F = m_arfModelPtr->arf(posRelUsed, rotsAutdUsed);
+			Eigen::MatrixXf D = F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(comb.size(), comb.size());
+			Eigen::VectorXf c = -F.transpose() * force;
+			Eigen::VectorXi condEq = Eigen::VectorXi::Constant(1, -1);
+			Eigen::VectorXf duty_min = Eigen::VectorXf::Zero(comb.size());
+			Eigen::VectorXf duty_max = Eigen::VectorXf::Constant(comb.size(), 1.0f / comb.size());
+			//std::cout << "duty_max: " << duty_max.transpose() << std::endl;
+			Eigen::VectorXf resultPart;
+			//std::cout << "F(part):" << std::endl << F << std::endl;
+			//std::cout
+			//	<< "F: " << std::endl
+			//	<< F << std::endl;
+
+			EigenCgalQpSolver(resultPart, A, b, D, c, condEq, duty_min, duty_max);
+			//std::cout << "resultPart:" << resultPart.transpose() << std::endl;
+			float res = (F * resultPart - force).norm();
+			//std::cout
+			//	<< "resultPart:" << resultPart.transpose()
+			//	<< " (res: " << res << ")"
+			//	<< std::endl;
+			std::vector<float> duty_ordered(m_pAupa->geometry()->numDevices(), 0.f);
+			for (int id = 0; id < c.size(); id++) {
+				duty_ordered[deviceIdUsed[comb[id]]] = resultPart[id];
+			}
+			resAndDuties[ic] = std::make_pair(res, duty_ordered);
+			//std::cout << "resultFull: ";
+			//for (auto&& e : duty_ordered) {
+			//	std::cout << e << ", ";
+			//}
+			//std::cout << std::endl;
 		}
-		for (int iC = 0; iC < combinations.size(); iC++) {
-			resAndDuties[iC] = fut[iC].get();
-		}
-		
-		auto duty_best = std::min_element(
+		//for (auto&& c : combinations){
+		//	fut.push_back(
+		//		std::async(
+		//			std::launch::async,
+		//			[&c, &deviceIdUsed, &force, &posRelAll, &rotsAutdAll, this]() {
+		//			}
+		//		)
+		//	);
+		//}
+		//for (int iC = 0; iC < combinations.size(); iC++) {
+		//	resAndDuties[iC] = fut[iC].get();
+		//}
+		auto resAndDutyBest = std::min_element(
 			resAndDuties.begin(),
 			resAndDuties.end(),
 			[](std::pair<float, std::vector<float>> smaller, std::pair<float, std::vector<float>> larger) {
-				return smaller.first < larger.first ; 
+				return smaller.first < larger.first; 
 			}
-		)->second;
+		);
+		//std::cout << "(res: " << resAndDutyBest->first << ")"<< std::endl;
+		//std::cout << "dutyBest: ";
+		//for (auto&& e : resAndDutyBest->second) {
+		//	std::cout << e << ",";
+		//}
+		//std::cout << std::endl;
 		Eigen::VectorXf duty_best_eigen(m_pAupa->geometry()->numDevices());
-		for (int i = 0; i < duty_best.size(); i++) {
-			duty_best_eigen[i] = duty_best[i];
+		for (int i = 0; i < resAndDutyBest->second.size(); i++) {
+			duty_best_eigen[i] = resAndDutyBest->second[i];
 		}
 		return duty_best_eigen;
 	}

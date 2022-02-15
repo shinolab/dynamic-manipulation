@@ -57,7 +57,7 @@ float EigenCgalLpSolver(
 	Eigen::VectorXi const &equalityConditions,
 	Eigen::VectorXf const &lowerbound,
 	Eigen::VectorXf const &upperbound,
-	const float accuracy
+	float accuracy
 )
 {
 	auto bound_scale_factor = 0.01f;
@@ -115,10 +115,13 @@ float EigenCgalQpSolver(
 	float accuracy
 )
 {
-	Eigen::MatrixXf A_scaled = A / accuracy;
+	constexpr auto bound_scale_factor = 0.01f;
+	Eigen::MatrixXf A_scaled = A / accuracy * bound_scale_factor;
 	Eigen::VectorXf b_scaled = b / accuracy;
-	Eigen::MatrixXf D_scaled = D / accuracy;
+	Eigen::MatrixXf D_scaled = D / accuracy * bound_scale_factor;
 	Eigen::VectorXf c_scaled = c / accuracy;
+	Eigen::VectorXf lb_scaled = lowerbound / bound_scale_factor;
+	Eigen::VectorXf ub_scaled = upperbound / bound_scale_factor;
 	auto _A_scaled = Eigen2CgalArray2d(A_scaled);
 	auto _D_scaled = Eigen2CgalArray2d(D_scaled);
 	CGAL::Comparison_result* r = new CGAL::Comparison_result[A.rows()];
@@ -139,7 +142,7 @@ float EigenCgalQpSolver(
 		fub[i] = true;
 	}
 
-	QpProgram qp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lowerbound.data(), fub, upperbound.data(), _D_scaled.get(), c_scaled.data(), 0);
+	QpProgram qp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lb_scaled.data(), fub, ub_scaled.data(), _D_scaled.get(), c_scaled.data(), 0);
 	Solution s = CGAL::solve_quadratic_program(qp, ET());
 	result.resize(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)
@@ -147,11 +150,11 @@ float EigenCgalQpSolver(
 		int index = std::distance(s.variable_values_begin(), itr);
 		result[index] = (*itr).numerator().to_double() / (*itr).denominator().to_double();
 	}
+	result *= bound_scale_factor;
 	delete fub;
 	delete flb;
 	delete r;
 	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy;
 }
 
-//define QP
 

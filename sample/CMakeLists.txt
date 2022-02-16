@@ -58,6 +58,16 @@ target_link_libraries(
 )
 set_target_properties(test_compute_duty PROPERTIES FOLDER "test")
 
+add_executable(test_attraction_basin test_attraction_basin.cpp)
+target_link_libraries(
+    test_attraction_basin
+    StereoTracker
+    CameraDevice
+    ImgProgUtil
+    DynamicManipulation
+)
+set_target_properties(test_attraction_basin PROPERTIES FOLDER "test")
+
 option(BUILD_PCL_APPS "build examples that use pcl" OFF)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)
 if(BUILD_PCL_APPS)

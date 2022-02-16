@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <ctime>
 #include <fstream>
+#include <future>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -10,7 +11,6 @@
 using namespace dynaman;
 
 int main(int argc, char** argv) {
-
 
 	char date[sizeof("yymmdd_HHMMSS")];
 	auto t = std::time(nullptr);
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	constexpr size_t NX = 2;
 	constexpr size_t NY = 2;
 	constexpr size_t NZ = 2;
-	constexpr size_t NF = 3;
+	constexpr size_t NF = 125;
 	constexpr float X_MIN = 0;
 	constexpr float X_MAX = 0;
 	constexpr float Y_MIN = 0;
@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
 		<<",fx(opt),fy(opt),fz(opt)"
 		<< std::endl;
 	std::cout << "Error: (approx), (heuristics)" << std::endl;
+
+	auto start = std::chrono::high_resolution_clock::now();
 	for (int ix = 0; ix < NX; ix++) {
 		for (int iy = 0; iy < NY; iy++) {
 			for (int iz = 0; iz < NZ; iz++) {
@@ -69,30 +71,33 @@ int main(int argc, char** argv) {
 						cosf(dist_polar(mt))
 					).normalized();
 
-					auto duty_approx = manipulator.ComputeDuty(force, pos);
-					auto duty_heuristics = manipulator.ComputeDuty(force, pos, 11);
+					//auto duty_approx = manipulator.ComputeDuty(force, pos);
+					auto duty_heuristics = manipulator.ComputeDuty(force, pos, 5);
 					//auto duty_opt = manipulator.ComputeDuty(force, pos, 12);
-					auto posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
-					auto f_mat = manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry()));
-					auto force_approx = f_mat * duty_approx;
-					auto force_heuristics = f_mat * duty_heuristics;
+					//auto posRel = pos.replicate(1, pAupa->geometry()->numDevices()) - CentersAutd(pAupa->geometry());
+					//auto f_mat = manipulator.arfModel()->arf(posRel, RotsAutd(pAupa->geometry()));
+					//auto force_approx = f_mat * duty_approx;
+					//auto force_heuristics = f_mat * duty_heuristics;
 					//auto force_opt = f_mat * duty_opt;
-					ofs << pos.x() << "," << pos.y() << "," << pos.z()
-						<< "," << force_approx.x() << "," << force_approx.y() << "," << force_approx.z()
-						<< "," << force_heuristics.x() << "," << force_heuristics.y() << "," << force_heuristics.z()
-						//<< "," << force_opt.x() << "," << force_opt.y() << "," << force_opt.z()
-						<< std::endl;
-					std::cout << "Error: "
-						<< std::fixed << std::setprecision(5)
-						<< (force - force_approx).norm()
-						<< "," << (force - force_heuristics).norm()
-						//<< "," << (force - force_opt).norm()
-						<< std::endl;
+					//ofs << pos.x() << "," << pos.y() << "," << pos.z()
+					//	<< "," << force_approx.x() << "," << force_approx.y() << "," << force_approx.z()
+					//	<< "," << force_heuristics.x() << "," << force_heuristics.y() << "," << force_heuristics.z()
+					//	//<< "," << force_opt.x() << "," << force_opt.y() << "," << force_opt.z()
+					//	<< std::endl;
+					//std::cout << "Error: "
+					//	<< std::fixed << std::setprecision(5)
+					//	<< (force - force_approx).norm()
+					//	<< "," << (force - force_heuristics).norm()
+					//	//<< "," << (force - force_opt).norm()
+					//	<< std::endl;
 					
 				}
 			}
 		}
 	}
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	std::cout << "elapsed: " << elapsed_ms.count() << "ms" << std::endl;
 	ofs.close();
 	return 0;
 }

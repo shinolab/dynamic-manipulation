@@ -172,6 +172,7 @@ namespace dynaman {
 		for (int ic = 0; ic < combinations.size(); ic++) {
 			fut.push_back(
 				std::async(
+					std::launch::async,
 					[&combinations, &force, &posRelAll, &rotsAutdAll, &deviceIdUsed, ic, &resAndDuties, this]() {
 						auto comb = combinations[ic];
 

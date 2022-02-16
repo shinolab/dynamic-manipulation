@@ -38,16 +38,14 @@ int main(int argc, char** argv) {
 	haptic_icon::SetGeometry(pAupa);
 
 	auto pManipulator = MultiplexManipulator::Create(
+		pAupa,
+		pTracker,
 		30 * Eigen::Vector3f::Constant(-1.6f), // gainP
 		6 * Eigen::Vector3f::Constant(-4.0f), // gainD
-		1 * Eigen::Vector3f::Constant(-0.05f), //gainI
-		100, //freqLM
-		10,
-		5,
-		0
+		1 * Eigen::Vector3f::Constant(-0.05f) //gainI
 	);
 
-	pManipulator->StartManipulation(pAupa, pTracker, pObject);
+	pManipulator->StartManipulation(pObject);
 
 	std::this_thread::sleep_for(std::chrono::seconds(8));
 

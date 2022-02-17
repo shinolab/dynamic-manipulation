@@ -164,8 +164,7 @@ int main(int argc, char** argv) {
 	);
 	System system(pAupa, pTracker, pObject);
 	Eigen::Vector3f p(0.386947, 5.94529e-07, -9.65365e-09);
-	Eigen::Vector3f p2(0.386947, 0.1, 0);
-	system.F(p2);
+	system.F(p);
 	return 0;
 	//pObject->SetTrajectory(
 	//	TrajectoryBangbangWithDrag::Create(

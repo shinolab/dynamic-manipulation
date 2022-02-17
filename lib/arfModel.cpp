@@ -288,7 +288,7 @@ arfModelFocusSphereExp50mm::arfModelFocusSphereExp50mm(
 Eigen::MatrixXf arfModelFocusSphereExp50mm::arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd) {
 	Eigen::RowVectorXf dists = posRel.colwise().norm();
 	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum();
-	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).array().acos().matrix();
+	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).cwiseMin(1.0f).cwiseMax(-1.0f).array().acos().matrix();
 	Eigen::RowVectorXi indexesDist = (dists.replicate(tableDistance.rows(), 1) - tableDistance.replicate(1, dists.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
 	indexesDist = (indexesDist.array() - 1).cwiseMax(0).cwiseMin(tableDistance.rows() - 2); // correct index outside the table
 	Eigen::RowVectorXi indexesAngle = (angles.replicate(tableAngle.rows(), 1) - tableAngle.replicate(1, angles.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();

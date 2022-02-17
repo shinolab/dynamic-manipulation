@@ -93,19 +93,19 @@ public:
 		Eigen::Vector3f drag = -0.5f * pi * RHO * vel_true.norm() * vel_true.norm() * pObject_->Radius() * pObject_->Radius() * vel_true.normalized();
 		Eigen::Vector3f forceTotal = forceArf + drag;
 		Eigen::Vector3f accelResult = forceTotal / pObject_->totalMass();
-		if (t > 4.22) {
-			std::cout
-				<< "pos_true: " << pos_true.transpose()
-				<< std::endl << "vel_true: " << vel_true.transpose()
-				<< std::endl << "integ: " << integ_true.transpose()
-				<< std::endl << "forceTarget: " << forceTarget.transpose()
-				<< std::endl << "duty: " << duty.transpose() << std::endl
-				<< std::endl << "F: " << std::endl << FTrue
-				<< std::endl;
-			std::cout << "forceArf: " << forceArf.transpose() << std::endl;
-			std::cout << "drag: " << drag.transpose() << std::endl;
+		//if (t > 4.22) {
+		//	std::cout
+		//		<< "pos_true: " << pos_true.transpose()
+		//		<< std::endl << "vel_true: " << vel_true.transpose()
+		//		<< std::endl << "integ: " << integ_true.transpose()
+		//		<< std::endl << "forceTarget: " << forceTarget.transpose()
+		//		<< std::endl << "duty: " << duty.transpose() << std::endl
+		//		<< std::endl << "F: " << std::endl << FTrue
+		//		<< std::endl;
+		//	std::cout << "forceArf: " << forceArf.transpose() << std::endl;
+		//	std::cout << "drag: " << drag.transpose() << std::endl;
 
-		}
+		//}
 		dxdt[0] = x[3];
 		dxdt[1] = x[4];
 		dxdt[2] = x[5];
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
 
 	float time_init = 1.0f;
 	float time_trans_start = 2.0f;
-	float time_end = 4.27f;
+	float time_end = 5.0f;
 
 	constexpr int NUM_STEP_MAX = 1000;
 	constexpr float DT_STEP = 0.001f;
@@ -163,18 +163,15 @@ int main(int argc, char** argv) {
 		50.0f
 	);
 	System system(pAupa, pTracker, pObject);
-	Eigen::Vector3f p(0.386947, 5.94529e-07, -9.65365e-09);
-	system.F(p);
-	return 0;
-	//pObject->SetTrajectory(
-	//	TrajectoryBangbangWithDrag::Create(
-	//		1.0,
-	//		pObject->Radius(),
-	//		static_cast<DWORD>(1000 * time_trans_start),
-	//		posInitTgt,
-	//		posEndTgt
-	//	)
-	//);
+	pObject->SetTrajectory(
+		TrajectoryBangbangWithDrag::Create(
+			1.0,
+			pObject->Radius(),
+			static_cast<DWORD>(1000 * time_trans_start),
+			posInitTgt,
+			posEndTgt
+		)
+	);
 
 	runge_kutta4<state_type> stepper;
 	auto steps = integrate_const(

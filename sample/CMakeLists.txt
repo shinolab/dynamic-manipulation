@@ -65,6 +65,7 @@ target_link_libraries(
     CameraDevice
     ImgProcUtil
     DynamicManipulation
+    ThrustSearch
 )
 set_target_properties(test_attraction_basin PROPERTIES FOLDER "test")
 

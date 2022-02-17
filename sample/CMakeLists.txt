@@ -63,7 +63,7 @@ target_link_libraries(
     test_attraction_basin
     StereoTracker
     CameraDevice
-    ImgProgUtil
+    ImgProcUtil
     DynamicManipulation
 )
 set_target_properties(test_attraction_basin PROPERTIES FOLDER "test")

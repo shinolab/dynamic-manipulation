@@ -273,6 +273,7 @@ namespace dynaman {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
 		}
 	}
+	
 
 	void MultiplexManipulator::ExecuteSingleActuation(
 		std::shared_ptr<autd::Controller> pAupa,
@@ -290,15 +291,15 @@ namespace dynaman {
 		auto posTgt = pObject->getPositionTarget(timeLoopInit);
 		auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 		auto accelTgt = pObject->getAccelTarget(timeLoopInit);
-		if (pObject->IsTracked() && isInsideWorkspace(pObject->getPosition(), pObject->lowerbound(), pObject->upperbound()))
+		if (pObject->IsTracked() && isInsideWorkspace(pos, pObject->lowerbound(), pObject->upperbound()))
 		{
 			Eigen::Vector3f accel;
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_gain);
 				accel
-					= m_gainP.asDiagonal() * (pos - posTgt)
-					+ m_gainD.asDiagonal() * (vel - velTgt)
-					+ m_gainI.asDiagonal() * integ
+					= m_gainP.asDiagonal() * (posTgt - pos)
+					+ m_gainD.asDiagonal() * (velTgt - vel)
+					- m_gainI.asDiagonal() * integ
 					+ accelTgt;
 			}
 			Eigen::Vector3f forceToApply
@@ -450,5 +451,20 @@ namespace dynaman {
 		if (!IsRunning()) {
 			m_logEnabled = false;
 		}
+	}
+
+	Eigen::Vector3f MultiplexManipulator::gainP() {
+		std::lock_guard<std::mutex> lock(m_mtx_gain);
+		return m_gainP;
+	}
+
+	Eigen::Vector3f MultiplexManipulator::gainD() {
+		std::lock_guard<std::mutex> lock(m_mtx_gain);
+		return m_gainD;
+	}
+
+	Eigen::Vector3f MultiplexManipulator::gainI() {
+		std::lock_guard<std::mutex> lock(m_mtx_gain);
+		return m_gainI;
 	}
 }

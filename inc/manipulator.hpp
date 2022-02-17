@@ -127,6 +127,12 @@ namespace dynaman {
 		);
 
 		void DisableLog();
+
+		Eigen::Vector3f gainP();
+
+		Eigen::Vector3f gainD();
+
+		Eigen::Vector3f gainI();
 	};
 }
 #endif // !_DYNAMAN_STRATEGY_HPP

@@ -1,5 +1,6 @@
 #include <ctime>
 #include <fstream>
+#include <random>
 #include <string>
 #include <vector>
 #include <boost/numeric/odeint.hpp>
@@ -12,13 +13,32 @@ using namespace boost::numeric::odeint;
 using namespace dynaman;
 using state_type = std::vector<float>;
 
-constexpr auto GRAVITY_ACCEL = 9.80665e3f; 
-constexpr auto RHO = 1.168e-9; //[kg/mm3]
 constexpr auto DUTY_MIN = 1.0f / 255.0f;
 constexpr float DT_MUX = 0.0025f;
-constexpr int NUM_STEP_MAX = 1000;
 constexpr float DT_STEP = 0.0005f;
 constexpr float DT_OBS = 0.01f;
+constexpr float DUTY_FF_MAX = 0.5f;
+constexpr auto GRAVITY_ACCEL = 9.80665e3f;
+constexpr int NUM_STEP_MAX = 1000;
+constexpr float RADIUS = 50.0f;
+constexpr auto RHO = 1.168e-9; //[kg/mm3]
+constexpr float THRES_CONVERGE_POS = 50;
+constexpr float THRES_CONVERGE_TIME = 5;
+
+void addRandomUnitVectors(std::vector<Eigen::Vector3f>& vectors, size_t num) {
+	std::random_device rnd;
+	std::mt19937 mt(rnd());
+	std::uniform_real_distribution<> dist(-1, 1);
+	for (int i = 0; i < num; i++) {
+		float t = std::asinf(dist(mt));
+		float u = dist(mt) * 2 * pi - pi;
+		vectors.emplace_back(
+			cosf(t) * cosf(u),
+			cosf(t) * sinf(u),
+			sinf(t)
+		);
+	}
+}
 
 float MuxMaximumThrust(
 	const Eigen::Vector3f& posStart,
@@ -122,8 +142,10 @@ private:
 	FloatingObjectPtr pObject_;
 	Eigen::MatrixXf centersAupa_;
 	std::vector<Eigen::Matrix3f> rotsAupa_;
-	std::ofstream ofsObs_;
+	//std::ofstream ofsObs_;
 	int step_count_ = 0;
+	bool converged_ = false;
+	int converge_count_ = 0;
 public:
 	std::vector<float> times_;
 	std::vector<std::pair<size_t, float>> duties_;
@@ -131,15 +153,14 @@ public:
 	System(
 		std::shared_ptr<autd::Controller> pAupa,
 		std::shared_ptr<dynaman::Tracker> pTracker,
-		FloatingObjectPtr pObject,
-		const std::string& filename
+		FloatingObjectPtr pObject
 	):
 		manipulator_(pAupa, pTracker),
 		pObject_(pObject),
 		centersAupa_(CentersAutd(pAupa->geometry())),
 		rotsAupa_(RotsAutd(pAupa->geometry()))
 	{
-		ofsObs_.open(filename);
+		//ofsObs_.open(filename);
 	}
 
 	void addDriveSequence(
@@ -163,6 +184,14 @@ public:
 				}
 			}
 		}
+	}
+
+	void check_convergence(const state_type& x, const float t) {
+		Eigen::Vector3f pos(x[0], x[1], x[2]);
+		auto posTgt = pObject_->getPositionTarget(static_cast<DWORD>(1000 * t));
+		(pos - posTgt).norm() < THRES_CONVERGE_POS ? converge_count_++ : converge_count_ = 0; 
+		converge_count_* DT_STEP > THRES_CONVERGE_TIME ? converged_ = true : converged_ = false;
+		//std::cout << "convergence_count :" << converge_count_ << std::endl;
 	}
 
 	void observe(const state_type& x, const float t) {
@@ -199,15 +228,6 @@ public:
 				times_,
 				duties_
 			);
-			ofsObs_
-				<< t
-				<< "," << pos.x() << "," << pos.y() << "," << pos.z()
-				<< "," << vel.x() << "," << vel.y() << "," << vel.z()
-				<< "," << integ.x() << "," << integ.y() << "," << integ.z();
-			for (int i = 0; i < duty.size(); i++) {
-				ofsObs_ << "," << duty[i];
-			}
-			ofsObs_ << std::endl;
 		}
 		step_count_++;
 	}
@@ -243,81 +263,120 @@ public:
 		dxdt[4] = accelResult[1];
 		dxdt[5] = accelResult[2];
 	}
+
+	bool isConverged() {
+		return converged_;
+	}
 };
 
-int main(int argc, char** argv) {
+bool simulate(
+	std::shared_ptr<autd::Controller> pAupa,
+	std::shared_ptr<dynaman::Tracker> pTracker,
+	std::shared_ptr<dynaman::Trajectory> pTrajectory,
+	const Eigen::Vector3f& posError,
+	const Eigen::Vector3f& velError,
+	float timeInit,
+	float timeEnd
+) {
+	auto systimeInit = static_cast<DWORD>(timeInit);
 
-	//Experiment Condition**********************
-
-	Eigen::Vector3f posInitTgt(-200, 0, 0);
-	Eigen::Vector3f posEndTgt(200, 0, 0);
-	Eigen::Vector3f posError(0, 0, 100);
-	Eigen::Vector3f velError(0, 0, 0);
-	state_type state(6);
-	state[0] = posInitTgt.x() + posError.x();
-	state[1] = posInitTgt.y() + posError.y();
-	state[2] = posInitTgt.z() + posError.z();
-	state[3] = velError[0];
-	state[4] = velError[1];
-	state[5] = velError[2];
-
-	float time_init = 1.0f;
-	float time_trans_start = 2.0f;
-	float time_end = 4.0f;
-	float duty_ff_max = 0.5f;
-
-
-	// ***********************************
-	char date[sizeof("yymmdd_HHMMSS")];
-	auto tt = std::time(nullptr);
-	std::strftime(&date[0], sizeof(date), "%y%m%d_%H%M%S", std::localtime(&tt));
-	std::string prefix(date);
-	std::string filenameTrue = prefix + "_basin_true_log.csv";
-	std::string filenameObs = prefix + "_basin_obs_log.csv";
-
-	auto pAupa = haptic_icon::CreateController();
-	auto pTracker = haptic_icon::CreateTracker("blue_target_r50mm.png");
 	FloatingObjectPtr pObject = FloatingObject::Create(
-		Eigen::Vector3f::Zero(),
+		pTrajectory->pos(systimeInit),
 		Eigen::Vector3f::Constant(-500),
 		Eigen::Vector3f::Constant(500),
-		50.0f
+		RADIUS
 	);
-	System system(pAupa, pTracker, pObject, filenameObs);
-	
-	auto pTrajectory = CreateBangbangTrajecotryWithDrag(
-		pAupa,
-		posInitTgt,
-		posEndTgt,
-		pObject->Radius(),
-		time_trans_start,
-		duty_ff_max
-	);
-	
+
+	System system(pAupa, pTracker, pObject);
+
 	pObject->SetTrajectory(pTrajectory);
 
-	Logger logger(filenameTrue, pTrajectory);
+	state_type state(6);
+	state[0] = pTrajectory->pos(systimeInit).x() + posError.x();
+	state[1] = pTrajectory->pos(systimeInit).y() + posError.y();
+	state[2] = pTrajectory->pos(systimeInit).z() + posError.z();
+	state[3] = pTrajectory->vel(systimeInit).x() + velError.x();
+	state[4] = pTrajectory->vel(systimeInit).y() + velError.y();
+	state[5] = pTrajectory->vel(systimeInit).z() + velError.z();
 
 	runge_kutta4<state_type> stepper;
 	auto steps = integrate_const(
 		stepper,
 		std::ref(system),
 		state,
-		time_init,
-		time_end,
+		timeInit,
+		timeEnd,
 		DT_STEP,
-		[&system, &logger](const state_type& x, const float t) {
-			logger(x, t);
+		[&system](const state_type& x, float t) {
 			system.observe(x, t);
+			system.check_convergence(x, t);
 		}
 	);
-	
-	std::cout << "Propagation finished. Total number of steps: " << steps << std::endl;
-	std::cout << "Terminal state: ";
+
+	//std::cout << "total steps: " << steps << std::endl;
+	std::cout << "terminal state: ";
 	for (auto&& e : state) {
-		std::cout << e << ",";
+		std::cout << e << "," ;
 	}
 	std::cout << std::endl;
+	return system.isConverged();
+}
+
+int main(int argc, char** argv) {
+
+	//Experiment Condition**********************
+	const int NT = 10;
+	const float posErrorLevel = 100;
+	const float velErrorLevel = 0;
+	Eigen::Vector3f posInitTgt(-200, 0, 0);
+	Eigen::Vector3f posEndTgt(200, 0, 0);
+
+	// ***********************************
+	char date[sizeof("yymmdd_HHMMSS")];
+	auto tt = std::time(nullptr);
+	std::strftime(&date[0], sizeof(date), "%y%m%d_%H%M%S", std::localtime(&tt));
+	std::string prefix(date);
+	std::string filename = prefix + "";
+
+	/*dependnet conditions*/
+	const float timeTransStart = 0.0f;// simulation constant
+	auto pAupa = haptic_icon::CreateController();
+	auto pTracker = haptic_icon::CreateTracker("blue_target_r50mm.png");
+
+	auto pTrajectory = CreateBangbangTrajecotryWithDrag(
+		pAupa,
+		posInitTgt,
+		posEndTgt,
+		RADIUS,
+		timeTransStart,
+		DUTY_FF_MAX
+	);
+
+	auto timeToTrans
+		= dynamic_cast<dynaman::TrajectoryBangbangWithDrag*>(pTrajectory.get())->time_to_accel()
+		+ dynamic_cast<dynaman::TrajectoryBangbangWithDrag*>(pTrajectory.get())->time_to_decel();
+
+	auto start = std::chrono::system_clock::now();
+	for (int it = 0; it < NT; it++) {
+		std::vector<Eigen::Vector3f> posErrors;
+		std::vector<Eigen::Vector3f> velErrors;
+		addRandomUnitVectors(posErrors, 1);
+		addRandomUnitVectors(velErrors, 1);
+
+		for (auto pe : posErrors) {
+			for (auto&& ve : velErrors) {
+			pe *= posErrorLevel;
+			ve *= velErrorLevel;
+				const float timeInit = timeTransStart + it * timeToTrans / NT;
+				const float timeEnd = timeInit + 10.0f;
+				auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
+				std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
+			}
+		}
+	}
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	std::cout << "elapsed:" << elapsed.count() << std::endl;
 
 	return 0;
 }

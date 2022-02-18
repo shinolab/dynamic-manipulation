@@ -14,16 +14,20 @@ using namespace dynaman;
 using state_type = std::vector<float>;
 
 constexpr auto DUTY_MIN = 1.0f / 255.0f;
-constexpr float DT_MUX = 0.0025f;
 constexpr float DT_STEP = 0.0005f;
 constexpr float DT_OBS = 0.01f;
 constexpr float DUTY_FF_MAX = 0.5f;
 constexpr auto GRAVITY_ACCEL = 9.80665e3f;
+constexpr int NUM_BINARY_SEARCH_MAX = 8;
 constexpr int NUM_STEP_MAX = 1000;
+constexpr int NUM_WAYPOINTS = 10;
+constexpr float NUM_ERROR_COND = 1000;
+constexpr float POS_ERROR_MAX = 300;
 constexpr float RADIUS = 50.0f;
 constexpr auto RHO = 1.168e-9; //[kg/mm3]
 constexpr float THRES_CONVERGE_POS = 50;
 constexpr float THRES_CONVERGE_TIME = 5;
+
 
 void addRandomUnitVectors(std::vector<Eigen::Vector3f>& vectors, size_t num) {
 	std::random_device rnd;
@@ -314,20 +318,28 @@ bool simulate(
 	);
 
 	//std::cout << "total steps: " << steps << std::endl;
-	std::cout << "terminal state: ";
-	for (auto&& e : state) {
-		std::cout << e << "," ;
-	}
-	std::cout << std::endl;
+	//std::cout << "terminal state: ";
+	//for (auto&& e : state) {
+	//	std::cout << e << "," ;
+	//}
+	//std::cout << std::endl;
 	return system.isConverged();
 }
 
-int main(int argc, char** argv) {
 
+int main(int argc, char** argv) {
 	//Experiment Condition**********************
-	const int NT = 10;
-	const float posErrorLevel = 100;
-	const float velErrorLevel = 0;
+	std::vector<float> velErrorLevels;// { 0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000 };
+	for (int iArg = 1; iArg < argc; iArg++) {
+		std::string str_argv(argv[iArg]);
+		auto argvf = std::stof(str_argv);
+		velErrorLevels.push_back(argvf);
+	}
+	std::cout << "velErrorLevels: ";
+	for (auto&& v : velErrorLevels) {
+		std::cout << ", " << v;
+	}
+	std::cout << std::endl;
 	Eigen::Vector3f posInitTgt(-200, 0, 0);
 	Eigen::Vector3f posEndTgt(200, 0, 0);
 
@@ -336,7 +348,16 @@ int main(int argc, char** argv) {
 	auto tt = std::time(nullptr);
 	std::strftime(&date[0], sizeof(date), "%y%m%d_%H%M%S", std::localtime(&tt));
 	std::string prefix(date);
-	std::string filename = prefix + "";
+	std::string filename = prefix + "_v" + std::string(argv[1]) + "_basin_summery.csv";
+	std::string filenameLog = prefix + "_v" + std::string(argv[1]) + "_log.txt";
+	std::ofstream ofs(filename);
+	std::ofstream ofsLog(filenameLog);
+	
+	ofs << "dv";
+	for (int it = 0; it < NUM_WAYPOINTS; it++) {
+		ofs << ",t=" << it;
+	}
+	ofs << std::endl;
 
 	/*dependnet conditions*/
 	const float timeTransStart = 0.0f;// simulation constant
@@ -357,26 +378,64 @@ int main(int argc, char** argv) {
 		+ dynamic_cast<dynaman::TrajectoryBangbangWithDrag*>(pTrajectory.get())->time_to_decel();
 
 	auto start = std::chrono::system_clock::now();
-	for (int it = 0; it < NT; it++) {
-		std::vector<Eigen::Vector3f> posErrors;
-		std::vector<Eigen::Vector3f> velErrors;
-		addRandomUnitVectors(posErrors, 1);
-		addRandomUnitVectors(velErrors, 1);
+	for (auto&& veLv : velErrorLevels){
+		ofs << veLv;
 
-		for (auto pe : posErrors) {
-			for (auto&& ve : velErrors) {
-			pe *= posErrorLevel;
-			ve *= velErrorLevel;
-				const float timeInit = timeTransStart + it * timeToTrans / NT;
-				const float timeEnd = timeInit + 10.0f;
-				auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
-				std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
+		for (int it = 0; it < NUM_WAYPOINTS; it++) {
+			float posErrorLb = 0;
+			float posErrorUb = POS_ERROR_MAX;
+			float posErrorMid;
+
+			for (int ib = 0; ib < NUM_BINARY_SEARCH_MAX; ib++) {
+				auto convergedInAllTrials = true;
+				posErrorMid = 0.5 * (posErrorLb + posErrorUb);
+				if (posErrorUb - posErrorMid < 1 || posErrorMid - posErrorLb < 1) {
+					break;
+				}
+				std::vector<Eigen::Vector3f> velErrors;
+				std::vector<Eigen::Vector3f> posErrors;
+				addRandomUnitVectors(velErrors, NUM_ERROR_COND);
+				addRandomUnitVectors(posErrors, NUM_ERROR_COND);
+
+				for (int ic = 0; ic < NUM_ERROR_COND; ic++) {
+					auto pe = posErrorMid * posErrors[ic];
+					auto ve = veLv * velErrors[ic];
+					const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
+					const float timeEnd = timeInit + 10.0f;
+					auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
+					//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
+					if (!isConverged) {
+						convergedInAllTrials = false;
+						std::cout
+							<< "failed to converge: (posError: " << pe.transpose()
+							<< ", velError: " << ve.transpose() << ")"
+							<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
+						ofsLog
+							<< "failed to converge: (posError: " << pe.transpose()
+							<< ", velError: " << ve.transpose() << ")"
+							<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
+
+						break;
+					}
+				}
+				if (convergedInAllTrials) {
+					ofsLog << "converged in all trials: posErrorLv: " << posErrorMid << "mm @ v=" << veLv << "mm/s, waypoint: " << it << ")" << std::endl;
+					std::cout <<"converged in all trials: posErrorLv: " << posErrorMid << "mm @ v=" << veLv << "mm/s, waypoint: " << it << ")" << std::endl;
+				}
+				convergedInAllTrials ? posErrorLb = posErrorMid : posErrorUb = posErrorMid;
 			}
+			ofsLog << "Tolerant pos error is:" << posErrorMid << " mm @ v=" << veLv << "mm/s, waypoint: " << it << std::endl;
+			std::cout << "Tolerant pos error is:" << posErrorMid <<" mm @ v=" << veLv << "mm/s, waypoint: " << it  << std::endl;
+			ofs << "," << posErrorMid;
 		}
+		ofs << std::endl;
+		auto end = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		ofsLog << "elapsed:" << elapsed.count() << "ms" << std::endl;
+		std::cout << "elapsed:" << elapsed.count() << "ms" << std::endl;
 	}
-	auto end = std::chrono::system_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-	std::cout << "elapsed:" << elapsed.count() << std::endl;
+	ofs.close();
+	ofsLog.close();
 
 	return 0;
 }

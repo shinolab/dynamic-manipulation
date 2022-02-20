@@ -58,38 +58,43 @@ target_link_libraries(
 )
 set_target_properties(test_compute_duty PROPERTIES FOLDER "test")
 
-add_executable(test_attraction_basin_h test_attraction_basin_h.cpp)
+add_library(dynaman_simulator dynaman_simulator.cpp dynaman_simulator.hpp)
 target_link_libraries(
-    test_attraction_basin_h
+    dynaman_simulator
     StereoTracker
     CameraDevice
     ImgProcUtil
     DynamicManipulation
     ThrustSearch
+)
+
+add_executable(test_attraction_basin_h test_attraction_basin_h.cpp)
+target_link_libraries(
+    test_attraction_basin_h
+    dynaman_simulator
     )
 set_target_properties(test_attraction_basin_h PROPERTIES FOLDER "test")
 
 add_executable(test_attraction_basin_d test_attraction_basin_d.cpp)
 target_link_libraries(
     test_attraction_basin_d
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-    ThrustSearch
+    dynaman_simulator
     )
 set_target_properties(test_attraction_basin_d PROPERTIES FOLDER "test")
 
 add_executable(test_attraction_basin_v test_attraction_basin_v.cpp)
 target_link_libraries(
     test_attraction_basin_v
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-    ThrustSearch
+    dynaman_simulator
     )
 set_target_properties(test_attraction_basin_v PROPERTIES FOLDER "test")
+
+add_executable(test_resolution test_resolution.cpp)
+target_link_libraries(
+    test_resolution
+    dynaman_simulator
+)
+set_target_properties(test_resolution PROPERTIES FOLDER "test")
 
 option(BUILD_PCL_APPS "build examples that use pcl" OFF)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)

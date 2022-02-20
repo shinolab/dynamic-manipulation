@@ -21,8 +21,8 @@ constexpr auto GRAVITY_ACCEL = 9.80665e3f;
 constexpr int NUM_BINARY_SEARCH_MAX = 8;
 constexpr int NUM_STEP_MAX = 1000;
 constexpr int NUM_WAYPOINTS = 10;
-constexpr float NUM_ERROR_COND = 1000;
-constexpr float POS_ERROR_MAX = 300;
+constexpr float NUM_ERROR_COND = 10000;
+constexpr float POS_ERROR_MAX = 210;
 constexpr float RADIUS = 50.0f;
 constexpr auto RHO = 1.168e-9; //[kg/mm3]
 constexpr float THRES_CONVERGE_POS = 50;
@@ -348,8 +348,8 @@ int main(int argc, char** argv) {
 	auto tt = std::time(nullptr);
 	std::strftime(&date[0], sizeof(date), "%y%m%d_%H%M%S", std::localtime(&tt));
 	std::string prefix(date);
-	std::string filename = prefix + "_v" + std::string(argv[1]) + "_basin_summery.csv";
-	std::string filenameLog = prefix + "_v" + std::string(argv[1]) + "_log.txt";
+	std::string filename = prefix + "_v" + std::string(argv[1]) + "_basin_summery_h.csv";
+	std::string filenameLog = prefix + "_v" + std::string(argv[1]) + "_log_h.txt";
 	std::ofstream ofs(filename);
 	std::ofstream ofsLog(filenameLog);
 	

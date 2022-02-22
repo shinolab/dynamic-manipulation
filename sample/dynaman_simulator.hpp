@@ -21,6 +21,8 @@ constexpr float THRES_CONVERGE_TIME = 5;
 
 void addRandomUnitVectors(std::vector<Eigen::Vector3f>& vectors, size_t num);
 
+void addUnitVectorsFib(std::vector<Eigen::Vector3f>& vectors, int num);
+
 float MuxMaximumThrust(
 	const Eigen::Vector3f& posStart,
 	const Eigen::Vector3f& posEnd,

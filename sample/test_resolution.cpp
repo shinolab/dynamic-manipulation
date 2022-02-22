@@ -42,6 +42,17 @@ bool run_single_simulation(
 }
 
 int main(int argc, char** argv) {
+
+
+	std::string filename("20220222_fib_sphere_test.csv");
+	std::vector<Eigen::Vector3f> vectors;
+	addUnitVectorsFib(vectors, 120);
+	std::ofstream ofs(filename);
+	std::cout << vectors.size() << std::endl;
+	for (auto&& v : vectors) {
+		ofs << v.x() << "," << v.y() << "," << v.z() << "," << std::endl;
+	}
+	return 0;
 	
 	char date[sizeof("yymmdd_HHMMSS")];
 	auto tt = std::time(nullptr);
@@ -56,8 +67,8 @@ int main(int argc, char** argv) {
 		std::ofstream ofs(filename);
 		run_single_simulation(
 			s,
-			Eigen::Vector3f(-200, 0, 0),
-			Eigen::Vector3f(200, 0, 0),
+			200 * Eigen::Vector3f(1, 0, -1).normalized(),
+			200 * Eigen::Vector3f(1, 0, 1).normalized(),
 			[&ofs](const state_type& x, const float t)
 			{
 				ofs << t << "," << x[0] << "," << x[1] << "," << x[2] << "," << x[3] << "," << x[4] << "," << x[5] << std::endl;

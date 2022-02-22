@@ -20,6 +20,20 @@ void addRandomUnitVectors(std::vector<Eigen::Vector3f>& vectors, size_t num) {
 	}
 }
 
+void addUnitVectorsFib(std::vector<Eigen::Vector3f>& vectors, int num) {
+	const float psi = (std::sqrtf(5.0f) - 1.0f) / 2.0f;
+	for (int i = -num; i <= num; i++) {
+		auto theta = std::asinf(2.0f * i / (2.0f * num + 1.0f));
+		auto phi = 2.0f * PI * i * psi;
+		std::cout << "theta: " << theta << ", phi: " << phi << std::endl;
+		vectors.emplace_back(
+			std::cosf(theta) * std::cosf(phi),
+			std::cosf(theta) * std::sinf(phi),
+			std::sinf(theta)
+		);
+	}
+}
+
 float MuxMaximumThrust(
 	const Eigen::Vector3f& posStart,
 	const Eigen::Vector3f& posEnd,

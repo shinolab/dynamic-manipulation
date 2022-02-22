@@ -40,7 +40,33 @@ namespace dynaman {
 		static std::shared_ptr<Trajectory> Create(
 			Eigen::Vector3f const& positionTarget,
 			Eigen::Vector3f const& velocityTarget,
-			Eigen::Vector3f const& accelTarget);
+			Eigen::Vector3f const& accelTarget
+		);
+	};
+
+	class TrajectoryStep : public Trajectory 
+	{
+	private:
+		Eigen::Vector3f m_posInit;
+		Eigen::Vector3f m_posEnd;
+		DWORD m_switch_time_ms;
+	public:
+		TrajectoryStep(
+			const Eigen::Vector3f& posInit,
+			const Eigen::Vector3f& posEnd,
+			DWORD switch_time_ms
+		);
+
+		static std::shared_ptr<Trajectory> Create(
+			const Eigen::Vector3f& posInit,
+			const Eigen::Vector3f& posEnd,
+			DWORD switch_time_ms
+		);
+
+		Eigen::Vector3f pos(DWORD sys_time_ms = timeGetTime()) override;
+		Eigen::Vector3f vel(DWORD sys_time_ms = timeGetTime()) override;
+		Eigen::Vector3f accel(DWORD sys_time_ms = timeGetTime()) override;
+
 	};
 
 	class TrajectoryBangBang : public Trajectory

@@ -44,6 +44,36 @@ std::shared_ptr<Trajectory> TrajectoryConstantState::Create(
 		);
 }
 
+TrajectoryStep::TrajectoryStep(
+	const Eigen::Vector3f& posInit,
+	const Eigen::Vector3f& posEnd,
+	DWORD switch_time_ms
+) :
+	m_posInit(posInit),
+	m_posEnd(posEnd),
+	m_switch_time_ms(switch_time_ms)
+{}
+
+std::shared_ptr<Trajectory> TrajectoryStep::Create(
+	const Eigen::Vector3f& posInit,
+	const Eigen::Vector3f& posEnd,
+	DWORD switch_time_ms
+) {
+	return std::make_shared<TrajectoryStep>(posInit, posEnd, switch_time_ms);
+}
+
+Eigen::Vector3f TrajectoryStep::pos(DWORD sys_time_ms) {
+	return sys_time_ms < m_switch_time_ms ? m_posInit : m_posEnd;
+}
+
+Eigen::Vector3f TrajectoryStep::vel(DWORD sys_time_ms) {
+	return Eigen::Vector3f::Zero();
+}
+
+Eigen::Vector3f TrajectoryStep::accel(DWORD sys_time_ms) {
+	return Eigen::Vector3f::Zero();
+}
+
 Eigen::Vector3f TrajectoryBangBang::pos(DWORD sys_time_ms)
 {
 	if (sys_time_ms < _sys_time_init)

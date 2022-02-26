@@ -14,7 +14,7 @@ using namespace dynaman;
 constexpr float DUTY_FF_MAX = 0.5f;
 constexpr int NUM_BINARY_SEARCH_MAX = 8;
 constexpr int NUM_WAYPOINTS = 10;
-constexpr float NUM_ERROR_COND = 10000;
+constexpr float NUM_ERROR_COND = 50;
 constexpr float POS_ERROR_MAX = 210;
 
 
@@ -69,6 +69,13 @@ int main(int argc, char** argv) {
 		+ dynamic_cast<dynaman::TrajectoryBangbangWithDrag*>(pTrajectory.get())->time_to_decel();
 
 	auto start = std::chrono::system_clock::now();
+
+	std::vector<Eigen::Vector3f> velErrors;
+	std::vector<Eigen::Vector3f> posErrors;
+	//addRandomUnitVectors(velErrors, NUM_ERROR_COND);
+	//addRandomUnitVectors(posErrors, NUM_ERROR_COND);
+	addUnitVectorsFib(velErrors, NUM_ERROR_COND);
+	addUnitVectorsFib(posErrors, NUM_ERROR_COND);
 	for (auto&& veLv : velErrorLevels){
 		ofs << veLv;
 
@@ -83,31 +90,31 @@ int main(int argc, char** argv) {
 				if (posErrorUb - posErrorMid < 1 || posErrorMid - posErrorLb < 1) {
 					break;
 				}
-				std::vector<Eigen::Vector3f> velErrors;
-				std::vector<Eigen::Vector3f> posErrors;
-				addRandomUnitVectors(velErrors, NUM_ERROR_COND);
-				addRandomUnitVectors(posErrors, NUM_ERROR_COND);
-
-				for (int ic = 0; ic < NUM_ERROR_COND; ic++) {
-					auto pe = posErrorMid * posErrors[ic];
-					auto ve = veLv * velErrors[ic];
-					const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
-					const float timeEnd = timeInit + 10.0f;
-					auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
-					//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
-					if (!isConverged) {
-						convergedInAllTrials = false;
-						std::cout
-							<< "failed to converge: (posError: " << pe.transpose()
-							<< ", velError: " << ve.transpose() << ")"
-							<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
-						ofsLog
-							<< "failed to converge: (posError: " << pe.transpose()
-							<< ", velError: " << ve.transpose() << ")"
-							<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
-
-						break;
+				for (auto&& pd : posErrors) {
+					for (auto&& vd : velErrors) {
+						auto pe = posErrorMid * pd;
+						auto ve = veLv * vd;
+						const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
+						const float timeEnd = timeInit + 10.0f;
+						auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
+						//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
+						if (!isConverged) {
+							convergedInAllTrials = false;
+							std::cout
+								<< "failed to converge: (posError: " << pe.transpose()
+								<< ", velError: " << ve.transpose() << ")"
+								<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
+							ofsLog
+								<< "failed to converge: (posError: " << pe.transpose()
+								<< ", velError: " << ve.transpose() << ")"
+								<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
+							break;
+						}
 					}
+					if (!convergedInAllTrials)
+						break;
+				}
+				for (int ic = 0; ic < NUM_ERROR_COND; ic++) {
 				}
 				if (convergedInAllTrials) {
 					ofsLog << "converged in all trials: posErrorLv: " << posErrorMid << "mm @ v=" << veLv << "mm/s, waypoint: " << it << ")" << std::endl;

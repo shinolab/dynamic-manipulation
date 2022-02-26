@@ -25,7 +25,7 @@ void addUnitVectorsFib(std::vector<Eigen::Vector3f>& vectors, int num) {
 	for (int i = -num; i <= num; i++) {
 		auto theta = std::asinf(2.0f * i / (2.0f * num + 1.0f));
 		auto phi = 2.0f * PI * i * psi;
-		std::cout << "theta: " << theta << ", phi: " << phi << std::endl;
+		//std::cout << "theta: " << theta << ", phi: " << phi << std::endl;
 		vectors.emplace_back(
 			std::cosf(theta) * std::cosf(phi),
 			std::cosf(theta) * std::sinf(phi),

@@ -14,8 +14,8 @@ using namespace dynaman;
 
 constexpr float DUTY_FF_MAX = 0.5f;
 constexpr int NUM_BINARY_SEARCH_MAX = 8;
-constexpr int NUM_WAYPOINTS = 10;
-constexpr float NUM_ERROR_COND = 50;
+constexpr int NUM_WAYPOINTS = 50;
+constexpr float NUM_ERROR_COND = 2;
 constexpr float POS_ERROR_MAX = 210;
 
 
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 			fut.push_back(
 				std::async(
 					std::launch::async,
-					[&]() {
+					[it, &drTol, &veLv, &posErrors, &velErrors, &timeTransStart, &timeToTrans, &pAupa, &pTracker, &pTrajectory]() {
 						float posErrorLb = 0;
 						float posErrorUb = POS_ERROR_MAX;
 						float posErrorMid;

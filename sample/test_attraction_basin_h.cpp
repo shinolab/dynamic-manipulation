@@ -1,5 +1,6 @@
 #include <ctime>
 #include <fstream>
+#include <future>
 #include <string>
 #include <vector>
 #include <boost/numeric/odeint.hpp>
@@ -76,55 +77,54 @@ int main(int argc, char** argv) {
 	//addRandomUnitVectors(posErrors, NUM_ERROR_COND);
 	addUnitVectorsFib(velErrors, NUM_ERROR_COND);
 	addUnitVectorsFib(posErrors, NUM_ERROR_COND);
+
 	for (auto&& veLv : velErrorLevels){
 		ofs << veLv;
-
+		std::vector<float> drTol(NUM_WAYPOINTS);
+		std::vector<std::future<void>> fut;
 		for (int it = 0; it < NUM_WAYPOINTS; it++) {
-			float posErrorLb = 0;
-			float posErrorUb = POS_ERROR_MAX;
-			float posErrorMid;
+			fut.push_back(
+				std::async(
+					std::launch::async,
+					[&]() {
+						float posErrorLb = 0;
+						float posErrorUb = POS_ERROR_MAX;
+						float posErrorMid;
 
-			for (int ib = 0; ib < NUM_BINARY_SEARCH_MAX; ib++) {
-				auto convergedInAllTrials = true;
-				posErrorMid = 0.5 * (posErrorLb + posErrorUb);
-				if (posErrorUb - posErrorMid < 1 || posErrorMid - posErrorLb < 1) {
-					break;
-				}
-				for (auto&& pd : posErrors) {
-					for (auto&& vd : velErrors) {
-						auto pe = posErrorMid * pd;
-						auto ve = veLv * vd;
-						const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
-						const float timeEnd = timeInit + 10.0f;
-						auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
-						//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
-						if (!isConverged) {
-							convergedInAllTrials = false;
-							std::cout
-								<< "failed to converge: (posError: " << pe.transpose()
-								<< ", velError: " << ve.transpose() << ")"
-								<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
-							ofsLog
-								<< "failed to converge: (posError: " << pe.transpose()
-								<< ", velError: " << ve.transpose() << ")"
-								<< "(norm:" << pe.norm() << ", " << ve.norm() << ")" << std::endl;
-							break;
+						for (int ib = 0; ib < NUM_BINARY_SEARCH_MAX; ib++) {
+							auto convergedInAllTrials = true;
+							posErrorMid = 0.5 * (posErrorLb + posErrorUb);
+							if (posErrorUb - posErrorMid < 1 || posErrorMid - posErrorLb < 1) {
+								break;
+							}
+							for (auto&& pd : posErrors) {
+								for (auto&& vd : velErrors) {
+									auto pe = posErrorMid * pd;
+									auto ve = veLv * vd;
+									const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
+									const float timeEnd = timeInit + 10.0f;
+									auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
+									//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
+									if (!isConverged) {
+										convergedInAllTrials = false;
+										break;
+									}
+								}
+								if (!convergedInAllTrials)
+									break;
+							}
+							convergedInAllTrials ? posErrorLb = posErrorMid : posErrorUb = posErrorMid;
 						}
+						drTol[it] = posErrorMid;
 					}
-					if (!convergedInAllTrials)
-						break;
-				}
-				for (int ic = 0; ic < NUM_ERROR_COND; ic++) {
-				}
-				if (convergedInAllTrials) {
-					ofsLog << "converged in all trials: posErrorLv: " << posErrorMid << "mm @ v=" << veLv << "mm/s, waypoint: " << it << ")" << std::endl;
-					std::cout <<"converged in all trials: posErrorLv: " << posErrorMid << "mm @ v=" << veLv << "mm/s, waypoint: " << it << ")" << std::endl;
-				}
-				convergedInAllTrials ? posErrorLb = posErrorMid : posErrorUb = posErrorMid;
-			}
-			ofsLog << "Tolerant pos error is:" << posErrorMid << " mm @ v=" << veLv << "mm/s, waypoint: " << it << std::endl;
-			std::cout << "Tolerant pos error is:" << posErrorMid <<" mm @ v=" << veLv << "mm/s, waypoint: " << it  << std::endl;
-			ofs << "," << posErrorMid;
+				)
+			);
+		}
+		for (auto&& f : fut) {
+			f.get();
+		}
+		for (auto&& dr : drTol) {
+			ofs << "," << dr;
 		}
 		ofs << std::endl;
 		auto end = std::chrono::system_clock::now();

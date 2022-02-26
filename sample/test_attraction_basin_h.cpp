@@ -14,8 +14,8 @@ using namespace dynaman;
 
 constexpr float DUTY_FF_MAX = 0.5f;
 constexpr int NUM_BINARY_SEARCH_MAX = 8;
-constexpr int NUM_WAYPOINTS = 50;
-constexpr float NUM_ERROR_COND = 2;
+constexpr int NUM_WAYPOINTS = 10;
+constexpr float NUM_ERROR_COND = 50;
 constexpr float POS_ERROR_MAX = 210;
 
 

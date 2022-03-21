@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 if(POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)
 endif()
@@ -16,17 +16,20 @@ include_directories(${PROJECT_SOURCE_DIR}/inc)
 include_directories(${PROJECT_SOURCE_DIR}/deps/autd3-library-software/client/lib)
 
 # OpenCV
-find_package(OpenCV REQUIRED)
+find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Find Kinect SDK v2
-find_package( KinectSDK2 REQUIRED )
-include_directories( ${KinectSDK2_INCLUDE_DIRS} )
-link_directories( ${KinectSDK2_LIBRARY_DIRS} )
-
+find_package(KinectSDK2)
+if(KINECTSDK2_FOUND)
+    include_directories( ${KinectSDK2_INCLUDE_DIRS} )
+    link_directories( ${KinectSDK2_LIBRARY_DIRS} )
+endif()
 # Find Ximea
-find_package(XIMEA REQUIRED)
-include_directories(${XIMEA_INCLUDE_DIR})
+find_package(XIMEA)
+if(XIMEA_FOUND)
+    include_directories(${XIMEA_INCLUDE_DIR})
+endif()
 
 add_executable(demo_manipulator demo_manipulator.cpp)
 target_link_libraries(
@@ -47,75 +50,6 @@ target_link_libraries(
     DynamicManipulation
 )
 set_target_properties(demo_catch PROPERTIES FOLDER "demos")
-
-add_executable(test_compute_duty test_compute_duty.cpp)
-target_link_libraries(
-    test_compute_duty
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-)
-set_target_properties(test_compute_duty PROPERTIES FOLDER "test")
-
-add_library(dynaman_simulator dynaman_simulator.cpp dynaman_simulator.hpp)
-target_link_libraries(
-    dynaman_simulator
-    StereoTracker
-    CameraDevice
-    ImgProcUtil
-    DynamicManipulation
-    ThrustSearch
-)
-
-add_executable(test_attraction_basin_h test_attraction_basin_h.cpp)
-target_link_libraries(
-    test_attraction_basin_h
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_h PROPERTIES FOLDER "test")
-
-add_executable(test_attraction_basin_d test_attraction_basin_d.cpp)
-target_link_libraries(
-    test_attraction_basin_d
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_d PROPERTIES FOLDER "test")
-
-add_executable(test_attraction_basin_v test_attraction_basin_v.cpp)
-target_link_libraries(
-    test_attraction_basin_v
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_v PROPERTIES FOLDER "test")
-
-add_executable(test_attraction_basin_td test_attraction_basin_td.cpp)
-target_link_libraries(
-    test_attraction_basin_td
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_td PROPERTIES FOLDER "test")
-
-add_executable(test_attraction_basin_th test_attraction_basin_th.cpp)
-target_link_libraries(
-    test_attraction_basin_th
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_th PROPERTIES FOLDER "test")
-
-add_executable(test_attraction_basin_th0 test_attraction_basin_th0.cpp)
-target_link_libraries(
-    test_attraction_basin_th0
-    dynaman_simulator
-    )
-set_target_properties(test_attraction_basin_th0 PROPERTIES FOLDER "test")
-
-add_executable(test_resolution test_resolution.cpp)
-target_link_libraries(
-    test_resolution
-    dynaman_simulator
-)
-set_target_properties(test_resolution PROPERTIES FOLDER "test")
 
 option(BUILD_PCL_APPS "build examples that use pcl" OFF)
 #option(BUILD_AZURE_KINECT_APPS "requires GPU better than GeForce 1070 or better." ON)

@@ -25,12 +25,12 @@ bool test_convergence(
 	std::shared_ptr<dynaman::Trajectory> pTrajectory,
 	const Eigen::Vector3f& posError,
 	const Eigen::Vector3f& velError,
-	float timeInit,
-	float timeEnd,
+	float time_init_s,
+	float time_end_s,
 	int stepsPowerResolution,
 	std::function<void(const state_type& x, const float t)> observer
 ) {
-	auto systimeInit = static_cast<DWORD>(1000 * timeInit);
+	auto systimeInit = static_cast<DWORD>(1000 * time_init_s);
 	constexpr float radius = 50.0f;
 
 	FloatingObjectPtr pObject = FloatingObject::Create(
@@ -41,7 +41,7 @@ bool test_convergence(
 	);
 
 	pObject->SetTrajectory(pTrajectory);
-
+	
 	Simulator simulator(
 		pAupa,
 		pTracker,
@@ -58,7 +58,7 @@ bool test_convergence(
 		pTrajectory->vel(systimeInit).z() + velError.z()
 	};
 	
-	simulator.integrate(state, timeInit, timeEnd, observer);
+	simulator.integrate(state, time_init_s, time_end_s, observer);
 	return simulator.isConverged();
 }
 

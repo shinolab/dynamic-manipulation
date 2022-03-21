@@ -128,16 +128,17 @@ void System::addDriveSequence(
 		times.push_back(t);
 		duties.push_back(std::make_pair(0, 0));
 	}
-	else {
-		int deviceCount = 0;
-		for (int iDevice = 0; iDevice < 11; iDevice++) {
-			if (duty[iDevice] > DUTY_MIN) {
-				times.push_back(t + DT_OBS / num_active * deviceCount);
-				duties.push_back(std::make_pair(iDevice, duty[iDevice]));
-				deviceCount++;
-			}
+	return;
+	
+	int deviceCount = 0;
+	for (int iDevice = 0; iDevice < 11; iDevice++) {
+		if (duty[iDevice] > DUTY_MIN) {
+			times.push_back(t + DT_OBS / num_active * deviceCount);
+			duties.push_back(std::make_pair(iDevice, duty[iDevice]));
+			deviceCount++;
 		}
 	}
+	return;
 }
 
 void System::check_convergence(const state_type& x, const float t) {
@@ -192,7 +193,6 @@ void System::observe(const state_type& x, const float t) {
 
 void System::operator()(const state_type& x, state_type& dxdt, const float t) {
 	//observation
-	DWORD systime_ms = static_cast<DWORD>(t * 1000);
 	Eigen::Vector3f pos(x[0], x[1], x[2]);
 	Eigen::Vector3f vel(x[3], x[4], x[5]);
 
@@ -212,14 +212,13 @@ void System::operator()(const state_type& x, state_type& dxdt, const float t) {
 	Eigen::MatrixXf FTrue = manipulator_.arfModel()->arf(posRel, rotsAupa_);
 	Eigen::Vector3f forceArf = FTrue.col(iDevice) * duty;
 	Eigen::Vector3f drag = -0.5f * PI * RHO * vel.norm() * vel.norm() * pObject_->Radius() * pObject_->Radius() * vel.normalized();
-	Eigen::Vector3f forceTotal = forceArf + drag;
-	Eigen::Vector3f accelResult = forceTotal / pObject_->totalMass();
+	Eigen::Vector3f accel = (forceArf + drag) / pObject_->totalMass();
 	dxdt[0] = x[3];
 	dxdt[1] = x[4];
 	dxdt[2] = x[5];
-	dxdt[3] = accelResult[0];
-	dxdt[4] = accelResult[1];
-	dxdt[5] = accelResult[2];
+	dxdt[3] = accel[0];
+	dxdt[4] = accel[1];
+	dxdt[5] = accel[2];
 }
 
 bool System::isConverged() {

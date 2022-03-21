@@ -89,6 +89,27 @@ target_link_libraries(
     )
 set_target_properties(test_attraction_basin_v PROPERTIES FOLDER "test")
 
+add_executable(test_attraction_basin_td test_attraction_basin_td.cpp)
+target_link_libraries(
+    test_attraction_basin_td
+    dynaman_simulator
+    )
+set_target_properties(test_attraction_basin_td PROPERTIES FOLDER "test")
+
+add_executable(test_attraction_basin_th test_attraction_basin_th.cpp)
+target_link_libraries(
+    test_attraction_basin_th
+    dynaman_simulator
+    )
+set_target_properties(test_attraction_basin_th PROPERTIES FOLDER "test")
+
+add_executable(test_attraction_basin_th0 test_attraction_basin_th0.cpp)
+target_link_libraries(
+    test_attraction_basin_th0
+    dynaman_simulator
+    )
+set_target_properties(test_attraction_basin_th0 PROPERTIES FOLDER "test")
+
 add_executable(test_resolution test_resolution.cpp)
 target_link_libraries(
     test_resolution

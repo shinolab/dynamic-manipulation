@@ -141,12 +141,11 @@ void System::addDriveSequence(
 	return;
 }
 
-void System::check_convergence(const state_type& x, const float t) {
+void System::checkConvergence(const state_type& x, const float t) {
 	Eigen::Vector3f pos(x[0], x[1], x[2]);
 	auto posTgt = pObject_->getPositionTarget(static_cast<DWORD>(1000 * t));
 	(pos - posTgt).norm() < THRES_CONVERGE_POS ? converge_count_++ : converge_count_ = 0;
 	converge_count_* DT_STEP > THRES_CONVERGE_TIME ? converged_ = true : converged_ = false;
-	//std::cout << "convergence_count :" << converge_count_ << std::endl;
 }
 
 void System::observe(const state_type& x, const float t) {
@@ -191,26 +190,28 @@ void System::observe(const state_type& x, const float t) {
 	step_count_++;
 }
 
+Eigen::VectorXf System::aupaPower(float time_s) {
+	size_t iDevice = 0;
+	float duty = 0;
+	int num_device = centersAupa_.cols();
+	Eigen::VectorXf power = Eigen::VectorXf::Zero(num_device);
+	for (auto itr = times_.rbegin(); itr != times_.rend(); itr++) {
+		if (*itr <= time_s) {
+			auto it = std::distance(itr, times_.rend()) - 1;
+			iDevice = duties_[it].first;
+			power[iDevice] = duties_[it].second;
+			break;
+		}
+	}
+	return power;
+}
+
 void System::operator()(const state_type& x, state_type& dxdt, const float t) {
 	//observation
 	Eigen::Vector3f pos(x[0], x[1], x[2]);
 	Eigen::Vector3f vel(x[3], x[4], x[5]);
-
 	Eigen::MatrixXf posRel = pos.replicate(1, 11) - centersAupa_;
-
-	size_t iDevice = 0;
-	float duty = 0;
-	for (auto itr = times_.rbegin(); itr != times_.rend(); itr++) {
-		if (*itr <= t) {
-			auto it = std::distance(itr, times_.rend()) - 1;
-			iDevice = duties_[it].first;
-			duty = duties_[it].second;
-			break;
-		}
-	}
-
-	Eigen::MatrixXf FTrue = manipulator_.arfModel()->arf(posRel, rotsAupa_);
-	Eigen::Vector3f forceArf = FTrue.col(iDevice) * duty;
+	Eigen::Vector3f forceArf = manipulator_.arfModel()->arf(posRel, rotsAupa_) * aupaPower(t);
 	Eigen::Vector3f drag = -0.5f * PI * RHO * vel.norm() * vel.norm() * pObject_->Radius() * pObject_->Radius() * vel.normalized();
 	Eigen::Vector3f accel = (forceArf + drag) / pObject_->totalMass();
 	dxdt[0] = x[3];
@@ -229,53 +230,49 @@ void System::setResolution(int num_steps) {
 	steps_resolution_ = num_steps;
 }
 
-bool simulate(
+Simulator::Simulator(
 	std::shared_ptr<autd::Controller> pAupa,
 	std::shared_ptr<dynaman::Tracker> pTracker,
-	std::shared_ptr<dynaman::Trajectory> pTrajectory,
-	const Eigen::Vector3f& posError,
-	const Eigen::Vector3f& velError,
-	float timeInit,
-	float timeEnd,
-	int stepsPowerResolution,
-	std::function<void(const state_type& x, const float t)> observer
+	FloatingObjectPtr pObject,
+	int num_resolution
+):
+	m_system(pAupa, pTracker, pObject),
+	m_pObject(pObject)
+{
+	m_system.setResolution(num_resolution);
+}
+
+int Simulator::integrate(
+	state_type& state,
+	float time_init,
+	float time_end,
+	std::function<void(const state_type& x, const float t)>& observer
 ) {
-	auto systimeInit = static_cast<DWORD>(timeInit);
+	boost::numeric::odeint::runge_kutta4<state_type> stepper;
 
-	FloatingObjectPtr pObject = FloatingObject::Create(
-		pTrajectory->pos(systimeInit),
-		Eigen::Vector3f::Constant(-500),
-		Eigen::Vector3f::Constant(500),
-		RADIUS
-	);
-
-	System system(pAupa, pTracker, pObject);
-
-	system.setResolution(stepsPowerResolution);
-
-	pObject->SetTrajectory(pTrajectory);
-
-	state_type state(6);
-	state[0] = pTrajectory->pos(systimeInit).x() + posError.x();
-	state[1] = pTrajectory->pos(systimeInit).y() + posError.y();
-	state[2] = pTrajectory->pos(systimeInit).z() + posError.z();
-	state[3] = pTrajectory->vel(systimeInit).x() + velError.x();
-	state[4] = pTrajectory->vel(systimeInit).y() + velError.y();
-	state[5] = pTrajectory->vel(systimeInit).z() + velError.z();
-
-	runge_kutta4<state_type> stepper;
 	auto steps = integrate_const(
 		stepper,
 		std::ref(system),
 		state,
-		timeInit,
-		timeEnd,
+		time_init,
+		time_init,
 		DT_STEP,
-		[&system, &observer](const state_type& x, float t) {
-			system.observe(x, t);
-			system.check_convergence(x, t);
+		[this, &observer](const state_type& x, float t) {
+			m_system.observe(x, t);
+			checkConvergence(x, t);
 			observer(x, t);
 		}
 	);
-	return system.isConverged();
+	return steps;
+}
+
+void Simulator::checkConvergence(const state_type& x, const float time_s) {
+	Eigen::Vector3f pos(x[0], x[1], x[2]);
+	auto posTgt = m_pObject->getPositionTarget(static_cast<DWORD>(1000 * time_s));
+	(pos - posTgt).norm() < THRES_CONVERGE_POS ? m_converge_count++ : m_converge_count = 0;
+	m_converge_count * DT_STEP > THRES_CONVERGE_TIME ? m_converged = true : m_converged = false;
+}
+
+bool Simulator::isConverged() {
+	return m_converged;
 }

@@ -43,7 +43,6 @@ std::shared_ptr<Trajectory> CreateBangbangTrajecotryWithDrag(
 	std::shared_ptr<arfModelLinearBase> arf_model = std::make_shared<arfModelFocusSphereExp50mm>()
 );
 
-
 class System;
 
 class System {
@@ -74,9 +73,11 @@ public:
 		std::vector<std::pair<size_t, float>>& duties
 	);
 
-	void check_convergence(const state_type& x, const float t);
+	void checkConvergence(const state_type& x, const float t);
 
 	void observe(const state_type& x, const float t);
+
+	Eigen::VectorXf aupaPower(float time_s);
 
 	void operator()(const state_type& x, state_type& dxdt, const float t);
 
@@ -85,7 +86,7 @@ public:
 	void setResolution(int num_steps);
 };
 
-bool simulate(
+bool test_convergence(
 	std::shared_ptr<autd::Controller> pAupa,
 	std::shared_ptr<dynaman::Tracker> pTracker,
 	std::shared_ptr<dynaman::Trajectory> pTrajectory,
@@ -96,4 +97,32 @@ bool simulate(
 	int stepsPowerResolution = 0,
 	std::function<void(const state_type&, const float)> observer = [](const state_type&, const float) {}
 );
+
+class Simulator {
+private:
+	System m_system;
+	FloatingObjectPtr m_pObject;
+	int m_converge_count = 0;
+	int m_step_count = 0;
+	bool m_converged = false;
+
+public:
+	Simulator(
+		std::shared_ptr<autd::Controller> pAupa,
+		std::shared_ptr<dynaman::Tracker> pTrackeer,
+		dynaman::FloatingObjectPtr pObject,
+		int num_resolution = 0
+	);
+
+	int integrate(
+		state_type& state,
+		float time_init,
+		float time_end,
+		std::function<void(const state_type& x, const float t)>& observer
+	);
+
+	void checkConvergence(const state_type& state, const float time_s);
+
+	bool isConverged();
+};
 #endif // !_DYNAMAN_SIMULATOR_HPP

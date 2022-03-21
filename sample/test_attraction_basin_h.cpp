@@ -19,6 +19,49 @@ constexpr float NUM_ERROR_COND = 50;
 constexpr float POS_ERROR_MAX = 210;
 
 
+bool test_convergence(
+	std::shared_ptr<autd::Controller> pAupa,
+	std::shared_ptr<dynaman::Tracker> pTracker,
+	std::shared_ptr<dynaman::Trajectory> pTrajectory,
+	const Eigen::Vector3f& posError,
+	const Eigen::Vector3f& velError,
+	float timeInit,
+	float timeEnd,
+	int stepsPowerResolution,
+	std::function<void(const state_type& x, const float t)> observer
+) {
+	auto systimeInit = static_cast<DWORD>(1000 * timeInit);
+	constexpr float radius = 50.0f;
+
+	FloatingObjectPtr pObject = FloatingObject::Create(
+		pTrajectory->pos(systimeInit),
+		Eigen::Vector3f::Constant(-500),
+		Eigen::Vector3f::Constant(500),
+		radius
+	);
+
+	pObject->SetTrajectory(pTrajectory);
+
+	Simulator simulator(
+		pAupa,
+		pTracker,
+		pObject,
+		stepsPowerResolution
+	);
+
+	state_type state{
+		pTrajectory->pos(systimeInit).x() + posError.x(),
+		pTrajectory->pos(systimeInit).y() + posError.y(),
+		pTrajectory->pos(systimeInit).z() + posError.z(),
+		pTrajectory->vel(systimeInit).x() + velError.x(),
+		pTrajectory->vel(systimeInit).y() + velError.y(),
+		pTrajectory->vel(systimeInit).z() + velError.z()
+	};
+	
+	simulator.integrate(state, timeInit, timeEnd, observer);
+	return simulator.isConverged();
+}
+
 int main(int argc, char** argv) {
 	//Experiment Condition**********************
 	std::vector<float> velErrorLevels;// { 0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000 };
@@ -103,7 +146,7 @@ int main(int argc, char** argv) {
 									auto ve = veLv * vd;
 									const float timeInit = timeTransStart + it * timeToTrans / NUM_WAYPOINTS;
 									const float timeEnd = timeInit + 10.0f;
-									auto isConverged = simulate(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
+									auto isConverged = test_convergence(pAupa, pTracker, pTrajectory, pe, ve, timeInit, timeEnd);
 									//std::cout << "isConverged: " << std::boolalpha << isConverged << std::endl;
 									if (!isConverged) {
 										convergedInAllTrials = false;

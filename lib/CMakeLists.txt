@@ -72,12 +72,6 @@ if(USE_XIMEA)
 	set_target_properties(StereoTracker PROPERTIES FOLDER "DynamicManipulation")
 endif()
 
-add_library(WinMultiplexer
-	WinMultiplexer.cpp
-	../inc/WinMultiplexer.hpp
-)
-set_target_properties(WinMultiplexer PROPERTIES FOLDER "DynamicManipulation")
-
 add_library(ThrustSearch
 	../inc/ThrustSearch.hpp
 	ThrustSearch.cpp
@@ -115,5 +109,4 @@ target_link_libraries(DynamicManipulation
 	LinearArfModel
 	QPSolver
 	Trajectory
-	WinMultiplexer
 )

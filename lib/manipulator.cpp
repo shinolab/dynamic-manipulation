@@ -218,17 +218,15 @@ namespace dynaman {
 				return smaller.first < larger.first; 
 			}
 		);
-		//std::cout << "(res: " << resAndDutyBest->first << ")"<< std::endl;
-		//std::cout << "dutyBest: ";
-		//for (auto&& e : resAndDutyBest->second) {
-		//	std::cout << e << ",";
-		//}
-		//std::cout << std::endl;
 		Eigen::VectorXf duty_best_eigen(m_pAupa->geometry()->numDevices());
 		for (int i = 0; i < resAndDutyBest->second.size(); i++) {
 			duty_best_eigen[i] = resAndDutyBest->second[i];
 		}
 		return duty_best_eigen;
+	}
+
+	void MultiplexManipulator::SetOnPause(std::function<void()>& func_on_pause) {
+		m_on_pause = func_on_pause;
 	}
 
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(
@@ -258,20 +256,17 @@ namespace dynaman {
 		return gain_list;
 	}
 
-	void MultiplexManipulator::ExecuteSingleObservation(
-		std::shared_ptr<Tracker> pTracker,
-		FloatingObjectPtr pObject
-	) {
+	void MultiplexManipulator::ExecuteSingleObservation() {
 		DWORD observeTime = timeGetTime();
 		Eigen::Vector3f posObserved;
-		bool observed = pTracker->observe(observeTime, posObserved, pObject);
-		if (observed && isInsideWorkspace(posObserved, pObject->lowerbound(), pObject->upperbound())) {
+		bool observed = m_pTracker->observe(observeTime, posObserved, m_pObject);
+		if (observed && isInsideWorkspace(posObserved, m_pObject->lowerbound(), m_pObject->upperbound())) {
 			m_pObject->updateStates(observeTime, posObserved);
 			m_pObject->SetTrackingStatus(true);
 		}
-		else if (observeTime - pObject->lastDeterminationTime > 100)
+		else if (observeTime - m_pObject->lastDeterminationTime > 100)
 		{
-			pObject->SetTrackingStatus(false);
+			m_pObject->SetTrackingStatus(false);
 		}
 		if (m_logEnabled) {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
@@ -281,24 +276,19 @@ namespace dynaman {
 	}
 	
 
-	void MultiplexManipulator::ExecuteSingleActuation(
-		std::shared_ptr<autd::Controller> pAupa,
-		FloatingObjectPtr pObject
-	) {
+	void MultiplexManipulator::ExecuteSingleActuation() {
 		if (IsPaused()) {
-			pAupa->AppendGainSync(autd::FocalPointGain::Create(pObject->getPosition()));
-			pAupa->AppendModulationSync(autd::SineModulation::Create(150));
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			m_on_pause();
 			return;
 		}
-		DWORD timeLoopInit = timeGetTime();
+		auto timeLoopInit = timeGetTime();
 		Eigen::Vector3f pos, vel, integ;
-		pObject->getStates(pos, vel, integ);
-		auto posTgt = pObject->getPositionTarget(timeLoopInit);
-		auto velTgt = pObject->getVelocityTarget(timeLoopInit);
-		auto accelTgt = pObject->getAccelTarget(timeLoopInit);
+		m_pObject->getStates(pos, vel, integ);
+		auto posTgt = m_pObject->getPositionTarget(timeLoopInit);
+		auto velTgt = m_pObject->getVelocityTarget(timeLoopInit);
+		auto accelTgt = m_pObject->getAccelTarget(timeLoopInit);
 
-		if (pObject->IsTracked() && pObject->IsInsideWorkspace())
+		if (m_pObject->IsTracked() && m_pObject->IsInsideWorkspace())
 		{
 			Eigen::Vector3f accel;
 			{
@@ -319,9 +309,9 @@ namespace dynaman {
 			}
 			else {
 				auto gain_list = CreateLateralGainList(duties, pos);
-				pAupa->ResetLateralGain();
-				pAupa->AppendLateralGain(gain_list);
-				pAupa->StartLateralModulation(m_freqLm);
+				m_pAupa->ResetLateralGain();
+				m_pAupa->AppendLateralGain(gain_list);
+				m_pAupa->StartLateralModulation(m_freqLm);
 			}
 			if (m_logEnabled) {
 				m_controlLogStream
@@ -334,7 +324,7 @@ namespace dynaman {
 					<< accelTgt.x() << "," << accelTgt.y() << "," << accelTgt.z() << ","
 					<< accel.x() << "," << accel.y() << "," << accel.z() << ",";
 				Eigen::MatrixXf posRel = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
-				Eigen::Vector3f forceResult = m_arfModelPtr->arf(posRel, RotsAutd(pAupa->geometry())) * duties;
+				Eigen::Vector3f forceResult = m_arfModelPtr->arf(posRel, RotsAutd(m_pAupa->geometry())) * duties;
 				m_controlLogStream << forceResult.x() << "," << forceResult.y() << "," << forceResult.z();
 				for (int i_duty = 0; i_duty < duties.size(); i_duty++) {
 					m_controlLogStream << "," << duties[i_duty];
@@ -342,8 +332,6 @@ namespace dynaman {
 				m_controlLogStream << std::endl;
 			}
 		}
-		int waitTime = m_period_control_ms - (timeGetTime() - timeLoopInit);
-		Sleep(std::clamp(waitTime, 0, m_period_control_ms));
 	}
 
 	int MultiplexManipulator::StartManipulation(
@@ -376,14 +364,20 @@ namespace dynaman {
 		m_thr_track = std::thread([this]()
 			{
 				while (this->IsRunning()) {
-					this->ExecuteSingleObservation(m_pTracker, m_pObject);
+					auto time_loop_init_ms = timeGetTime();
+					this->ExecuteSingleObservation();
+					int wait_time_ms = m_period_track_ms - (timeGetTime() - time_loop_init_ms);
+					Sleep(std::clamp(wait_time_ms, 0, m_period_track_ms));
 				}
 			}
 		);
 		m_thr_control = std::thread([this]()
 			{
 				while (this->IsRunning()) {
-					this->ExecuteSingleActuation(m_pAupa, m_pObject);
+					DWORD timeLoopInit = timeGetTime();
+					this->ExecuteSingleActuation();
+					int wait_time_ms = m_period_control_ms - (timeGetTime() - timeLoopInit);
+					Sleep(std::clamp(wait_time_ms, 0, m_period_control_ms));
 				}
 			}
 		);

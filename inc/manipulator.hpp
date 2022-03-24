@@ -23,6 +23,7 @@ namespace dynaman {
 		virtual void FinishManipulation() = 0;
 		virtual void PauseManipulation() = 0;
 		virtual void ResumeManipulation() = 0;
+		virtual void SetOnPause(std::function<void()>& func_on_pause) = 0;
 	};
 
 	class MultiplexManipulator : public Manipulator {
@@ -50,6 +51,7 @@ namespace dynaman {
 		std::mutex m_mtx_gain;
 		std::ofstream m_obsLogStream;
 		std::ofstream m_controlLogStream;
+		std::function<void()> m_on_pause = []() {return; };
 
 	public:
 		MultiplexManipulator(
@@ -91,19 +93,15 @@ namespace dynaman {
 
 		void ResumeManipulation() override;
 
+		void SetOnPause(std::function<void()>& func_on_pause) override;
+
 		bool IsRunning();
 
 		bool IsPaused();
 
-		void ExecuteSingleObservation(
-			std::shared_ptr<Tracker> pTracker,
-			FloatingObjectPtr pObject
-		);
+		void ExecuteSingleObservation();
 
-		void ExecuteSingleActuation(
-			std::shared_ptr<autd::Controller> pAupa,
-			FloatingObjectPtr pObject
-		);
+		void ExecuteSingleActuation();
 
 		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& position);
 

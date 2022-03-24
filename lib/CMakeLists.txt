@@ -29,10 +29,6 @@ set_target_properties(Trajectory PROPERTIES FOLDER "DynamicManipulation")
 add_library(LinearArfModel ../inc/arfModel.hpp arfModel.cpp)
 set_target_properties(LinearArfModel PROPERTIES FOLDER "DynamicManipulation")
 
-add_library(AdditionalGain ../inc/additionalGain.hpp additionalGain.cpp)
-target_link_libraries(AdditionalGain autd3)
-set_target_properties(AdditionalGain PROPERTIES FOLDER "DynamicManipulation")
-
 # Tracker
 # Kinect v2 tracker and Ximea stereo tracker is implemented as default trackers
 option(USE_KINECT "USE KINECT" OFF)
@@ -116,7 +112,6 @@ set_target_properties(QPSolver PROPERTIES FOLDER "DynamicManipulation")
 
 target_link_libraries(DynamicManipulation
 	autd3
-	AdditionalGain
 	${Boost_LIBRARIES}
 	${OpenCV_LIBS}
 	LinearArfModel

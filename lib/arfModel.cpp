@@ -2,7 +2,6 @@
 #define _ARF_MODEL_
 
 #include "arfModel.hpp"
-#include "read-csv-to-eigen.hpp"
 #include <Eigen\Geometry>
 #include <unsupported/Eigen/Splines>
 #define _USE_MATH_DEFINES

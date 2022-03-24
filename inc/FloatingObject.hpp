@@ -53,8 +53,8 @@ namespace dynaman {
 		);
 
 		float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
-		float Weight();
-		float Radius();
+		float weight();
+		float radius();
 		float totalMass();
 		Eigen::Vector3f getPosition();
 		Eigen::Vector3f getVelocity();
@@ -63,11 +63,11 @@ namespace dynaman {
 		Eigen::Vector3f getVelocityTarget(DWORD systime_ms = timeGetTime());
 		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
 		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
-		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew);
-		void updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew, Eigen::Vector3f& velocitynew);
+		void updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew);
+		void updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew, const Eigen::Vector3f& velocitynew);
 		void resetIntegral();
 
-		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
+		void setTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
 		void updateStatesTarget(
 			const Eigen::Vector3f& positionTarget,
 			const Eigen::Vector3f& velocityTarget = Eigen::Vector3f::Zero(),
@@ -75,9 +75,9 @@ namespace dynaman {
 		);
 
 		bool isConverged(float tolPos, float tolVel);
-		bool IsTracked();
-		bool IsInsideWorkspace();
-		void SetTrackingStatus(bool _isTracked);
+		bool isTracked();
+		bool isInsideWorkspace();
+		void setTrackingStatus(bool is_tracked);
 		Eigen::Vector3f averageVelocity();
 		Eigen::Vector3f AverageVelocity(
 			std::deque<Eigen::Vector3f> velBuffer,

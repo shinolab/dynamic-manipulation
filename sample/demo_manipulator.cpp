@@ -60,14 +60,14 @@ int main(int argc, char** argv ) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	//Maneuvers with open-loop control
-	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
+	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(2.0f, timeGetTime(), posCenter, posCircleInit));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	pObject->SetTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
+	pObject->setTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	std::this_thread::sleep_for(std::chrono::milliseconds(6100));
-	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
+	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	
-	pObject->SetTrajectory(dynaman::TrajectoryInfShape::Create(
+	pObject->setTrajectory(dynaman::TrajectoryInfShape::Create(
 		posCenter,
 		300,
 		400,
@@ -75,7 +75,7 @@ int main(int argc, char** argv ) {
 		timeGetTime()
 	));
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	pObject->SetTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
+	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	pObject->updateStatesTarget(posCenter);
 

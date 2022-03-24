@@ -53,18 +53,18 @@ namespace dynaman {
 		return AIR_DENSITY * 4.0f * pi * m_radius * m_radius * m_radius / 3.0f;
 	}
 
-	float FloatingObject::Radius() {
+	float FloatingObject::radius() {
 		return m_radius;
 	}
 
-	float FloatingObject::Weight()
+	float FloatingObject::weight()
 	{
 		return m_weight;
 	}
 
 	float FloatingObject::totalMass()
 	{
-		return sphereMass() + Weight();
+		return sphereMass() + weight();
 	}
 
 	Eigen::Vector3f FloatingObject::getPosition()
@@ -114,7 +114,7 @@ namespace dynaman {
 		integ = m_integral;
 	}
 
-	void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew)
+	void FloatingObject::updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew)
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
 		float dt = (float)(determinationTime - lastDeterminationTime) / 1000.f; // [sec]
@@ -125,7 +125,7 @@ namespace dynaman {
 		positionBuffer.pop_front();
 		velocityBuffer.push_back(m_velocity);
 		velocityBuffer.pop_front();
-		if (IsTracked())
+		if (isTracked())
 		{
 			m_integral += (0.5f * (positionNew + m_position) - getPositionTarget()) * dt;
 		}
@@ -133,11 +133,11 @@ namespace dynaman {
 		lastDeterminationTime = determinationTime;
 	}
 
-	void FloatingObject::updateStates(DWORD determinationTime, Eigen::Vector3f& positionNew, Eigen::Vector3f& velocityNew)
+	void FloatingObject::updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew, const Eigen::Vector3f& velocityNew)
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
 		float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
-		if (IsTracked())
+		if (isTracked())
 		{
 			m_integral += (0.5f * (positionNew + m_position) - getPositionTarget()) * dt;
 		}
@@ -163,17 +163,17 @@ namespace dynaman {
 		const Eigen::Vector3f& _accelTarget)
 	{
 		auto constTrajPtr = TrajectoryConstantState::Create(_positionTarget, _velocityTarget, _accelTarget);
-		SetTrajectory(constTrajPtr);
+		setTrajectory(constTrajPtr);
 	}
 
-	bool FloatingObject::IsTracked() {
+	bool FloatingObject::isTracked() {
 		std::lock_guard<std::mutex> lock(mtxTrack);
 		return m_is_tracked;
 	}
 
-	void FloatingObject::SetTrackingStatus(bool _isTracked) {
+	void FloatingObject::setTrackingStatus(bool is_tracked) {
 		std::lock_guard<std::mutex> lock(mtxTrack);
-		this->m_is_tracked = _isTracked;
+		this->m_is_tracked = is_tracked;
 	}
 
 	Eigen::Vector3f FloatingObject::averageVelocity()
@@ -226,7 +226,7 @@ namespace dynaman {
 		return ((getPosition() - getPositionTarget()).norm() < tolPos) && ((this->getVelocity() - this->getVelocityTarget()).norm() < tolVel);
 	}
 
-	bool FloatingObject::IsInsideWorkspace()
+	bool FloatingObject::isInsideWorkspace()
 	{
 		auto pos = getPosition();
 		Eigen::Vector3f v0 = pos - lowerbound();
@@ -234,7 +234,7 @@ namespace dynaman {
 		return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
 	}
 
-	void FloatingObject::SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr)
+	void FloatingObject::setTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr)
 	{
 		std::lock_guard<std::shared_mutex> lock(mtxTrajectory);
 		trajectoryPtr = newTrajectoryPtr;

@@ -9,7 +9,7 @@
 
 namespace dynaman {
 
-	constexpr DWORD thres_timeout_track_ms = 100;
+	constexpr DWORD THRES_TIMEOUT_TRACK_MS = 100;
 	constexpr float DUTY_MIN = 1.0f/255.f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
@@ -262,11 +262,11 @@ namespace dynaman {
 		bool observed = m_pTracker->observe(observeTime, posObserved, m_pObject);
 		if (observed && isInsideWorkspace(posObserved, m_pObject->lowerbound(), m_pObject->upperbound())) {
 			m_pObject->updateStates(observeTime, posObserved);
-			m_pObject->SetTrackingStatus(true);
+			m_pObject->setTrackingStatus(true);
 		}
-		else if (observeTime - m_pObject->lastDeterminationTime > 100)
+		else if (observeTime - m_pObject->lastDeterminationTime > THRES_TIMEOUT_TRACK_MS)
 		{
-			m_pObject->SetTrackingStatus(false);
+			m_pObject->setTrackingStatus(false);
 		}
 		if (m_logEnabled) {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
@@ -286,7 +286,7 @@ namespace dynaman {
 		auto velTgt = m_pObject->getVelocityTarget(timeLoopInit);
 		auto accelTgt = m_pObject->getAccelTarget(timeLoopInit);
 
-		if (m_pObject->IsTracked() && m_pObject->IsInsideWorkspace())
+		if (m_pObject->isTracked() && m_pObject->isInsideWorkspace())
 		{
 			Eigen::Vector3f accel;
 			{
@@ -299,7 +299,7 @@ namespace dynaman {
 			}
 			Eigen::Vector3f forceToApply
 				= m_pObject->totalMass() * accel
-				+ m_pObject->Weight() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
+				+ m_pObject->weight() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
 			auto duties = ComputeDuty(forceToApply, pos);
 			int num_active = (duties.array() > 1.0e-3f).count();
 			if (num_active == 0) {

@@ -297,7 +297,8 @@ namespace dynaman {
 		auto posTgt = pObject->getPositionTarget(timeLoopInit);
 		auto velTgt = pObject->getVelocityTarget(timeLoopInit);
 		auto accelTgt = pObject->getAccelTarget(timeLoopInit);
-		if (pObject->IsTracked() && isInsideWorkspace(pos, pObject->lowerbound(), pObject->upperbound()))
+
+		if (pObject->IsTracked() && pObject->IsInsideWorkspace())
 		{
 			Eigen::Vector3f accel;
 			{
@@ -310,7 +311,7 @@ namespace dynaman {
 			}
 			Eigen::Vector3f forceToApply
 				= m_pObject->totalMass() * accel
-				+ m_pObject->AdditionalMass() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
+				+ m_pObject->Weight() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
 			auto duties = ComputeDuty(forceToApply, pos);
 			int num_active = (duties.array() > 1.0e-3f).count();
 			if (num_active == 0) {

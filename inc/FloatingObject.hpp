@@ -20,16 +20,16 @@ namespace dynaman {
 		std::deque<Eigen::Vector3f> positionBuffer;
 		std::deque<Eigen::Vector3f> velocityBuffer;
 		std::deque<float> dTBuffer;
-		float radius; // [mm]
-		float additionalMass;
+		float m_radius; // [mm]
+		float m_weight;
 
 	private:
-		Eigen::Vector3f position;
-		Eigen::Vector3f velocity;
-		Eigen::Vector3f integral;
-		Eigen::Vector3f _upperbound;
-		Eigen::Vector3f _lowerbound;
-		bool isTracked;
+		Eigen::Vector3f m_position;
+		Eigen::Vector3f m_velocity;
+		Eigen::Vector3f m_integral;
+		Eigen::Vector3f m_upperbound;
+		Eigen::Vector3f m_lowerbound;
+		bool m_is_tracked;
 		std::mutex mtxState;
 		std::mutex mtxTrack;
 		std::shared_mutex mtxTrajectory;
@@ -37,11 +37,12 @@ namespace dynaman {
 
 	public:
 		FloatingObject(
-			const Eigen::Vector3f& _positionTarget,
+			const Eigen::Vector3f& positionTarget,
 			const Eigen::Vector3f& lowerbound,
 			const Eigen::Vector3f& upperbound,
 			float radius,
-			float weight = 0.0f);
+			float weight = 0.0f
+		);
 
 		static FloatingObjectPtr Create(
 			const Eigen::Vector3f& posTgt,
@@ -52,7 +53,7 @@ namespace dynaman {
 		);
 
 		float sphereMass(); //return a mass equivalent to an air of the volume of the sphere
-		float AdditionalMass();
+		float Weight();
 		float Radius();
 		float totalMass();
 		Eigen::Vector3f getPosition();
@@ -68,9 +69,9 @@ namespace dynaman {
 
 		void SetTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);
 		void updateStatesTarget(
-			const Eigen::Vector3f& _positionTarget,
-			const Eigen::Vector3f& _velocityTarget = Eigen::Vector3f::Zero(),
-			const Eigen::Vector3f& _accelTarget = Eigen::Vector3f::Zero()
+			const Eigen::Vector3f& positionTarget,
+			const Eigen::Vector3f& velocityTarget = Eigen::Vector3f::Zero(),
+			const Eigen::Vector3f& accelTarget = Eigen::Vector3f::Zero()
 		);
 
 		bool isConverged(float tolPos, float tolVel);

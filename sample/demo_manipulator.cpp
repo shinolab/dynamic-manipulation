@@ -10,7 +10,6 @@ using namespace dynaman;
 
 int main(int argc, char** argv ) {
 
-
 	std::string target_image_name("blue_target_r50mm.png");
 	auto pTracker = haptic_icon::CreateTracker(target_image_name);
 	pTracker->open();

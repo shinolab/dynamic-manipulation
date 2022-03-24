@@ -52,20 +52,22 @@ option(USE_XIMEA "USE XIMEA CAMERA" ON)
 if(USE_XIMEA)
 
 	find_package( XIMEA REQUIRED )
-
 	include_directories(${XIMEA_INCLUDE_DIR})
 
-	add_library(xiApiPlusOcv ../inc/xiApiPlusOcv.hpp xiApiPlusOcv.cpp)
-	target_link_libraries(xiApiPlusOcv ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
-	set_target_properties(xiApiPlusOcv PROPERTIES FOLDER "DynamicManipulation")
+	add_library(
+		CameraDevice
+		../inc/CameraDevice.hpp
+		CameraDevice.cpp
+		../inc/xiApiPlusOcv.hpp
+		xiApiPlusOcv.cpp
+	)
+	target_link_libraries(CameraDevice ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
+	set_target_properties(CameraDevice PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(ImgProcUtil ../inc/ImgProcUtil.hpp ImgProcUtil.cpp)
 	target_link_libraries(ImgProcUtil ${OpenCV_LIBS})
 	set_target_properties(ImgProcUtil PROPERTIES FOLDER "DynamicManipulation")
 
-	add_library(CameraDevice ../inc/CameraDevice.hpp CameraDevice.cpp)
-	target_link_libraries(CameraDevice xiApiPlusOcv)
-	set_target_properties(CameraDevice PROPERTIES FOLDER "DynamicManipulation")
 
 	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
 	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})

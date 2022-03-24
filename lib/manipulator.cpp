@@ -271,8 +271,6 @@ namespace dynaman {
 		if (m_logEnabled) {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
 		}
-		int wait_time_ms = m_period_track_ms - (timeGetTime() - observeTime);
-		Sleep(std::clamp(wait_time_ms, 0, m_period_track_ms));
 	}
 	
 

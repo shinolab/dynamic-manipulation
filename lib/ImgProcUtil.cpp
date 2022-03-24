@@ -7,14 +7,17 @@
 
 namespace imgProc {
 	threshold_extractor::threshold_extractor(
-		const cv::Scalar lowerBound,
-		const cv::Scalar upperBound):
+		cv::Scalar lowerBound,
+		cv::Scalar upperBound
+	):
 		_lowerBound(lowerBound),
-		_upperBound(upperBound){}
+		_upperBound(upperBound)
+	{}
 
-	std::shared_ptr<threshold_extractor> create(
-		const cv::Scalar lowerBound,
-		const cv::Scalar upperBound) {
+	std::shared_ptr<threshold_extractor> threshold_extractor::create(
+		cv::Scalar lowerBound,
+		cv::Scalar upperBound
+	) {
 		return std::make_shared<threshold_extractor>(lowerBound, upperBound);
 	}
 
@@ -32,9 +35,11 @@ namespace imgProc {
 		const std::vector<cv::Mat>& img_target,
 		int lowerBound,
 		int upperBound,
-		int size_hist):
+		int size_hist
+	):
 		_lowerBound(lowerBound),
-		_upperBound(upperBound) {
+		_upperBound(upperBound)
+	{
 		std::vector<cv::Mat> imgs_target_hsv;
 		for (auto itr = img_target.begin(); itr != img_target.end(); itr++) {
 			cv::Mat img_target_hsv;
@@ -52,7 +57,8 @@ namespace imgProc {
 		const std::vector<cv::Mat>& imgs_target,
 		int lowerBound,
 		int upperBound,
-		int size_hist) {
+		int size_hist
+	) {
 		return std::make_shared<hue_backproject_extractor>(
 			imgs_target,
 			lowerBound,

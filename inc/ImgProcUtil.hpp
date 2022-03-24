@@ -15,8 +15,8 @@ namespace imgProc {
 
 	class threshold_extractor :public extractor {
 	public:
-		threshold_extractor(const cv::Scalar lowerBound, const cv::Scalar upperBound);
-		static std::shared_ptr<threshold_extractor> create(const cv::Scalar lowerBound, const cv::Scalar upperBound);
+		threshold_extractor(cv::Scalar lowerBound, cv::Scalar upperBound);
+		static std::shared_ptr<threshold_extractor> create(cv::Scalar lowerBound, cv::Scalar upperBound);
 		cv::Point2f extract_center(const cv::Mat& img) override;
 		cv::Mat img_debug() override;
 	private:

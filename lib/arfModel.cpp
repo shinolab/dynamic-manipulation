@@ -3,7 +3,6 @@
 
 #include "arfModel.hpp"
 #include <Eigen\Geometry>
-#include <unsupported/Eigen/Splines>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>

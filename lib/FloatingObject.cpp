@@ -76,7 +76,7 @@ namespace dynaman {
 	Eigen::Vector3f FloatingObject::getVelocity()
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
-		return AverageVelocity(this->velocityBuffer, this->dTBuffer);
+		return averageVelocity(this->velocityBuffer, this->dTBuffer);
 	}
 
 	Eigen::Vector3f FloatingObject::getIntegral()
@@ -110,7 +110,7 @@ namespace dynaman {
 	) {
 		std::lock_guard<std::mutex> lock(mtxState);
 		pos = m_position;
-		vel = AverageVelocity(this->velocityBuffer, this->dTBuffer);
+		vel = averageVelocity(this->velocityBuffer, this->dTBuffer);
 		integ = m_integral;
 	}
 
@@ -194,7 +194,7 @@ namespace dynaman {
 		return averageVelocity;
 	}
 
-	Eigen::Vector3f FloatingObject::AverageVelocity(
+	Eigen::Vector3f FloatingObject::averageVelocity(
 		std::deque<Eigen::Vector3f> velocityBuffer,
 		std::deque<float> intervalBuffer
 	) {
@@ -212,7 +212,7 @@ namespace dynaman {
 		return distSum /= period;
 	}
 
-	Eigen::Vector3f FloatingObject::AveragePosition() {
+	Eigen::Vector3f FloatingObject::averagePosition() {
 		Eigen::Vector3f posAverage(0, 0, 0);
 		std::lock_guard<std::mutex> lock(mtxState);
 		for (auto itr = positionBuffer.begin(); itr != positionBuffer.end(); itr++) {

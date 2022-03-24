@@ -79,11 +79,11 @@ namespace dynaman {
 		bool isInsideWorkspace();
 		void setTrackingStatus(bool is_tracked);
 		Eigen::Vector3f averageVelocity();
-		Eigen::Vector3f AverageVelocity(
+		Eigen::Vector3f averageVelocity(
 			std::deque<Eigen::Vector3f> velBuffer,
 			std::deque<float> intervalBuffer
 		);
-		Eigen::Vector3f AveragePosition();
+		Eigen::Vector3f averagePosition();
 		Eigen::Vector3f lowerbound();
 		Eigen::Vector3f upperbound();
 	};

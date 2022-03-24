@@ -35,7 +35,8 @@ namespace dynaman {
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		float freqLm,
-		int loopPeriod,
+		int period_control_ms,
+		int period_track_ms,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	):
@@ -46,7 +47,8 @@ namespace dynaman {
 		m_gainI(gainI),
 		m_freqLm(freqLm),
 		m_lambda(lambda),
-		loopPeriod_(loopPeriod),
+		m_period_control_ms(period_control_ms),
+		m_period_track_ms(period_track_ms),
 		m_arfModelPtr(arfModelPtr),
 		m_isRunning(false),
 		m_isPaused(false),
@@ -60,7 +62,8 @@ namespace dynaman {
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI,
 		float freqLm,
-		int loopPeriod,
+		int period_control_ms,
+		int period_track_ms,
 		float lambda,
 		std::shared_ptr<arfModelLinearBase> arfModelPtr
 	) {
@@ -71,7 +74,8 @@ namespace dynaman {
 			gainD,
 			gainI,
 			freqLm,
-			loopPeriod,
+			period_control_ms,
+			period_track_ms,
 			lambda,
 			arfModelPtr
 			);
@@ -272,6 +276,8 @@ namespace dynaman {
 		if (m_logEnabled) {
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
 		}
+		int wait_time_ms = m_period_track_ms - (timeGetTime() - observeTime);
+		Sleep(std::clamp(wait_time_ms, 0, m_period_track_ms));
 	}
 	
 
@@ -335,8 +341,8 @@ namespace dynaman {
 				m_controlLogStream << std::endl;
 			}
 		}
-		int waitTime = m_periodControl_ms - (timeGetTime() - timeLoopInit);
-		Sleep(std::max(0, waitTime));
+		int waitTime = m_period_control_ms - (timeGetTime() - timeLoopInit);
+		Sleep(std::clamp(waitTime, 0, m_period_control_ms));
 	}
 
 	int MultiplexManipulator::StartManipulation(

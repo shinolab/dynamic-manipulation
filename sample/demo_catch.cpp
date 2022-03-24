@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
 		pos_init,
 		Eigen::Vector3f::Constant(-600),
 		Eigen::Vector3f::Constant(600),
-		0,//-0.036e-3f,
 		50.f
 	);
 

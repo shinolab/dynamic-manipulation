@@ -10,12 +10,6 @@
 
 namespace dynaman {
 
-	class Navigator {
-	public:
-		virtual bool Navigate(std::shared_ptr<Tracker> pTracker, FloatingObjectPtr pObject) = 0;
-	};
-
-
 	class Manipulator {
 	public:
 		Manipulator() {}

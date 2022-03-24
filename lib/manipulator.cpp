@@ -335,6 +335,8 @@ namespace dynaman {
 				m_controlLogStream << std::endl;
 			}
 		}
+		int waitTime = m_periodControl_ms - (timeGetTime() - timeLoopInit);
+		Sleep(std::max(0, waitTime));
 	}
 
 	int MultiplexManipulator::StartManipulation(
@@ -364,18 +366,17 @@ namespace dynaman {
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
 			m_isRunning = true;
 		}
+		m_thr_track = std::thread([this]()
+			{
+				while (this->IsRunning()) {
+					this->ExecuteSingleObservation(m_pTracker, m_pObject);
+				}
+			}
+		);
 		m_thr_control = std::thread([this]()
 			{
 				while (this->IsRunning()) {
-					DWORD tLoopInit = timeGetTime();
-					this->ExecuteSingleObservation(m_pTracker, m_pObject);
 					this->ExecuteSingleActuation(m_pAupa, m_pObject);
-					DWORD waitTime = std::clamp(
-						timeGetTime() - tLoopInit,
-						static_cast<DWORD>(0),
-						static_cast<DWORD>(loopPeriod_)
-					);
-					std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
 				}
 			}
 		);
@@ -390,6 +391,9 @@ namespace dynaman {
 		}
 		if (m_thr_control.joinable()) {
 			m_thr_control.join();
+		}
+		if (m_thr_track.joinable()) {
+			m_thr_track.join();
 		}
 		if (m_obsLogStream.is_open()) {
 			m_obsLogStream.close();

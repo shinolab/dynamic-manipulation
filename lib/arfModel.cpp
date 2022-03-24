@@ -71,73 +71,6 @@ Eigen::MatrixXf arfModelExperimentalPoly::arf(const Eigen::MatrixXf& posRel, con
 	return arf(posRel, Eigen::MatrixXf());
 }
 
-arfModelTheoreticalTable::arfModelTheoreticalTable()
-{
-	this->tableDistance = Eigen::VectorXf::LinSpaced(8, 0.4, 1.8);
-	this->tableAngle = Eigen::VectorXf::LinSpaced(6, 0, 5.0*M_PI / 9.0);
-	this->tableARF.resize(8, 6);
-	this->tableARF << 
-		1.000000000, 1.025280603, 1.104517639, 1.249525661, 1.481451134, 1.849174802,
-		0.986364501, 1.010438669, 1.085707808, 1.221311067, 1.437984013, 1.777854586,
-		0.972982686, 0.995547584, 1.066292486, 1.194949282, 1.398205465, 1.707827359,
-		0.953808427, 0.975389474, 1.042081835, 1.160212992, 1.344836418, 1.632654528,
-		0.933133205, 0.952746075, 1.013621177, 1.123370632, 1.299178981, 1.569093517,
-		0.911749783, 0.930658413, 0.989791487, 1.096874291, 1.264885618, 1.506332866,
-		0.892205568, 0.910729752, 0.968241851, 1.070133146, 1.222860568, 1.427376353,
-		0.869627719, 0.887113992, 0.940677195, 1.032894236, 1.165005918, 1.331883179;
-	this->tableARF *= 5.012;
-}
-
-Eigen::MatrixXf arfModelTheoreticalTable::arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd) {
-	Eigen::RowVectorXf dists = posRel.colwise().norm();
-	Eigen::RowVectorXf altitudes = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum();
-	Eigen::RowVectorXf angles = altitudes.cwiseQuotient(dists).array().acos().matrix();
-	Eigen::RowVectorXi indexesDist = (dists.replicate(tableDistance.rows(), 1) - tableDistance.replicate(1, dists.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
-	indexesDist = (indexesDist.array() - 1).cwiseMax(0).cwiseMin(tableDistance.rows() - 2); // correct index outside the table
-	Eigen::RowVectorXi indexesAngle = (angles.replicate(tableAngle.rows(), 1) - tableAngle.replicate(1, angles.cols())).cwiseSign().cwiseMax(0).colwise().sum().cast<int>();
-	indexesAngle = (indexesAngle.array() - 1).cwiseMax(0).cwiseMin(tableAngle.rows() - 2);
-	Eigen::RowVectorXf forces(posRel.cols());
-
-	for (int i = 0; i < posRel.cols(); i++)
-	{
-		float f00 = tableARF(indexesDist[i], indexesAngle[i]);
-		float f10 = tableARF(indexesDist[i] + 1, indexesAngle[i]);
-		float f01 = tableARF(indexesDist[i], indexesAngle[i] + 1);
-		float f11 = tableARF(indexesDist[i] + 1, indexesAngle[i] + 1);
-		float r0 = tableDistance[indexesDist[i]];
-		float r1 = tableDistance[indexesDist[i] + 1];
-		float t0 = tableAngle[indexesAngle[i]];
-		float t1 = tableAngle[indexesAngle[i] + 1];
-		float dr = (dists[i] - r0) / (r1 - r0);
-		float dt = (angles[i] - t0) / (t1 - t0);
-		float f = f00 * (1 - dr) * (1 - dt) + f10 * dr * (1 - dt) + f01 * (1 - dr) * dt + f11 * dr * dt;
-		forces[i] = f;
-	}
-	return posRel.colwise().normalized() * forces.asDiagonal(); // [mN]
-}
-
-Eigen::MatrixXf arfModelTheoreticalTable::arf(const Eigen::MatrixXf& _posRel, const Eigen::MatrixXf& eulerAnglesAUTD)
-{
-	Eigen::MatrixXf posRel = _posRel/1000.f;
-	Eigen::MatrixXf directionsAUTD(3, eulerAnglesAUTD.cols());
-	for (int i = 0; i < directionsAUTD.cols(); i++)
-	{
-		directionsAUTD.col(i) << 
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).x(), Eigen::Vector3f::UnitZ()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).y(), Eigen::Vector3f::UnitY()) *
-			Eigen::AngleAxisf(eulerAnglesAUTD.col(i).z(), Eigen::Vector3f::UnitZ()) * Eigen::Vector3f::UnitZ();
-	}
-	return arfFromDirections(_posRel, directionsAUTD);
-}
-
-Eigen::MatrixXf arfModelTheoreticalTable::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
-	Eigen::Matrix3Xf directionsAutd(3, posRel.cols());
-	for (int i_autd = 0; i_autd < posRel.cols(); i_autd++) {
-		directionsAutd.col(i_autd) = rots[i_autd] * Eigen::Vector3f::UnitZ();
-	}
-	return arfFromDirections(posRel, directionsAutd);
-}
-
 arfModelFocusOnSphereExperimental::arfModelFocusOnSphereExperimental()
 {
 	this->tableDistance = Eigen::VectorXf::LinSpaced(10, 200, 2000);
@@ -199,72 +132,6 @@ Eigen::MatrixXf arfModelFocusOnSphereExperimental::arf(const Eigen::MatrixXf& po
 	return arfFromDirections(posRel, directionsAutd);
 }
 
-arfModelFocusOnSphereD5::arfModelFocusOnSphereD5() {
-	const int numDist = 11;
-	const int numAngle = 9;
-	this->tableDistance = Eigen::VectorXf::LinSpaced(numDist, 100, 600);
-	this->tableAngle = Eigen::VectorXf::LinSpaced(numAngle, 0, 4 * M_PI / 9);
-	this->tableArfVertical.resize(numDist, numAngle);
-	this->tableArfHorizontal.resize(numDist, numAngle);
-	this->tableArfVertical <<
-		1.90E-02, 1.84E-02, 1.69E-02, 1.46E-02, 1.17E-02, 8.71E-03, 6.55E-03, 0.004348326, 2.32E-03,
-		2.37E-02, 2.28E-02, 2.04E-02, 1.70E-02, 1.30E-02, 8.54E-03, 4.60E-03, 0.002148835, 9.43E-04,
-		2.47E-02, 2.40E-02, 2.16E-02, 1.78E-02, 1.29E-02, 7.61E-03, 3.73E-03, 0.001697458, 9.61E-04,
-		2.45E-02, 2.41E-02, 2.21E-02, 1.81E-02, 1.25E-02, 6.93E-03, 3.33E-03, 0.001527912, 9.90E-04,
-		2.39E-02, 2.38E-02, 2.23E-02, 1.82E-02, 1.20E-02, 6.48E-03, 3.07E-03, 0.001438716, 8.79E-04,
-		2.34E-02, 2.34E-02, 2.22E-02, 1.80E-02, 1.15E-02, 6.15E-03, 2.86E-03, 0.001373089, 6.74E-04,
-		2.29E-02, 2.29E-02, 2.20E-02, 1.78E-02, 1.11E-02, 5.85E-03, 2.73E-03, 0.001283384, 5.60E-04,
-		2.24E-02, 2.24E-02, 2.17E-02, 1.76E-02, 1.07E-02, 5.60E-03, 2.62E-03, 0.001182336, 4.71E-04,
-		2.18E-02, 2.18E-02, 2.13E-02, 1.72E-02, 1.03E-02, 5.39E-03, 2.50E-03, 0.001085084, 4.12E-04,
-		2.13E-02, 2.13E-02, 2.09E-02, 1.68E-02, 9.95E-03, 5.20E-03, 2.38E-03, 0.00099765, 3.65E-04,
-		2.08E-02, 2.07E-02, 2.04E-02, 1.64E-02, 9.65E-03, 5.02E-03, 2.26E-03, 0.000920678, 3.27E-04;
-	this->tableArfHorizontal <<
-		4.78E-05, 0.001683716, 0.003144588, 0.004250118, 0.00484127, 0.004922806, 4.88E-03, 4.98E-03, 5.06E-03,
-		6.25E-05, 0.003153982, 0.00554344, 0.007020677, 0.007508789, 0.006992697, 5.71E-03, 4.52E-03, 4.42E-03,
-		5.75E-05, 0.003933318, 0.00684551, 0.008441441, 0.00862748, 0.007381622, 5.52E-03, 4.17E-03, 4.30E-03,
-		4.54E-05, 0.004161848, 0.007476261, 0.009168828, 0.009049355, 7.32E-03, 5.28E-03, 3.95E-03, 4.05E-03,
-		3.53E-05, 4.16E-03, 7.77E-03, 9.52E-03, 9.14E-03, 7.16E-03, 5.07E-03, 3.76E-03, 3.72E-03,
-		2.82E-05, 4.09E-03, 7.89E-03, 9.71E-03, 9.06E-03, 6.98E-03, 4.88E-03, 3.57E-03, 3.36E-03,
-		2.31E-05, 4.00E-03, 7.88E-03, 9.75E-03, 8.91E-03, 6.80E-03, 4.69E-03, 3.41E-03, 3.03E-03,
-		1.91E-05, 3.90E-03, 7.79E-03, 9.71E-03, 8.73E-03, 6.58E-03, 4.51E-03, 3.24E-03, 2.73E-03,
-		1.60E-05, 3.81E-03, 7.67E-03, 9.63E-03, 8.50E-03, 6.36E-03, 4.35E-03, 3.05E-03, 2.47E-03,
-		1.35E-05, 3.72E-03, 7.53E-03, 9.49E-03, 8.25E-03, 6.16E-03, 4.19E-03, 2.87E-03, 2.24E-03,
-		1.17E-05, 3.63E-03, 7.37E-03, 9.33E-03, 8.03E-03, 5.98E-03, 4.03E-03, 2.69E-03, 2.04E-03;			
-}
-
-Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
-	const Eigen::MatrixXf& posRel,
-	const Eigen::MatrixXf& eulerAngles
-) {
-	std::vector<Eigen::Matrix3f> rots(eulerAngles.cols());
-	for (int iAupa = 0; iAupa < eulerAngles.cols(); iAupa++) {
-		rots[iAupa] 
-			= Eigen::AngleAxisf(eulerAngles.col(iAupa).x(), Eigen::Vector3f::UnitZ())
-			* Eigen::AngleAxisf(eulerAngles.col(iAupa).y(), Eigen::Vector3f::UnitY())
-			* Eigen::AngleAxisf(eulerAngles.col(iAupa).z(), Eigen::Vector3f::UnitZ());
-	}
-	return arf(posRel, rots);
-}
-
-Eigen::MatrixXf arfModelFocusOnSphereD5::arf(
-	const Eigen::MatrixXf& posRel,
-	const std::vector<Eigen::Matrix3f>& rots
-) {
-	Eigen::MatrixXf directionsAutd(3, rots.size());
-	for (int i_aupa = 0; i_aupa < rots.size(); i_aupa++) {
-		directionsAutd.col(i_aupa) = rots[i_aupa] * Eigen::Vector3f::UnitZ();
-	}
-	Eigen::VectorXf dists = posRel.colwise().norm();
-	Eigen::VectorXf heights = posRel.cwiseProduct(directionsAutd.colwise().normalized()).colwise().sum().transpose();
-	Eigen::VectorXf angles = heights.cwiseQuotient(dists).array().acos().matrix().transpose()	;
-	Eigen::MatrixXf arfMatrix(3, posRel.cols());
-	for (int i_aupa = 0; i_aupa < posRel.cols(); i_aupa++) {
-		auto forceVertical = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfVertical);
-		auto forceHorizontal = linearInterp2d(dists[i_aupa], angles[i_aupa], tableDistance, tableAngle, tableArfHorizontal);
-		arfMatrix.col(i_aupa) = rots[i_aupa] * Eigen::Vector3f(forceHorizontal, 0.f, forceVertical);
-	}
-	return arfMatrix;
-}
 
 arfModelFocusSphereExp50mm::arfModelFocusSphereExp50mm(
 ) {
@@ -335,18 +202,5 @@ Eigen::MatrixXf arfModelFocusSphereExp50mm::arf(const Eigen::MatrixXf& posRel, c
 	return arfFromDirections(posRel, directionsAutd);
 }
 
-//Return 3-by-(numAUTD) matrix where each column represents ARF by AUTD at muximum duty. 
-Eigen::MatrixXf arfModel::arf(const Eigen::MatrixXf& _posRel)
-{
-	Eigen::MatrixXf posRel = _posRel / 1000;
-	Eigen::RowVector4f arfCoefficient;
-	arfCoefficient << 0.3683, 0.6913, -0.9431, 0.2769; arfCoefficient *= 9.8; // [mN]
-	Eigen::RowVectorXf dist = posRel.colwise().norm();
-	Eigen::RowVectorXf dist2 = dist.cwiseProduct(dist);
-	Eigen::RowVectorXf dist3 = dist2.cwiseProduct(dist);
-	Eigen::MatrixXf dists(arfCoefficient.cols(), dist.cols());
-	dists << Eigen::RowVectorXf::Ones(dist.cols()), dist, dist2, dist3;
-	return posRel.colwise().normalized() * (arfCoefficient * dists).asDiagonal();
-}
 
 #endif

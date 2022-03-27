@@ -13,16 +13,13 @@ namespace dynaman {
 	using FloatingObjectPtr = std::shared_ptr<FloatingObject>;
 
 	class FloatingObject {
-	public:
-		DWORD lastDeterminationTime;
+		DWORD m_lastDeterminationTime;
 		const size_t velocityBufferSize;
 		std::deque<Eigen::Vector3f> positionBuffer;
 		std::deque<Eigen::Vector3f> velocityBuffer;
 		std::deque<float> dTBuffer;
 		float m_radius; // [mm]
 		float m_weight;
-
-	private:
 		Eigen::Vector3f m_position;
 		Eigen::Vector3f m_velocity;
 		Eigen::Vector3f m_integral;
@@ -32,7 +29,7 @@ namespace dynaman {
 		std::mutex mtxState;
 		std::mutex mtxTrack;
 		std::shared_mutex mtxTrajectory;
-		std::shared_ptr<Trajectory> trajectoryPtr;
+		std::shared_ptr<Trajectory> m_pTrajectory;
 
 	public:
 		FloatingObject(
@@ -55,6 +52,7 @@ namespace dynaman {
 		float weight();
 		float radius();
 		float totalMass();
+		DWORD lastDeterminationTime();
 		Eigen::Vector3f position();
 		Eigen::Vector3f velocity();
 		Eigen::Vector3f integral();

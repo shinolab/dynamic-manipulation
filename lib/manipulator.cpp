@@ -312,7 +312,7 @@ namespace dynaman {
 			m_pObject->updateStates(observeTime, posObserved);
 			m_pObject->setTrackingStatus(true);
 		}
-		else if (observeTime - m_pObject->lastDeterminationTime > THRES_TIMEOUT_TRACK_MS)
+		else if (observeTime - m_pObject->lastDeterminationTime() > THRES_TIMEOUT_TRACK_MS)
 		{
 			m_pObject->setTrackingStatus(false);
 		}

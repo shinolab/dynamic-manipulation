@@ -63,7 +63,7 @@ namespace dynaman {
 			int period_control_ms = 10,
 			int period_track_ms = 5,
 			float lambda = 0.0f,
-			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()
+			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereR50>()
 		);
 
 		MultiplexManipulator(const MultiplexManipulator& m) = delete;
@@ -81,7 +81,7 @@ namespace dynaman {
 			int period_control_ms = 10,
 			int period_track_ms = 5,
 			float lambda = 0.0f,
-			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereExp50mm>()//std::make_shared<arfModelFocusOnSphereExperimental>()
+			std::shared_ptr<arfModelLinearBase> arfModelPtr = std::make_shared<arfModelFocusSphereR50>()
 		);
 
 		int StartManipulation(FloatingObjectPtr pObject) override;

@@ -32,31 +32,40 @@ public:
 };
 
 
-class arfModelFocusOnSphereExperimental : public arfModelLinearBase
+class arfModelTabular : public arfModelLinearBase
 {
-public:
-	arfModelFocusOnSphereExperimental();
-	Eigen::MatrixXf arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd);
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf &eulerAnglesAUTD) override;
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
-	
 private:
-	Eigen::VectorXf tableDistance;
-	Eigen::VectorXf tableAngle;
-	Eigen::MatrixXf tableARF;
+	Eigen::VectorXf m_tableDistance;
+	Eigen::VectorXf m_tableAngle;
+	Eigen::MatrixXf m_tableForce;
+
+	Eigen::MatrixXf arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd);
+
+public:
+	arfModelTabular(const Eigen::VectorXf& tableDistance, const Eigen::VectorXf& tableAngle, const Eigen::MatrixXf& tableForce);
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& eulerAnglesAutd) override;
+	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
 };
 
-class arfModelFocusSphereExp50mm : public arfModelLinearBase {
+class arfModelFocusSphereR100 : public arfModelTabular
+{
 public:
-	arfModelFocusSphereExp50mm();
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& eulerAngles) override;
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
-	Eigen::MatrixXf arfFromDirections(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& directionsAutd);
+	arfModelFocusSphereR100();
 
 private:
-	Eigen::VectorXf tableDistance;
-	Eigen::VectorXf tableAngle;
-	Eigen::MatrixXf tableArf;
+	Eigen::VectorXf tableDistances() const;
+	Eigen::VectorXf tableAngles() const;
+	Eigen::MatrixXf tableForces() const;
+};
+
+class arfModelFocusSphereR50 : public arfModelTabular {
+public:
+	arfModelFocusSphereR50();
+
+private:
+	Eigen::VectorXf tableDistances() const;
+	Eigen::VectorXf tableAngles() const;
+	Eigen::MatrixXf tableForces() const;
 };
 
 

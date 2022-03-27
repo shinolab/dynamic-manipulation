@@ -9,7 +9,6 @@ namespace imgProc {
 	public:
 		virtual ~extractor() {};
 		virtual cv::Point2f extract_center(const cv::Mat& img) = 0;
-		virtual cv::Mat img_debug() = 0;
 	};
 
 	class threshold_extractor :public extractor {
@@ -17,11 +16,9 @@ namespace imgProc {
 		threshold_extractor(cv::Scalar lowerBound, cv::Scalar upperBound);
 		static std::shared_ptr<threshold_extractor> create(cv::Scalar lowerBound, cv::Scalar upperBound);
 		cv::Point2f extract_center(const cv::Mat& img) override;
-		cv::Mat img_debug() override;
 	private:
 		cv::Scalar _upperBound;
 		cv::Scalar _lowerBound;
-		cv::Mat _img_processed;
 	};
 
 	//determines the position of target object based on hue value of an image.
@@ -51,7 +48,6 @@ namespace imgProc {
 
 		cv::Point2f extract_center(const cv::Mat& img) override;
 
-		cv::Mat img_debug() override;
 	private:
 		cv::Mat _hist_target;
 		cv::Mat _img_result;

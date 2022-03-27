@@ -35,9 +35,7 @@ public:
 		const Eigen::VectorXf& upperbound,
 		float accuracy = 1.0e-8f
 	);
-
 	Result solve();
-
 
 private:
 	Eigen::MatrixXf A;

@@ -120,7 +120,7 @@ namespace dynaman {
 
 	Eigen::MatrixXf MultiplexManipulator::posRelActive(
 		const Eigen::Vector3f& position,
-		Eigen::Array<bool, -1, -1> isActive
+		const Eigen::Array<bool, -1, -1>& isActive
 	) {
 		Eigen::MatrixXf posRel = position.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		Eigen::MatrixXf posRelActive(3, isActive.count());
@@ -135,7 +135,7 @@ namespace dynaman {
 	}
 
 	std::vector<Eigen::Matrix3f> MultiplexManipulator::rotsAupaActive(
-		Eigen::Array<bool, -1, -1> isActive
+		const Eigen::Array<bool, -1, -1>& isActive
 	) {
 		std::vector<Eigen::Matrix3f> rotsAutd = RotsAutd(m_pAupa->geometry());
 		std::vector<Eigen::Matrix3f> rotsAutdActive(isActive.count());
@@ -170,7 +170,7 @@ namespace dynaman {
 	
 	Eigen::VectorXf MultiplexManipulator::expandDuty(
 		const Eigen::VectorXf& duties_active,
-		Eigen::Array<bool, -1, -1> is_active
+		const Eigen::Array<bool, -1, -1>& is_active
 	) {
 		int iAupaActive = 0;
 		int num_aupa = m_pAupa->geometry()->numDevices();

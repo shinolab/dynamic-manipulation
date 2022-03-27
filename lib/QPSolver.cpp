@@ -119,7 +119,7 @@ QuadraticProgram::QuadraticProgram(
 	const Eigen::VectorXi& equalityConditions,
 	const Eigen::VectorXf& lowerbound,
 	const Eigen::VectorXf& upperbound,
-	float accuracy = 1.0e-7f
+	float accuracy
 ) :
 	A(A),
 	b(b),

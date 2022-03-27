@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include "QPSolver.h"
 #include "arfModel.hpp"
 #include "FloatingObject.hpp"
 #include "tracker.hpp"
@@ -106,11 +107,11 @@ namespace dynaman {
 
 		Eigen::MatrixXf posRelActive(
 			const Eigen::Vector3f& postiion,
-			Eigen::Array<bool, -1, -1> isActive
+			const Eigen::Array<bool, -1, -1>& isActive
 		);
 
 		std::vector<Eigen::Matrix3f> rotsAupaActive(
-			Eigen::Array<bool, -1, -1> isActive
+			const Eigen::Array<bool, -1, -1>& isActive
 		);
 
 
@@ -122,7 +123,7 @@ namespace dynaman {
 		void ApplyActuation(const Eigen::VectorXf& duties);
 
 		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
-		Eigen::VectorXf expandDuty(const Eigen::VectorXf& dutiesThin, Eigen::Array<bool, -1, -1> is_active);
+		Eigen::VectorXf expandDuty(const Eigen::VectorXf& dutiesThin, const Eigen::Array<bool, -1, -1>& is_active);
 
 		std::shared_ptr<arfModelLinearBase> arfModel();
 

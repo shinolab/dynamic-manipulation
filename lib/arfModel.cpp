@@ -1,11 +1,9 @@
-#ifndef _ARF_MODEL_
-#define _ARF_MODEL_
-
 #include "arfModel.hpp"
 #include <Eigen\Geometry>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <iostream>
+
+using namespace dynaman;
 
 /*
 returns -1 if an arg is smaller than any elem of range
@@ -100,8 +98,7 @@ Eigen::MatrixXf arfModelTabular::arfFromDirections(const Eigen::MatrixXf& posRel
 }
 
 arfModelFocusSphereR100::arfModelFocusSphereR100()
-	:
-	arfModelTabular(tableDistances(), tableAngles(), tableForces())
+	:arfModelTabular(tableDistances(), tableAngles(), tableForces())
 {}
 
 Eigen::VectorXf arfModelFocusSphereR100::tableDistances() const {
@@ -123,8 +120,7 @@ Eigen::MatrixXf arfModelFocusSphereR100::tableForces() const {
 }
 
 arfModelFocusSphereR50::arfModelFocusSphereR50()
-	:
-	arfModelTabular(tableDistances(), tableAngles(), tableForces())
+	:arfModelTabular(tableDistances(), tableAngles(), tableForces())
 {}
 
 Eigen::VectorXf arfModelFocusSphereR50::tableDistances() const {
@@ -149,7 +145,6 @@ Eigen::MatrixXf arfModelFocusSphereR50::tableForces() const {
 		//5.9878, 6.566, 6.664, 5.88, 5.6938, 4.949, 4.7922, 4.3218, 3.9298, 3.6946, 3.3712, 3.2046, 2.9694, 2.8224, 2.6362, 2.3814, 2.2148, 1.9796, 1.862, 1.7248,
 		//4.4492, 5.0176, 4.6256, 4.1356, 3.871, 3.6946, 3.5868, 3.479, 3.332, 3.1458, 2.94, 2.7832, 2.5676, 2.3618, 2.1364, 1.9502, 1.764, 1.6464, 1.47, 1.3328,
 		//2.7, 3.1752, 2.8322, 2.5186, 2.2638, 2.0874, 1.9894, 1.7836, 1.6464, 1.4798, 1.3818, 1.2348, 1.1466, 1.029, 0.931, 0.8428, 0.7448, 0.6664, 0.588, 0.5684;
+
 	return table_forces;
 }
-
-#endif

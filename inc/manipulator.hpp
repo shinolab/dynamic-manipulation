@@ -99,41 +99,34 @@ namespace dynaman {
 			const Eigen::Vector3f& position,
 			size_t numAutdMax
 		);
-
 		Eigen::Array<bool, -1, -1> chooseAupaToDrive(
 			const Eigen::Vector3f& forceTarget,
 			const Eigen::Vector3f& position
 		);
-
 		Eigen::MatrixXf posRelActive(
 			const Eigen::Vector3f& postiion,
 			const Eigen::Array<bool, -1, -1>& isActive
 		);
-
 		std::vector<Eigen::Matrix3f> rotsAupaActive(
 			const Eigen::Array<bool, -1, -1>& isActive
 		);
-
-
 		QuadraticProgram constructQp(
 			const Eigen::Vector3f& forceTarget,
 			const Eigen::MatrixXf& posRel,
 			const std::vector<Eigen::Matrix3f>& rotsAupa
 		);
 		void ApplyActuation(const Eigen::VectorXf& duties);
-
 		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 		Eigen::VectorXf expandDuty(const Eigen::VectorXf& dutiesThin, const Eigen::Array<bool, -1, -1>& is_active);
-
-		std::shared_ptr<arfModelLinearBase> arfModel();
-
-		bool IsRunning();
-		bool IsPaused();
 
 		void setGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
 		Eigen::Vector3f gainP();
 		Eigen::Vector3f gainD();
 		Eigen::Vector3f gainI();
+		bool IsRunning();
+		bool IsPaused();
+
+		std::shared_ptr<arfModelLinearBase> arfModel();
 
 		void EnableLog(const std::string& obsLogName, const std::string& controlLogName);
 		void DisableLog();

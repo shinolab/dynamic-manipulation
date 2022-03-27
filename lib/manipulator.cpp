@@ -67,6 +67,86 @@ namespace dynaman {
 			);
 	}
 
+	int MultiplexManipulator::StartManipulation(
+		FloatingObjectPtr pObject
+	) {
+		if (!m_pTracker->isOpen()) {
+			std::cerr << "ERROR: Tracker is NOT open!" << std::endl;
+			return -1;
+		}
+		if (!m_pAupa->isOpen()) {
+			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
+			return -1;
+		}
+		m_pObject = pObject;
+
+		if (m_logEnabled) {
+			InitLogStream();
+		}
+
+		timeBeginPeriod(1);
+		{
+			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
+			m_isRunning = true;
+		}
+		m_thr_track = std::thread([this]()
+			{
+				while (this->IsRunning()) {
+					auto time_loop_init_ms = timeGetTime();
+					this->ExecuteSingleObservation();
+					int wait_time_ms = m_period_track_ms - (timeGetTime() - time_loop_init_ms);
+					Sleep(std::clamp(wait_time_ms, 0, m_period_track_ms));
+				}
+			}
+		);
+		m_thr_control = std::thread([this]()
+			{
+				while (this->IsRunning()) {
+					DWORD timeLoopInit = timeGetTime();
+					this->ExecuteSingleActuation();
+					int wait_time_ms = m_period_control_ms - (timeGetTime() - timeLoopInit);
+					Sleep(std::clamp(wait_time_ms, 0, m_period_control_ms));
+				}
+			}
+		);
+		timeEndPeriod(1);
+		return 0;
+	}
+
+	void MultiplexManipulator::FinishManipulation() {
+		{
+			std::lock_guard<std::shared_mutex> lk(m_mtx_isRunning);
+			m_isRunning = false;
+		}
+		if (m_thr_control.joinable()) {
+			m_thr_control.join();
+		}
+		if (m_thr_track.joinable()) {
+			m_thr_track.join();
+		}
+		if (m_obsLogStream.is_open()) {
+			m_obsLogStream.close();
+		}
+		if (m_controlLogStream.is_open()) {
+			m_controlLogStream.close();
+		}
+		m_pAupa->AppendGainSync(autd::NullGain::Create());
+	}
+
+	void MultiplexManipulator::PauseManipulation() {
+		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+		m_isPaused = true;
+	}
+
+	void MultiplexManipulator::ResumeManipulation() {
+		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
+		m_isPaused = false;
+	}
+
+	void MultiplexManipulator::SetOnPause(std::function<void()>& func_on_pause) {
+		m_on_pause = func_on_pause;
+	}
+
 	Eigen::Vector3f MultiplexManipulator::ComputeForce(DWORD systime, FloatingObjectPtr pObject) {
 		Eigen::Vector3f pos, vel, integ, posTgt, velTgt, accelTgt;
 		m_pObject->getStates(pos, vel, integ);
@@ -273,10 +353,6 @@ namespace dynaman {
 		return duty_best_eigen;
 	}
 
-	void MultiplexManipulator::SetOnPause(std::function<void()>& func_on_pause) {
-		m_on_pause = func_on_pause;
-	}
-
 	std::vector<autd::GainPtr> MultiplexManipulator::CreateLateralGainList(
 		const Eigen::VectorXf& duties,
 		const Eigen::Vector3f& focus
@@ -366,81 +442,7 @@ namespace dynaman {
 		m_controlLogStream << std::endl;
 	}
 
-	int MultiplexManipulator::StartManipulation(
-		FloatingObjectPtr pObject
-	){
-		if (!m_pTracker->isOpen()) {
-			std::cerr << "ERROR: Tracker is NOT open!" << std::endl;
-			return -1;
-		}
-		if (!m_pAupa->isOpen()) {
-			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
-			return -1;
-		}
-		m_pObject = pObject;
 
-		if (m_logEnabled) {
-			InitLogStream();
-		}
-
-		timeBeginPeriod(1);
-		{
-			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
-			m_isRunning = true;
-		}
-		m_thr_track = std::thread([this]()
-			{
-				while (this->IsRunning()) {
-					auto time_loop_init_ms = timeGetTime();
-					this->ExecuteSingleObservation();
-					int wait_time_ms = m_period_track_ms - (timeGetTime() - time_loop_init_ms);
-					Sleep(std::clamp(wait_time_ms, 0, m_period_track_ms));
-				}
-			}
-		);
-		m_thr_control = std::thread([this]()
-			{
-				while (this->IsRunning()) {
-					DWORD timeLoopInit = timeGetTime();
-					this->ExecuteSingleActuation();
-					int wait_time_ms = m_period_control_ms - (timeGetTime() - timeLoopInit);
-					Sleep(std::clamp(wait_time_ms, 0, m_period_control_ms));
-				}
-			}
-		);
-		timeEndPeriod(1);
-		return 0;
-	}
-
-	void MultiplexManipulator::FinishManipulation() {
-		{
-			std::lock_guard<std::shared_mutex> lk(m_mtx_isRunning);
-			m_isRunning = false;
-		}
-		if (m_thr_control.joinable()) {
-			m_thr_control.join();
-		}
-		if (m_thr_track.joinable()) {
-			m_thr_track.join();
-		}
-		if (m_obsLogStream.is_open()) {
-			m_obsLogStream.close();
-		}
-		if (m_controlLogStream.is_open()) {
-			m_controlLogStream.close();
-		}
-		m_pAupa->AppendGainSync(autd::NullGain::Create());
-	}
-
-	void MultiplexManipulator::PauseManipulation() {
-		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
-		m_isPaused = true;
-	}
-
-	void MultiplexManipulator::ResumeManipulation() {
-		std::lock_guard<std::mutex> lock(m_mtx_isPaused);
-		m_isPaused = false;
-	}
 
 	void MultiplexManipulator::setGain(
 		const Eigen::Vector3f& gainP,

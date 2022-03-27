@@ -76,7 +76,6 @@ namespace dynaman {
 		bool isTracked();
 		bool isInsideWorkspace();
 		void setTrackingStatus(bool is_tracked);
-		Eigen::Vector3f averageVelocity();
 		Eigen::Vector3f averageVelocity(
 			std::deque<Eigen::Vector3f> velBuffer,
 			std::deque<float> intervalBuffer

@@ -157,24 +157,6 @@ namespace dynaman {
 		this->m_is_tracked = is_tracked;
 	}
 
-	Eigen::Vector3f FloatingObject::averageVelocity()
-	{
-		Eigen::Vector3f averageVelocity(0, 0, 0);
-		std::lock_guard<std::mutex> lock(mtxState);
-		auto itrVel = velocityBuffer.begin();
-		auto itrDT = dTBuffer.begin();
-		float period = 0;
-		while (itrVel != velocityBuffer.end())
-		{
-			averageVelocity += (*itrDT) * (*itrVel);
-			period += *itrDT;
-			itrDT++;
-			itrVel++;
-		}
-		averageVelocity /= period;
-		return averageVelocity;
-	}
-
 	Eigen::Vector3f FloatingObject::averageVelocity(
 		std::deque<Eigen::Vector3f> velocityBuffer,
 		std::deque<float> intervalBuffer
@@ -220,7 +202,6 @@ namespace dynaman {
 		std::lock_guard<std::shared_mutex> lock(mtxTrajectory);
 		trajectoryPtr = newTrajectoryPtr;
 	}
-
 
 	Eigen::Vector3f FloatingObject::lowerbound() {
 		return m_lowerbound;

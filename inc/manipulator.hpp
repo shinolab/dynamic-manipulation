@@ -94,11 +94,7 @@ namespace dynaman {
 
 		Eigen::Vector3f ComputeForce(DWORD systime, FloatingObjectPtr pObject);
 		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& position);
-		Eigen::VectorXf ComputeDuty(
-			const Eigen::Vector3f& forceTarget,
-			const Eigen::Vector3f& position,
-			size_t numAutdMax
-		);
+
 		Eigen::Array<bool, -1, -1> chooseAupaToDrive(
 			const Eigen::Vector3f& forceTarget,
 			const Eigen::Vector3f& position

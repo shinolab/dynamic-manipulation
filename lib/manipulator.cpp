@@ -12,6 +12,7 @@ namespace dynaman {
 	constexpr DWORD THRES_TIMEOUT_TRACK_MS = 100;
 	constexpr float DUTY_MIN = 1.0f/255.f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
+	constexpr float THRES_MIN_INNERPRODUCT = 0.17f;
 
 	MultiplexManipulator::MultiplexManipulator(
 		std::shared_ptr<autd::Controller> pAupa,
@@ -66,19 +67,36 @@ namespace dynaman {
 			);
 	}
 
+	Eigen::Vector3f MultiplexManipulator::ComputeForce(DWORD systime, FloatingObjectPtr pObject) {
+		Eigen::Vector3f pos, vel, integ, posTgt, velTgt, accelTgt;
+		m_pObject->getStates(pos, vel, integ);
+		m_pObject->getStatesTarget(posTgt, velTgt, accelTgt, systime);
+
+		Eigen::Vector3f accel
+				= gainP().asDiagonal() * (posTgt - pos)
+				+ gainD().asDiagonal() * (velTgt - vel)
+				- gainI().asDiagonal() * integ
+				+ accelTgt;
+
+		Eigen::Vector3f force
+			= m_pObject->totalMass() * accel
+			+ m_pObject->weight() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
+		return force;
+	}
+
 	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
 		const Eigen::Vector3f& force,
 		const Eigen::Vector3f& position
 	) {
 		Eigen::MatrixXf posRel = position.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		Eigen::MatrixXf directions = posRel.colwise().normalized();
-		Eigen::Array<bool, -1, -1> isActive = ((directions.transpose() * force.normalized()).array() > 0.17f);
-		if (isActive.count() == 0) {
-			return Eigen::VectorXf::Zero(posRel.cols());
-		}
-		int numAupaActive = isActive.count();
-		Eigen::MatrixXf posRelActive(3, isActive.count());
 		std::vector<Eigen::Matrix3f> rotsAutd = RotsAutd(m_pAupa->geometry());
+
+		Eigen::Array<bool, -1, -1> isActive = ((directions.transpose() * force.normalized()).array() > THRES_MIN_INNERPRODUCT);
+		if (isActive.count() == 0) {
+			return Eigen::VectorXf::Zero(m_pAupa->geometry()->numDevices());
+		}
+		Eigen::MatrixXf posRelActive(3, isActive.count());
 		std::vector<Eigen::Matrix3f> rotsAutdActive(isActive.count());
 		int iAupaActive = 0;
 		for (int iAupa = 0; iAupa < posRel.cols(); iAupa++) {
@@ -91,8 +109,8 @@ namespace dynaman {
 		Eigen::MatrixXf F = m_arfModelPtr->arf(posRelActive, rotsAutdActive);
 		Eigen::VectorXi condEq(1);
 		condEq << -1;
-		Eigen::MatrixXf A(1, numAupaActive);
-		A << Eigen::RowVectorXf::Ones(numAupaActive);
+		Eigen::MatrixXf A(1, isActive.count());
+		A << Eigen::RowVectorXf::Ones(isActive.count());
 		Eigen::VectorXf b(1);
 		b << 1;
 		Eigen::VectorXf resultActive;
@@ -100,21 +118,27 @@ namespace dynaman {
 			resultActive,
 			A,
 			b,
-			F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(numAupaActive, numAupaActive),
+			F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(isActive.count(), isActive.count()),
 			-F.transpose() * force,
 			condEq,
-			Eigen::VectorXf::Zero(numAupaActive),
-			Eigen::VectorXf::Ones(numAupaActive)
+			Eigen::VectorXf::Zero(isActive.count()),
+			Eigen::VectorXf::Ones(isActive.count())
 		);
-		iAupaActive = 0;
-		Eigen::VectorXf resultFull(posRel.cols());
-		for (int iAupa = 0; iAupa < posRel.cols(); iAupa++) {
-			if (isActive(iAupa)) {
-				resultFull(iAupa) = resultActive(iAupaActive);
+		auto resultFull = expandDuty(resultActive, isActive);
+		return resultFull;
+	}
+	
+	Eigen::VectorXf MultiplexManipulator::expandDuty(
+		const Eigen::VectorXf& duties_active,
+		Eigen::Array<bool, -1, -1> is_active
+	) {
+		int iAupaActive = 0;
+		int num_aupa = m_pAupa->geometry()->numDevices();
+		Eigen::VectorXf resultFull = Eigen::VectorXf::Zero(num_aupa);
+		for (int i_aupa_full = 0; i_aupa_full < num_aupa; i_aupa_full++) {
+			if (is_active(i_aupa_full)) {
+				resultFull(i_aupa_full) = duties_active(iAupaActive);
 				iAupaActive++;
-			}
-			else {
-				resultFull(iAupa) = 0;
 			}
 		}
 		return resultFull;
@@ -228,7 +252,7 @@ namespace dynaman {
 			auto itr_duties = std::find_if(dutiesStl.begin() + id_begin_search, dutiesStl.end(), [](float u) {return u > DUTY_MIN; });
 			for (int i_autd = 0; i_autd < m_pAupa->geometry()->numDevices(); i_autd++) {
 				if (i_autd == std::distance(dutiesStl.begin(), itr_duties)) {
-					int amplitude = std::max(0, (std::min(255, static_cast<int>((*itr_duties) * 255.f * num_active))));
+					int amplitude = std::clamp(static_cast<int>((*itr_duties) * 255.f * num_active), 0, 255);
 					gain_map.insert(std::make_pair(i_autd, autd::FocalPointGain::Create(focus, amplitude)));
 				}
 				else {
@@ -239,6 +263,19 @@ namespace dynaman {
 			id_begin_search = std::distance(dutiesStl.begin(), itr_duties) + 1;
 		}
 		return gain_list;
+	}
+
+	void MultiplexManipulator::ApplyActuation(const Eigen::VectorXf& duties) {
+		int num_active = (duties.array() > DUTY_MIN).count();
+		if (num_active == 0) {
+			m_pAupa->AppendGainSync(autd::NullGain::Create());
+		}
+		else {
+			auto gain_list = CreateLateralGainList(duties, m_pObject->position());
+			m_pAupa->ResetLateralGain();
+			m_pAupa->AppendLateralGain(gain_list);
+			m_pAupa->StartLateralModulation(m_freqLm);
+		}
 	}
 
 	void MultiplexManipulator::ExecuteSingleObservation() {
@@ -258,69 +295,43 @@ namespace dynaman {
 		}
 	}
 	
-
 	void MultiplexManipulator::ExecuteSingleActuation() {
 		if (IsPaused()) {
 			m_on_pause();
 			return;
 		}
-		auto timeLoopInit = timeGetTime();
-		Eigen::Vector3f pos, vel, integ;
-		m_pObject->getStates(pos, vel, integ);
-		auto posTgt = m_pObject->getPositionTarget(timeLoopInit);
-		auto velTgt = m_pObject->getVelocityTarget(timeLoopInit);
-		auto accelTgt = m_pObject->getAccelTarget(timeLoopInit);
-
-		if (m_pObject->isTracked() && m_pObject->isInsideWorkspace())
-		{
-			Eigen::Vector3f accel;
-			{
-				std::lock_guard<std::mutex> lock(m_mtx_gain);
-				accel
-					= m_gainP.asDiagonal() * (posTgt - pos)
-					+ m_gainD.asDiagonal() * (velTgt - vel)
-					- m_gainI.asDiagonal() * integ
-					+ accelTgt;
-			}
-			Eigen::Vector3f forceToApply
-				= m_pObject->totalMass() * accel
-				+ m_pObject->weight() * Eigen::Vector3f(0.f, 0.f, GRAVITY_ACCEL);
-			auto duties = ComputeDuty(forceToApply, pos);
-			int num_active = (duties.array() > 1.0e-3f).count();
-			if (num_active == 0) {
-				m_pAupa->AppendGainSync(autd::NullGain::Create());
-			}
-			else {
-				auto gain_list = CreateLateralGainList(duties, pos);
-				m_pAupa->ResetLateralGain();
-				m_pAupa->AppendLateralGain(gain_list);
-				m_pAupa->StartLateralModulation(m_freqLm);
-			}
-			if (m_logEnabled) {
-				m_controlLogStream
-					<< timeLoopInit << ","
-					<< pos.x() << "," << pos.y() << "," << pos.z() << ","
-					<< vel.x() << "," << vel.y() << "," << vel.z() << ","
-					<< integ.x() << "," << integ.y() << "," << integ.z() << ","
-					<< posTgt.x() << "," << posTgt.y() << "," << posTgt.z() << ","
-					<< velTgt.x() << "," << velTgt.y() << "," << velTgt.z() << ","
-					<< accelTgt.x() << "," << accelTgt.y() << "," << accelTgt.z() << ","
-					<< accel.x() << "," << accel.y() << "," << accel.z() << ",";
-				Eigen::MatrixXf posRel = pos.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
-				Eigen::Vector3f forceResult = m_arfModelPtr->arf(posRel, RotsAutd(m_pAupa->geometry())) * duties;
-				m_controlLogStream << forceResult.x() << "," << forceResult.y() << "," << forceResult.z();
-				for (int i_duty = 0; i_duty < duties.size(); i_duty++) {
-					m_controlLogStream << "," << duties[i_duty];
-				}
-				m_controlLogStream << std::endl;
-			}
+		if (!m_pObject->isTracked() || !m_pObject->isInsideWorkspace()) {
+			return;
 		}
+
+		auto timeLoopInit = timeGetTime();
+		auto forceToApply = ComputeForce(timeLoopInit, m_pObject);
+		auto duties = ComputeDuty(forceToApply, m_pObject->position());
+		ApplyActuation(duties);
+
+		if (m_logEnabled) {
+			m_controlLogStream << timeLoopInit << "," << m_pObject << ",";
+			for (auto&& duty : duties) {
+				m_controlLogStream << "," << duty;
+			}
+			m_controlLogStream << std::endl;
+		}
+	}
+
+	void MultiplexManipulator::InitLogStream() {
+		m_obsLogStream.open(m_obsLogName);
+		m_obsLogStream << "sys_time,x,y,z" << std::endl;
+		m_controlLogStream.open(m_controlLogName);
+		m_controlLogStream << m_pObject->logCtrlHeader();
+		for (int i_aupa = 0; i_aupa < m_pAupa->geometry()->numDevices(); i_aupa++) {
+			m_controlLogStream << ",duty" << i_aupa;
+		}
+		m_controlLogStream << std::endl;
 	}
 
 	int MultiplexManipulator::StartManipulation(
 		FloatingObjectPtr pObject
 	){
-		m_pObject = pObject;
 		if (!m_pTracker->isOpen()) {
 			std::cerr << "ERROR: Tracker is NOT open!" << std::endl;
 			return -1;
@@ -329,16 +340,12 @@ namespace dynaman {
 			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
 			return -1;
 		}
+		m_pObject = pObject;
+
 		if (m_logEnabled) {
-			m_obsLogStream.open(m_obsLogName);
-			m_obsLogStream << "sys_time,x,y,z" << std::endl;
-			m_controlLogStream.open(m_controlLogName);
-			m_controlLogStream << "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt,axRes,ayRes,azRes,Fxres,Fyres,Fzres";
-			for (int i_aupa = 0; i_aupa < m_pAupa->geometry()->numDevices(); i_aupa++) {
-				m_controlLogStream << ",duty" << i_aupa;
-			}
-			m_controlLogStream << std::endl;
+			InitLogStream();
 		}
+
 		timeBeginPeriod(1);
 		{
 			std::lock_guard<std::shared_mutex> lock(m_mtx_isRunning);
@@ -398,7 +405,7 @@ namespace dynaman {
 		m_isPaused = false;
 	}
 
-	void MultiplexManipulator::SetGain(
+	void MultiplexManipulator::setGain(
 		const Eigen::Vector3f& gainP,
 		const Eigen::Vector3f& gainD,
 		const Eigen::Vector3f& gainI

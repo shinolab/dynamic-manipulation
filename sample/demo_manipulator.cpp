@@ -64,7 +64,7 @@ int main(int argc, char** argv ) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	pObject->setTrajectory(dynaman::TrajectoryCircle::Create(posCenter, orbit_radius, pi / 2.f, 0.f, orbit_period, 0.f, timeGetTime()));
 	std::this_thread::sleep_for(std::chrono::milliseconds(6100));
-	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
+	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->position(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	
 	pObject->setTrajectory(dynaman::TrajectoryInfShape::Create(
@@ -75,7 +75,7 @@ int main(int argc, char** argv ) {
 		timeGetTime()
 	));
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->getPosition(), posCenter));
+	pObject->setTrajectory(dynaman::TrajectoryBangBang::Create(1.0f, timeGetTime(), pObject->position(), posCenter));
 	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	pObject->updateStatesTarget(posCenter);
 

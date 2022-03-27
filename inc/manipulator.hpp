@@ -51,6 +51,7 @@ namespace dynaman {
 		std::ofstream m_controlLogStream;
 		std::function<void()> m_on_pause = []() {return; };
 
+
 	public:
 		MultiplexManipulator(
 			std::shared_ptr<autd::Controller> pAupa,
@@ -84,48 +85,41 @@ namespace dynaman {
 		);
 
 		int StartManipulation(FloatingObjectPtr pObject) override;
-
 		void FinishManipulation() override;
-
 		void PauseManipulation() override;
-
 		void ResumeManipulation() override;
 
 		void SetOnPause(std::function<void()>& func_on_pause) override;
 
-		bool IsRunning();
 
-		bool IsPaused();
-
-		void ExecuteSingleObservation();
-
-		void ExecuteSingleActuation();
-
+		Eigen::Vector3f ComputeForce(DWORD systime, FloatingObjectPtr pObject);
 		Eigen::VectorXf ComputeDuty(const Eigen::Vector3f& forceTarget, const Eigen::Vector3f& position);
-
 		Eigen::VectorXf ComputeDuty(
 			const Eigen::Vector3f& forceTarget,
 			const Eigen::Vector3f& position,
 			size_t numAutdMax
 		);
+		void ApplyActuation(const Eigen::VectorXf& duties);
 
 		std::vector<autd::GainPtr> CreateLateralGainList(const Eigen::VectorXf& duties, const Eigen::Vector3f& focus);
 
-		void SetGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
-
 		std::shared_ptr<arfModelLinearBase> arfModel();
 
-		void EnableLog(
-			const std::string& obsLogName,
-			const std::string& controlLogName
-		);
+		bool IsRunning();
+		bool IsPaused();
 
+		void setGain(const Eigen::Vector3f& gainP, const Eigen::Vector3f& gainD, const Eigen::Vector3f& gainI);
+		Eigen::Vector3f gainP();
+		Eigen::Vector3f gainD();
+		Eigen::Vector3f gainI();
+
+		void EnableLog(const std::string& obsLogName, const std::string& controlLogName);
 		void DisableLog();
 
-		Eigen::Vector3f gainP();
+	private:
+		void InitLogStream();
+		void ExecuteSingleObservation();
+		void ExecuteSingleActuation();
 
-		Eigen::Vector3f gainD();
-
-		Eigen::Vector3f gainI();
 	};
 }

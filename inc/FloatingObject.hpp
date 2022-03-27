@@ -55,12 +55,12 @@ namespace dynaman {
 		float weight();
 		float radius();
 		float totalMass();
-		Eigen::Vector3f getPosition();
-		Eigen::Vector3f getVelocity();
-		Eigen::Vector3f getIntegral();
-		Eigen::Vector3f getPositionTarget(DWORD systime_ms = timeGetTime());
-		Eigen::Vector3f getVelocityTarget(DWORD systime_ms = timeGetTime());
-		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
+		Eigen::Vector3f position();
+		Eigen::Vector3f velocity();
+		Eigen::Vector3f integral();
+		Eigen::Vector3f positionTarget(DWORD systime_ms = timeGetTime());
+		Eigen::Vector3f velocityTarget(DWORD systime_ms = timeGetTime());
+		Eigen::Vector3f accelTarget(DWORD systime_ms = timeGetTime());
 		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
 		void updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew);
 		void resetIntegral();
@@ -71,8 +71,13 @@ namespace dynaman {
 			const Eigen::Vector3f& velocityTarget = Eigen::Vector3f::Zero(),
 			const Eigen::Vector3f& accelTarget = Eigen::Vector3f::Zero()
 		);
+		void getStatesTarget(
+			Eigen::Vector3f& positionTarget,
+			Eigen::Vector3f& velocityTarget,
+			Eigen::Vector3f& accelTarget,
+			DWORD time = timeGetTime()
+		);
 
-		bool isConverged(float tolPos, float tolVel);
 		bool isTracked();
 		bool isInsideWorkspace();
 		void setTrackingStatus(bool is_tracked);
@@ -83,5 +88,8 @@ namespace dynaman {
 		Eigen::Vector3f averagePosition();
 		Eigen::Vector3f lowerbound();
 		Eigen::Vector3f upperbound();
+		std::string logCtrlHeader() const ;
 	};
+
+	std::ofstream& operator<<(std::ostream& ofs, FloatingObjectPtr pObject);
 }

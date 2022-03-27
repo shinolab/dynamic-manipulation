@@ -67,37 +67,37 @@ namespace dynaman {
 		return sphereMass() + weight();
 	}
 
-	Eigen::Vector3f FloatingObject::getPosition()
+	Eigen::Vector3f FloatingObject::position()
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
 		return m_position;
 	}
 
-	Eigen::Vector3f FloatingObject::getVelocity()
+	Eigen::Vector3f FloatingObject::velocity()
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
 		return averageVelocity(this->velocityBuffer, this->dTBuffer);
 	}
 
-	Eigen::Vector3f FloatingObject::getIntegral()
+	Eigen::Vector3f FloatingObject::integral()
 	{
 		std::lock_guard<std::mutex> lock(mtxState);
 		return m_integral;
 	}
 
-	Eigen::Vector3f FloatingObject::getPositionTarget(DWORD systime_ms)
+	Eigen::Vector3f FloatingObject::positionTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
 		return trajectoryPtr->pos(systime_ms);
 	}
 
-	Eigen::Vector3f FloatingObject::getVelocityTarget(DWORD systime_ms)
+	Eigen::Vector3f FloatingObject::velocityTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
 		return trajectoryPtr->vel(systime_ms);
 	}
 
-	Eigen::Vector3f FloatingObject::getAccelTarget(DWORD systime_ms)
+	Eigen::Vector3f FloatingObject::accelTarget(DWORD systime_ms)
 	{
 		std::shared_lock<std::shared_mutex> lock(mtxTrajectory);
 		return trajectoryPtr->accel(systime_ms);
@@ -127,7 +127,7 @@ namespace dynaman {
 		velocityBuffer.pop_front();
 		if (isTracked())
 		{
-			m_integral += (0.5f * (positionNew + m_position) - getPositionTarget()) * dt;
+			m_integral += (0.5f * (positionNew + m_position) - positionTarget()) * dt;
 		}
 		m_position = positionNew;
 		lastDeterminationTime = determinationTime;
@@ -136,6 +136,18 @@ namespace dynaman {
 	void FloatingObject::resetIntegral() {
 		std::lock_guard<std::mutex> lock(mtxState);
 		m_integral.setZero();
+	}
+
+	void FloatingObject::getStatesTarget(
+		Eigen::Vector3f& posTgt,
+		Eigen::Vector3f& velTgt,
+		Eigen::Vector3f& accelTgt,
+		DWORD time
+	) {
+		std::lock_guard<std::shared_mutex> lock(mtxTrajectory);
+		posTgt = trajectoryPtr->pos(time);
+		velTgt = trajectoryPtr->vel(time);
+		accelTgt = trajectoryPtr->accel(time);
 	}
 
 	void FloatingObject::updateStatesTarget(
@@ -184,14 +196,10 @@ namespace dynaman {
 		return posAverage / positionBuffer.size();
 	}
 
-	bool FloatingObject::isConverged(float tolPos, float tolVel)
-	{
-		return ((getPosition() - getPositionTarget()).norm() < tolPos) && ((this->getVelocity() - this->getVelocityTarget()).norm() < tolVel);
-	}
 
 	bool FloatingObject::isInsideWorkspace()
 	{
-		auto pos = getPosition();
+		auto pos = position();
 		Eigen::Vector3f v0 = pos - lowerbound();
 		Eigen::Vector3f v1 = pos - upperbound();
 		return (v0.x() * v1.x() <= 0) && (v0.y() * v1.y() <= 0) && (v0.z() * v1.z() <= 0);
@@ -209,5 +217,24 @@ namespace dynaman {
 
 	Eigen::Vector3f FloatingObject::upperbound() {
 		return m_upperbound;
+	}
+
+	std::string FloatingObject::logCtrlHeader() const {
+		return "sys_time,x,y,z,vx,vy,vz,ix,iy,iz,xTgt,yTgt,zTgt,vxTgt,vyTgt,vzTgt,axTgt,ayTgt,azTgt";
+	}
+
+	std::ofstream& operator<<(std::ostream& ofs, FloatingObjectPtr pObject) {
+		DWORD time = pObject->lastDeterminationTime;
+		Eigen::Vector3f pos, vel, integ, posTgt, velTgt, accelTgt;
+		pObject->getStates(pos, vel, integ);
+		pObject->getStatesTarget(posTgt, velTgt, accelTgt, time);
+		ofs
+			<< time << ","
+			<< pos.x() << "," << pos.y() << "," << pos.z() << ","
+			<< vel.x() << "," << vel.y() << "," << vel.z() << ","
+			<< integ.x() << "," << integ.y() << "," << integ.z() << ","
+			<< posTgt.x() << "," << posTgt.y() << "," << posTgt.z() << ","
+			<< velTgt.x() << "," << velTgt.y() << "," << velTgt.z() << ","
+			<< accelTgt.x() << "," << accelTgt.y() << "," << accelTgt.z();
 	}
 }

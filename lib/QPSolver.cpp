@@ -3,6 +3,7 @@
 #include <CGAL/QP_solution.h>
 #include <Eigen/Dense>
 #include <iostream>
+#include "QPSolver.h"
 
 // choose exact integral type
 #ifdef CGAL_USE_GMP
@@ -45,21 +46,25 @@ std::shared_ptr<const float*> Eigen2CgalArray2d(Eigen::MatrixXf const &eigenMat)
 	return cgalMat;
 }
 
-/*
-Solve Linear Programming minimize: y = c'x subject to Ax </=/> b, .
-sign of the coefficients of equality conditions specifies inequality/equlaity conditions of the row number.
-*/
-float SolveLinearProgram(
-	Eigen::VectorXf &result,
-	Eigen::MatrixXf const &A,
-	Eigen::VectorXf const &b,
-	Eigen::VectorXf const &c,
-	Eigen::VectorXi const &equalityConditions,
-	Eigen::VectorXf const &lowerbound,
-	Eigen::VectorXf const &upperbound,
+LinearProgram::LinearProgram(
+	const Eigen::MatrixXf& A,
+	const Eigen::VectorXf& b,
+	const Eigen::VectorXf& c,
+	const Eigen::VectorXi& equalityConditions,
+	const Eigen::VectorXf& lowerbound,
+	const Eigen::VectorXf& upperbound,
 	float accuracy
-)
-{
+):
+	A(A),
+	b(b),
+	c(c),
+	equalityConditions(equalityConditions),
+	lowerbound(lowerbound),
+	upperbound(upperbound),
+	accuracy(accuracy)
+{}
+
+LinearProgram::Result LinearProgram::solve() {
 	auto bound_scale_factor = 0.01f;
 
 	Eigen::MatrixXf A_scaled = A / accuracy * bound_scale_factor;
@@ -90,7 +95,7 @@ float SolveLinearProgram(
 	}
 	LpProgram lp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lb_scaled.data(), fub, ub_scaled.data(), c_scaled.data(), 0.f);
 	Solution s = CGAL::solve_linear_program(lp, ET());
-	result.resize(A.cols());
+	Eigen::VectorXf result(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)
 	{
 		int index = std::distance(s.variable_values_begin(), itr);
@@ -100,20 +105,33 @@ float SolveLinearProgram(
 	delete fub;
 	delete flb;
 	delete r;
-	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy;
+	return LinearProgram::Result{
+		s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy,
+		result
+	};
 }
 
-float SolveQuadraticProgram(
-	Eigen::VectorXf &result,
-	Eigen::MatrixXf const &A,
-	Eigen::VectorXf const &b,
-	Eigen::MatrixXf const &D,
-	Eigen::VectorXf const &c,
-	Eigen::VectorXi const &equalityConditions,
-	Eigen::VectorXf const &lowerbound,
-	Eigen::VectorXf const &upperbound,
-	float accuracy
-)
+QuadraticProgram::QuadraticProgram(
+	const Eigen::MatrixXf& A,
+	const Eigen::VectorXf& b,
+	const Eigen::MatrixXf& D,
+	const Eigen::VectorXf& c,
+	const Eigen::VectorXi& equalityConditions,
+	const Eigen::VectorXf& lowerbound,
+	const Eigen::VectorXf& upperbound,
+	float accuracy = 1.0e-7f
+) :
+	A(A),
+	b(b),
+	D(D),
+	c(c),
+	equalityConditions(equalityConditions),
+	lowerbound(lowerbound),
+	upperbound(upperbound),
+	accuracy(accuracy)
+{}
+
+QuadraticProgram::Result QuadraticProgram::solve()
 {
 	constexpr auto bound_scale_factor = 0.01f;
 	Eigen::MatrixXf A_scaled = A / accuracy * bound_scale_factor;
@@ -144,7 +162,7 @@ float SolveQuadraticProgram(
 
 	QpProgram qp(A.cols(), A.rows(), _A_scaled.get(), b_scaled.data(), r, flb, lb_scaled.data(), fub, ub_scaled.data(), _D_scaled.get(), c_scaled.data(), 0);
 	Solution s = CGAL::solve_quadratic_program(qp, ET());
-	result.resize(A.cols());
+	Eigen::VectorXf result(A.cols());
 	for (auto itr = s.variable_values_begin(); itr != s.variable_values_end(); itr++)
 	{
 		int index = std::distance(s.variable_values_begin(), itr);
@@ -154,7 +172,9 @@ float SolveQuadraticProgram(
 	delete fub;
 	delete flb;
 	delete r;
-	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy;
+	return Result{
+		s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy,
+		result
+	};
 }
-
 

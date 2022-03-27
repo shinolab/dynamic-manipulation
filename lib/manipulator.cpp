@@ -84,46 +84,86 @@ namespace dynaman {
 		return force;
 	}
 
-	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
+	QuadraticProgram MultiplexManipulator::constructQp(
+		const Eigen::Vector3f& forceTarget,
+		const Eigen::MatrixXf& posRel,
+		const std::vector<Eigen::Matrix3f>& rotsAupa
+	) {
+		const int num_device_to_use = posRel.cols();
+		Eigen::MatrixXf F = m_arfModelPtr->arf(posRel, rotsAupa);
+		Eigen::VectorXi condEq(1);
+		condEq << -1;
+		Eigen::MatrixXf A(1, num_device_to_use);
+		A << Eigen::RowVectorXf::Ones(num_device_to_use);
+		Eigen::VectorXf b(1);
+		b << 1;
+		return QuadraticProgram(
+			A,
+			b,
+			F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(num_device_to_use, num_device_to_use),
+			-F.transpose() * forceTarget,
+			condEq,
+			Eigen::VectorXf::Zero(num_device_to_use),
+			Eigen::VectorXf::Ones(num_device_to_use)
+		);
+	}
+
+	Eigen::Array<bool, -1, -1> MultiplexManipulator::chooseAupaToDrive(
 		const Eigen::Vector3f& force,
 		const Eigen::Vector3f& position
 	) {
 		Eigen::MatrixXf posRel = position.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		Eigen::MatrixXf directions = posRel.colwise().normalized();
-		std::vector<Eigen::Matrix3f> rotsAutd = RotsAutd(m_pAupa->geometry());
-
 		Eigen::Array<bool, -1, -1> isActive = ((directions.transpose() * force.normalized()).array() > THRES_MIN_INNERPRODUCT);
-		if (isActive.count() == 0) {
-			return Eigen::VectorXf::Zero(m_pAupa->geometry()->numDevices());
-		}
+		return isActive;
+	}
+
+	Eigen::MatrixXf MultiplexManipulator::posRelActive(
+		const Eigen::Vector3f& position,
+		Eigen::Array<bool, -1, -1> isActive
+	) {
+		Eigen::MatrixXf posRel = position.replicate(1, m_pAupa->geometry()->numDevices()) - CentersAutd(m_pAupa->geometry());
 		Eigen::MatrixXf posRelActive(3, isActive.count());
-		std::vector<Eigen::Matrix3f> rotsAutdActive(isActive.count());
 		int iAupaActive = 0;
 		for (int iAupa = 0; iAupa < posRel.cols(); iAupa++) {
 			if (isActive(iAupa)) {
 				posRelActive.col(iAupaActive) << posRel.col(iAupa);
+				iAupaActive++;
+			}
+		}
+		return posRelActive;
+	}
+
+	std::vector<Eigen::Matrix3f> MultiplexManipulator::rotsAupaActive(
+		Eigen::Array<bool, -1, -1> isActive
+	) {
+		std::vector<Eigen::Matrix3f> rotsAutd = RotsAutd(m_pAupa->geometry());
+		std::vector<Eigen::Matrix3f> rotsAutdActive(isActive.count());
+		int num_device = m_pAupa->geometry()->numDevices();
+		int iAupaActive = 0;
+		for (int iAupa = 0; iAupa < num_device; iAupa++) {
+			if (isActive(iAupa)) {
 				rotsAutdActive[iAupaActive] = rotsAutd[iAupa];
 				iAupaActive++;
 			}
 		}
-		Eigen::MatrixXf F = m_arfModelPtr->arf(posRelActive, rotsAutdActive);
-		Eigen::VectorXi condEq(1);
-		condEq << -1;
-		Eigen::MatrixXf A(1, isActive.count());
-		A << Eigen::RowVectorXf::Ones(isActive.count());
-		Eigen::VectorXf b(1);
-		b << 1;
-		Eigen::VectorXf resultActive;
-		SolveQuadraticProgram(
-			resultActive,
-			A,
-			b,
-			F.transpose() * F + m_lambda * Eigen::MatrixXf::Identity(isActive.count(), isActive.count()),
-			-F.transpose() * force,
-			condEq,
-			Eigen::VectorXf::Zero(isActive.count()),
-			Eigen::VectorXf::Ones(isActive.count())
+		return rotsAutdActive;
+	}
+
+	Eigen::VectorXf MultiplexManipulator::ComputeDuty(
+		const Eigen::Vector3f& force,
+		const Eigen::Vector3f& position
+	) {
+		auto isActive = chooseAupaToDrive(force, position);
+		if (isActive.count() == 0) {
+			return Eigen::VectorXf::Zero(m_pAupa->geometry()->numDevices());
+		}
+		auto qp = constructQp(
+			force,
+			posRelActive(position, isActive),
+			rotsAupaActive(isActive)
 		);
+		auto resultActive = qp.solve().solution;
 		auto resultFull = expandDuty(resultActive, isActive);
 		return resultFull;
 	}
@@ -203,9 +243,8 @@ namespace dynaman {
 						Eigen::VectorXi condEq = Eigen::VectorXi::Constant(1, -1);
 						Eigen::VectorXf duty_min = Eigen::VectorXf::Zero(comb.size());
 						Eigen::VectorXf duty_max = Eigen::VectorXf::Constant(comb.size(), 1.0f / comb.size());
-						Eigen::VectorXf resultPart;
-
-						SolveQuadraticProgram(resultPart, A, b, D, c, condEq, duty_min, duty_max);
+						QuadraticProgram qp(A, b, D, c, condEq, duty_min, duty_max);
+						Eigen::VectorXf resultPart = qp.solve().solution;
 						float res = (F * resultPart - force).norm();
 						std::vector<float> duty_ordered(m_pAupa->geometry()->numDevices(), 0.f);
 						for (int id = 0; id < c.size(); id++) {
@@ -290,9 +329,8 @@ namespace dynaman {
 		{
 			m_pObject->setTrackingStatus(false);
 		}
-		if (m_logEnabled) {
+		if (m_logEnabled)
 			m_obsLogStream << observeTime << "," << posObserved.x() << "," << posObserved.y() << "," << posObserved.z() << std::endl;
-		}
 	}
 	
 	void MultiplexManipulator::ExecuteSingleActuation() {
@@ -300,9 +338,8 @@ namespace dynaman {
 			m_on_pause();
 			return;
 		}
-		if (!m_pObject->isTracked() || !m_pObject->isInsideWorkspace()) {
+		if (!m_pObject->isTracked() || !m_pObject->isInsideWorkspace())
 			return;
-		}
 
 		auto timeLoopInit = timeGetTime();
 		auto forceToApply = ComputeForce(timeLoopInit, m_pObject);

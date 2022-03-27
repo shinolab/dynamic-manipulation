@@ -15,29 +15,66 @@
 /// <param name="scale"></param>
 /// <returns></returns>
 
-float SolveLinearProgram(
-	Eigen::VectorXf &result,
-	Eigen::MatrixXf const &A,
-	Eigen::VectorXf const &b,
-	Eigen::VectorXf const &c,
-	Eigen::VectorXi const &equalityConditions,
-	Eigen::VectorXf const &lowerbound,
-	Eigen::VectorXf const &upperbound,
-	float accuracy = 1.0e-8f
-);
+/*
+Solve Linear Programming minimize: y = c'x subject to Ax </=/> b, .
+sign of the coefficients of equality conditions specifies inequality/equlaity conditions of the row number.
+*/
+class LinearProgram {
+public:
+	struct Result {
+		double residual;
+		Eigen::VectorXf solution;
+	};
+
+	LinearProgram(
+		const Eigen::MatrixXf& A,
+		const Eigen::VectorXf& b,
+		const Eigen::VectorXf& c,
+		const Eigen::VectorXi& equalityConditions,
+		const Eigen::VectorXf& lowerbound,
+		const Eigen::VectorXf& upperbound,
+		float accuracy = 1.0e-8f
+	);
+
+	Result solve();
+
+
+private:
+	Eigen::MatrixXf A;
+	Eigen::VectorXf b, c, lowerbound, upperbound;
+	Eigen::VectorXi equalityConditions;
+	float accuracy;
+};
+
 
 /*
 Find x such that minimizes: 0.5*x'Dx + cx, subject to Ax >=/=/=< b, lb<=x<=ub
 positive/zero/negative number of the equalityConditions[i] means Ax[i] <=/==/>= b[i]. 
 */
-float SolveQuadraticProgram(
-	Eigen::VectorXf &result,
-	Eigen::MatrixXf const &A,
-	Eigen::VectorXf const &b,
-	Eigen::MatrixXf const &D,
-	Eigen::VectorXf const &c,
-	Eigen::VectorXi const &equalityConditions,
-	Eigen::VectorXf const &lowerbound,
-	Eigen::VectorXf const &upperbound,
-	float accuracy = 1.0e-7f
-);
+
+class QuadraticProgram {
+public:
+	struct Result {
+		double residual;
+		Eigen::VectorXf solution;
+	};
+
+	QuadraticProgram(
+		const Eigen::MatrixXf & A,
+		const Eigen::VectorXf & b,
+		const Eigen::MatrixXf & D,
+		const Eigen::VectorXf & c,
+		const Eigen::VectorXi & equalityConditions,
+		const Eigen::VectorXf & lowerbound,
+		const Eigen::VectorXf & upperbound,
+		float accuracy = 1.0e-7f
+	);
+
+	Result solve();
+
+private:
+	Eigen::MatrixXf A, D;
+	Eigen::VectorXf b, c, lowerbound, upperbound;
+	Eigen::VectorXi equalityConditions;
+	float accuracy;
+};

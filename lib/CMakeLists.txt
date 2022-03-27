@@ -90,8 +90,8 @@ add_library(DynamicManipulation STATIC
 	../inc/FloatingObject.hpp
 	FloatingObject.cpp
 	../inc/tracker.hpp
-	../inc/GainPlan.hpp
-	GainPlan.cpp
+	../inc/MathUtil.hpp
+	MathUtil.cpp
 	../inc/manipulator.hpp
 	manipulator.cpp
 	../inc/geometryUtil.hpp

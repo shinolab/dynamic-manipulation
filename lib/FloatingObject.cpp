@@ -133,25 +133,6 @@ namespace dynaman {
 		lastDeterminationTime = determinationTime;
 	}
 
-	void FloatingObject::updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew, const Eigen::Vector3f& velocityNew)
-	{
-		std::lock_guard<std::mutex> lock(mtxState);
-		float dt = (float)(determinationTime - lastDeterminationTime) / 1000.0;
-		if (isTracked())
-		{
-			m_integral += (0.5f * (positionNew + m_position) - getPositionTarget()) * dt;
-		}
-		m_position = positionNew;
-		m_velocity = velocityNew;
-		lastDeterminationTime = determinationTime;
-		dTBuffer.push_back(dt);
-		dTBuffer.pop_front();
-		positionBuffer.push_back(positionNew);
-		positionBuffer.pop_front();
-		velocityBuffer.push_back(m_velocity);
-		velocityBuffer.pop_front();
-	}
-
 	void FloatingObject::resetIntegral() {
 		std::lock_guard<std::mutex> lock(mtxState);
 		m_integral.setZero();

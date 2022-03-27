@@ -1,7 +1,8 @@
 #include <algorithm>
 #include <future>
 #include "ThrustSearch.hpp"
-#include "GainPlan.hpp"
+#include "GeometryUtil.hpp"
+#include "MathUtil.hpp"
 #include "QPSolver.h"
 
 using namespace dynaman;

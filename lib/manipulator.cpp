@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <future>
 #include <iomanip>
-#include "GainPlan.hpp"
+#include "MathUtil.hpp"
 #include "QPSolver.h"
 #include "manipulator.hpp"
 #include "geometryUtil.hpp"

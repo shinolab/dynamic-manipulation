@@ -63,7 +63,6 @@ namespace dynaman {
 		Eigen::Vector3f getAccelTarget(DWORD systime_ms = timeGetTime());
 		void getStates(Eigen::Vector3f& pos, Eigen::Vector3f& vel, Eigen::Vector3f& integ);
 		void updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew);
-		void updateStates(DWORD determinationTime, const Eigen::Vector3f& positionNew, const Eigen::Vector3f& velocitynew);
 		void resetIntegral();
 
 		void setTrajectory(std::shared_ptr<Trajectory> newTrajectoryPtr);

@@ -59,7 +59,4 @@ namespace imgProc {
 		int _lowerBound;
 		int _upperBound;
 	};
-
-	void get_center_thr(const cv::Mat& img, const cv::Scalar lowerbound, const cv::Scalar upperbound, cv::Point2f& center);
-	void get_center_thr(const cv::Mat& img, const cv::Scalar lowerbound, const cv::Scalar upperbound, cv::Point2f& center, cv::ColorConversionCodes code);
 }

@@ -13,25 +13,6 @@ public:
 	virtual Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) = 0;
 };
 
-class arfModelConstant : public arfModelLinearBase
-{
-private:
-	float m_intensity;
-public:
-	arfModelConstant(float intensity = 5.012f);
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& eulerAnglesAUTD = Eigen::Matrix3f::Zero()) override;
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
-};
-
-class arfModelExperimentalPoly : public arfModelLinearBase
-{
-	const Eigen::RowVector4f m_coeffs;
-public:
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const Eigen::MatrixXf& eulerAnglesAUTD = Eigen::Matrix3f::Zero()) override;
-	Eigen::MatrixXf arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) override;
-};
-
-
 class arfModelTabular : public arfModelLinearBase
 {
 private:

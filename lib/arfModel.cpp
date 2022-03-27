@@ -41,34 +41,6 @@ float linearInterp2d(
 
 arfModelLinearBase::~arfModelLinearBase() {}
 
-arfModelConstant::arfModelConstant(float intensity) :m_intensity(intensity) {}
-
-Eigen::MatrixXf arfModelConstant::arf(const Eigen::MatrixXf &posRel, const Eigen::MatrixXf &eulerAnglesAUTD)
-{
-	return m_intensity * posRel.colwise().normalized();
-}
-
-Eigen::MatrixXf arfModelConstant::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
-	return arf(posRel, Eigen::MatrixXf());
-}
-
-Eigen::MatrixXf arfModelExperimentalPoly::arf(const Eigen::MatrixXf& _posRel, const Eigen::MatrixXf& eulerAnglesAUTD)
-{
-	Eigen::MatrixXf posRel = _posRel / 1000;
-	Eigen::RowVector4f arfCoefficient;
-	arfCoefficient << 0.3683, 0.6913, -0.9431, 0.2769; arfCoefficient *= 9.8; // [mN]
-	Eigen::RowVectorXf dist = posRel.colwise().norm();
-	Eigen::RowVectorXf dist2 = dist.cwiseProduct(dist);
-	Eigen::RowVectorXf dist3 = dist2.cwiseProduct(dist);
-	Eigen::MatrixXf dists(arfCoefficient.cols(), dist.cols());
-	dists << Eigen::RowVectorXf::Ones(dist.cols()), dist, dist2, dist3;
-	return posRel.colwise().normalized() * (arfCoefficient * dists).asDiagonal();
-}
-
-Eigen::MatrixXf arfModelExperimentalPoly::arf(const Eigen::MatrixXf& posRel, const std::vector<Eigen::Matrix3f>& rots) {
-	return arf(posRel, Eigen::MatrixXf());
-}
-
 arfModelTabular::arfModelTabular(
 	const Eigen::VectorXf& tableDistance,
 	const Eigen::VectorXf& tableAngle,

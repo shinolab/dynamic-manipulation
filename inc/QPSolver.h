@@ -17,7 +17,7 @@
 /// <param name="scale"></param>
 /// <returns></returns>
 
-float EigenCgalLpSolver(
+float SolveLinearProgram(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,
@@ -32,7 +32,7 @@ float EigenCgalLpSolver(
 Find x such that minimizes: 0.5*x'Dx + cx, subject to Ax >=/=/=< b, lb<=x<=ub
 positive/zero/negative number of the equalityConditions[i] means Ax[i] <=/==/>= b[i]. 
 */
-float EigenCgalQpSolver(
+float SolveQuadraticProgram(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,

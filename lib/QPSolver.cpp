@@ -49,7 +49,7 @@ std::shared_ptr<const float*> Eigen2CgalArray2d(Eigen::MatrixXf const &eigenMat)
 Solve Linear Programming minimize: y = c'x subject to Ax </=/> b, .
 sign of the coefficients of equality conditions specifies inequality/equlaity conditions of the row number.
 */
-float EigenCgalLpSolver(
+float SolveLinearProgram(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,
@@ -103,7 +103,7 @@ float EigenCgalLpSolver(
 	return s.objective_value().numerator().to_double() / s.objective_value().denominator().to_double() * accuracy;
 }
 
-float EigenCgalQpSolver(
+float SolveQuadraticProgram(
 	Eigen::VectorXf &result,
 	Eigen::MatrixXf const &A,
 	Eigen::VectorXf const &b,

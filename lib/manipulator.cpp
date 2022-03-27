@@ -111,7 +111,7 @@ namespace dynaman {
 		Eigen::VectorXf b(1);
 		b << 1;
 		Eigen::VectorXf resultActive;
-		EigenCgalQpSolver(
+		SolveQuadraticProgram(
 			resultActive,
 			A,
 			b,
@@ -196,7 +196,7 @@ namespace dynaman {
 						Eigen::VectorXf duty_max = Eigen::VectorXf::Constant(comb.size(), 1.0f / comb.size());
 						Eigen::VectorXf resultPart;
 
-						EigenCgalQpSolver(resultPart, A, b, D, c, condEq, duty_min, duty_max);
+						SolveQuadraticProgram(resultPart, A, b, D, c, condEq, duty_min, duty_max);
 						float res = (F * resultPart - force).norm();
 						std::vector<float> duty_ordered(m_pAupa->geometry()->numDevices(), 0.f);
 						for (int id = 0; id < c.size(); id++) {

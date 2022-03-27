@@ -69,7 +69,7 @@ float MuxThrustSearcher::MaximizeThrust(
 	Eigen::VectorXf lb(m_num_time_slices);
 	lb.setConstant(0.f);
 	auto ub = m_duty_max / m_num_time_slices * Eigen::VectorXf::Ones(m_num_time_slices);
-	EigenCgalLpSolver(
+	SolveLinearProgram(
 		duty,
 		A,
 		b,
@@ -141,7 +141,7 @@ Eigen::VectorXf dynaman::MaximizeThrust(
 	b << duty_max, 0, 0;
 	Eigen::VectorXi condEq(num_cond);
 	condEq << -1, 0, 0;
-	EigenCgalLpSolver(
+	SolveLinearProgram(
 		duty,
 		A,
 		b,

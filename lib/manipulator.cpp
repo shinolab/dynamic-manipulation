@@ -13,21 +13,6 @@ namespace dynaman {
 	constexpr float DUTY_MIN = 1.0f/255.f;
 	constexpr auto GRAVITY_ACCEL = 9.80665e3f;//[mm/s2]
 
-	bool IsInitialized(
-		std::shared_ptr<autd::Controller> pAupa,
-		std::shared_ptr<Tracker> pTracker
-	) {
-		if (!pTracker->isOpen()) {
-			std::cerr << "ERROR: Tracker is NOT open." << std::endl;
-			return false;
-		}
-		if (!pAupa->isOpen()) {
-			std::cerr << "ERROR: AUPA controller is not open." << std::endl;
-			return false;
-		}
-		return true;
-	}
-
 	MultiplexManipulator::MultiplexManipulator(
 		std::shared_ptr<autd::Controller> pAupa,
 		std::shared_ptr<dynaman::Tracker> pTracker,

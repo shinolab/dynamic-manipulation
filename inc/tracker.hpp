@@ -1,5 +1,4 @@
-#ifndef _DYNAMAN_TRACKER_HPP
-#define _DYNAMAN_TRACKER_HPP
+#pragma once
 
 #include <Eigen/Dense>
 #include "FloatingObject.hpp"
@@ -13,5 +12,3 @@ namespace dynaman {
 		virtual bool isOpen() = 0;
 	};
 }
-
-#endif // !_DYNAMAN_TRACKER_HPP

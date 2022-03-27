@@ -1,5 +1,4 @@
-#ifndef _STEREO_TRACKER_HPP
-#define _STEREO_TRACKER_HPP
+#pragma once
 #include "tracker.hpp"
 #include "CameraDevice.hpp"
 #include "ImgProcUtil.hpp"
@@ -67,4 +66,3 @@ namespace dynaman {
 	};
 
 }
-#endif // !_STEREO_TRACKER_HPP

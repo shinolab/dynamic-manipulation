@@ -1,5 +1,4 @@
-#ifndef _DYNAMAN_STRATEGY_HPP
-#define _DYNAMAN_STRATEGY_HPP
+#pragma once
 
 #include <fstream>
 #include "arfModel.hpp"
@@ -130,4 +129,3 @@ namespace dynaman {
 		Eigen::Vector3f gainI();
 	};
 }
-#endif // !_DYNAMAN_STRATEGY_HPP

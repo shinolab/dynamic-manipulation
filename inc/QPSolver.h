@@ -1,6 +1,4 @@
-#ifndef _ODCS_QP_SOLVER_H_
-#define _ODCS_QP_SOLVER_H_
-
+#pragma once
 #include <Eigen/Dense>
 
 /// <summary>
@@ -43,5 +41,3 @@ float SolveQuadraticProgram(
 	Eigen::VectorXf const &upperbound,
 	float accuracy = 1.0e-7f
 );
-
-#endif

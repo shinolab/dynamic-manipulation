@@ -1,6 +1,4 @@
-#ifndef _HAPTIC_ICON_HPP
-#define _HAPTIC_ICON_HPP
-
+#pragma once
 #include "manipulator.hpp"
 #include "StereoTracker.hpp"
 #include <Eigen/Geometry>
@@ -83,6 +81,3 @@ namespace haptic_icon {
 		return pAupa;
 	}
 }
-
-#endif // !_HAPTIC_ICON_HPP
-

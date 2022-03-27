@@ -1,6 +1,4 @@
-#ifndef _DYNAMAN_TRAJECTORY_HPP
-#define _DYNAMAN_TRAJECTORY_HPP
-
+#pragma once
 #include <Eigen/Geometry>
 #define NOMINMAX
 #include <Windows.h>
@@ -304,5 +302,3 @@ namespace dynaman {
 		float dist_to_accel();
 	};
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef _DYNAMAN_FLOATINGOBJECT_HPP
-#define _DYNAMAN_FLOATINGOBJECT_HPP
+#pragma once
 
 #include <memory>
 #include <deque>
@@ -88,5 +87,3 @@ namespace dynaman {
 		Eigen::Vector3f upperbound();
 	};
 }
-
-#endif

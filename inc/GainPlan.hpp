@@ -1,5 +1,4 @@
-#ifndef _DYNAMAN_GAINPLAN_HPP
-#define _DYNAMAN_GAINPLAN_HPP
+#pragma once
 
 #include <Eigen/Geometry>
 #include "autd3.hpp"
@@ -21,5 +20,3 @@ namespace dynaman {
 
 	std::vector<std::vector<size_t>> combination(size_t max, size_t num);
 }
-
-#endif // !_DYNAMAN_GAINPLAN_HPP

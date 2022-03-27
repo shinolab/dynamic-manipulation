@@ -1,5 +1,4 @@
-#ifndef _ARFMODEL_H_
-#define _ARFMODEL_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -50,6 +49,3 @@ namespace dynaman {
 		Eigen::MatrixXf tableForces() const;
 	};
 }
-
-
-#endif // !ARFMODEL_H_

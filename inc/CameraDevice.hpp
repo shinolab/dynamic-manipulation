@@ -1,5 +1,4 @@
-#ifndef _CAMERA_DEVICE_HPP
-#define _CAMERA_DEVICE_HPP
+#pragma once
 
 #include "xiApiPlusOcv.hpp"
 #include <opencv2/core.hpp>
@@ -55,5 +54,3 @@ private:
 	cv::Mat _img;
 	bool m_isOpen;
 };
-
-#endif // !_CAMERA_DEVICE_HPP

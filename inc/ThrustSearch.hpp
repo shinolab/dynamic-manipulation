@@ -1,6 +1,4 @@
-#ifndef _DYNAMAN_THRUST_SEARCH_HPP
-#define _DYNAMAN_THRUST_SEARCH_HPP
-
+#pragma once
 #include <Eigen/Dense>
 #include "autd3.hpp"
 #include "arfModel.hpp"
@@ -63,5 +61,3 @@ namespace dynaman {
 	);
 
 }
-
-#endif // !_DYNAMAN_THRUST_SEARCH_HPP

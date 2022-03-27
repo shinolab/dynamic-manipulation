@@ -3,22 +3,6 @@
 #include <vector>
 #include <algorithm>
 
-std::vector<Eigen::Vector3f> cornersWorkspaceAll(Eigen::Vector3f const& corner0, Eigen::Vector3f const& corner1) {
-	std::vector<Eigen::Vector3f> corners;
-	int index[3];
-	for (int i = 0; i < 8; i++) { // for the number of the corners
-		int res = i;
-		for (int j = 0; j < 3; j++) { // for x, y, z
-			index[j] = res % 2;
-			res /= 2;
-		}
-		float x = (index[0] == 0 ? corner0.x() : corner1.x());
-		float y = (index[1] == 0 ? corner0.y() : corner1.y());
-		float z = (index[2] == 0 ? corner0.z() : corner1.z());
-		corners.push_back(Eigen::Vector3f(x, y, z));
-	}
-	return std::move(corners);
-}
 
 std::vector<float> range2Points(Eigen::Vector3f const& pos_self, Eigen::Quaternionf const& quo_self, std::vector<Eigen::Vector3f> const& points) {
 	std::vector<float> ranges;

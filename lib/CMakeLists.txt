@@ -64,15 +64,21 @@ if(USE_XIMEA)
 	target_link_libraries(CameraDevice ${OpenCV_LIBS} ${XIMEA_LIBRARIES})
 	set_target_properties(CameraDevice PROPERTIES FOLDER "DynamicManipulation")
 
-	add_library(ImgProcUtil ../inc/ImgProcUtil.hpp ImgProcUtil.cpp)
-	target_link_libraries(ImgProcUtil ${OpenCV_LIBS})
-	set_target_properties(ImgProcUtil PROPERTIES FOLDER "DynamicManipulation")
-
-
-	add_library(StereoTracker ../inc/StereoTracker.hpp StereoTracker.cpp)
-	target_link_libraries(StereoTracker ImgProcUtil CameraDevice ${OpenCV_LIBS})
+	add_library(StereoTracker
+		../inc/StereoTracker.hpp
+		StereoTracker.cpp
+		../inc/ImgProcessor.hpp
+		ImgProcessor.cpp)
+	target_link_libraries(StereoTracker CameraDevice ${OpenCV_LIBS})
 	set_target_properties(StereoTracker PROPERTIES FOLDER "DynamicManipulation")
 endif()
+
+add_library(QPSolver
+	../inc/QPSolver.h
+	QPSolver.cpp
+)
+target_link_libraries(QPSolver CGAL::CGAL)
+set_target_properties(QPSolver PROPERTIES FOLDER "DynamicManipulation")
 
 add_library(ThrustSearch
 	../inc/ThrustSearch.hpp
@@ -96,13 +102,6 @@ set_target_properties(DynamicManipulation PROPERTIES FOLDER "DynamicManipulation
 if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
   target_compile_definitions( DynamicManipulation PRIVATE _ENABLE_EXTENDED_ALIGNED_STORAGE )
 endif()
-
-add_library(QPSolver
-	../inc/QPSolver.h
-	QPSolver.cpp
-)
-target_link_libraries(QPSolver CGAL::CGAL)
-set_target_properties(QPSolver PROPERTIES FOLDER "DynamicManipulation")
 
 target_link_libraries(DynamicManipulation
 	autd3

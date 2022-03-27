@@ -36,7 +36,6 @@ target_link_libraries(
     demo_manipulator
     StereoTracker
     CameraDevice
-    ImgProcUtil
     DynamicManipulation
 )
 set_target_properties(demo_manipulator PROPERTIES FOLDER "demos")
@@ -46,7 +45,6 @@ target_link_libraries(
     demo_catch
     StereoTracker
     CameraDevice
-    ImgProcUtil
     DynamicManipulation
 )
 set_target_properties(demo_catch PROPERTIES FOLDER "demos")

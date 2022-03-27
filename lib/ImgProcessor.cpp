@@ -1,9 +1,8 @@
 #include <iostream>
-#include <exception>
-#include "ImgProcUtil.hpp"
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include "ImgProcessor.hpp"
 
 namespace imgProc {
 	threshold_extractor::threshold_extractor(

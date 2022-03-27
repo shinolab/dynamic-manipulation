@@ -1,7 +1,7 @@
 #pragma once
 #include "tracker.hpp"
 #include "CameraDevice.hpp"
-#include "ImgProcUtil.hpp"
+#include "ImgProcessor.hpp"
 #include <opencv2/core.hpp>
 #include <Eigen/Dense>
 #include <memory>

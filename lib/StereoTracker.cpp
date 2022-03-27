@@ -1,5 +1,5 @@
 #include "StereoTracker.hpp"
-#include "ImgProcUtil.hpp"
+#include "ImgProcessor.hpp"
 #include <opencv2/core.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/imgproc.hpp>

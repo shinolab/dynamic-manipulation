@@ -1,3 +1,5 @@
+This software is released under MIT license.
+
 導入手順
 
 1. 下記の依存ライブラリを予めインスト—ルしておく．
